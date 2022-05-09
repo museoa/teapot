@@ -1,0 +1,193 @@
+#+title: Table Editor And Planner, Or: Teapot!
+
+Retrieved from
+https://web.archive.org/web/20211124073408/https://www.syntax-k.de/projekte/teapot/
+
+--------------------------------------------------------------------------------
+
+* Table Editor And Planner, Or: Teapot!
+
+Teapot is a compact spreadsheet software originally written by Michael
+Haardt. It features a (n)curses-based text terminal interface, and recently also
+a FLTK-based GUI.
+
+These days, it may seem pointless having yet another spreadsheet program (and
+one that doesn't even know how to load Microsoft Excel files). Its compact size
+(130k for the ncurses executable, 140k for the GUI executable, 300k for the
+self-contained Windows EXE) and the fact that it can run across serial lines and
+SSH sessions make it an interesting choice for embedded applications and as
+system administration utility, even more so since it has a batch processing mode
+and comes with example code for creating graphs from data sets.
+
+Another interesting feature is its modern approach to spread sheet theory: It
+sports true three-dimensional tables and iterative expressions. And since it
+breaks compatibility with the usual notions of big spreadsheet packages, it can
+also throw old syntactic cruft over board which many spreadsheets still inherit
+from the days of VisiCalc on ancient CP/M systems.
+
+** Features
+
+Here are some functional features in more detail:
+
+- Cell Syntax
+
+  Instead of the unflexible and complicated syntax used to address the values of
+  cells in traditional spread sheets ("B1" or "R1C2"), teapot uses for a more
+  functional approach: "@(1,2,0)". This results in an easily understandable
+  syntax and despite the very few basic functions, very powerful semantics.
+  
+- Relative References
+
+  As a direct result of this, instead of rewriting expressions during every
+  operation that might alter references, and thus guessing user intentions and
+  requiring awkward hacks like the "$A$1" syntax, references to other cells can
+  be relative or via named cells: "@(x()-1, y(), z())", "@(NamedCell)", or even
+  "@(x(TotalCost), y(Paper), z(IT_Department))"
+
+- Formula References
+
+  Formulas can be referenced directly via the "eval(...)" function instead of
+  the usual copy-paste routine. By referencing a "mother formula" explicitly,
+  changes and corrections to that formula are automatically propagated
+  throughout the sheet.
+
+- Three Dimensions
+
+  In traditional flat spread sheets, you have to have the ability of hiding
+  columns or rows to hide intermediate results. This indicates that two
+  dimensions are not enough, which is why teapot is three-dimensional. The third
+  dimension can be imagined like multiple layers on top of each other, usable
+  without the awkwardness of multiple worksheets in established spreadsheet
+  software.
+
+- Type-Safety
+
+  Unlike many other spread sheets, all values have a type, and all operations
+  and functions check types. As a conclusion, adding a decimal number and a
+  string will result in an error, instead of an (probably unwanted) result. This
+  makes error detection much easier.
+
+- Iterative Expressions
+
+  teapot offers very comfortable iterative expressions, modelled after the
+  clocked expressions in the current PhD work of Jörg Wittenberger at the
+  University of Technology in Dresden, Germany. These expressions solve problems
+  with circular dependencies in traditional spreadsheets and allow completely
+  new algorithms and uses. In effect, these make teapot turing-complete. The
+  proof is shipped as an example file, an implementation of Conway's Game of
+  Life.
+
+- Multiple UIs
+
+  teapot offers several flexible and functionally equivalent user interfaces: A
+  text mode interface using the standard (n)curses library, a modern graphical
+  user interface using the light-weight FLTK library, and a batch processing
+  mode for scripted calculations.
+
+- Platform-Independent File Format
+
+  The spread sheet file format is defined using XDR (External Data
+  Representation as used by Sun RPC), which makes sure it is portable accross
+  machines, especially regarding floating-point representations which may differ
+  from system to system. XDR ensures that number format conversion errors are
+  minimized. Due to this, usually no rounding or truncation is needed.
+
+- Legacy File Formats
+
+  Several additional file formats are supported: a custom, portable ASCII file
+  format to ease automatic generation of sheets by shell scripts, standard CSV,
+  SpreadsheetCalculator SC and Lotus 1-2-3 WK1 format. Microsoft Excel .xls and
+  OpenDocument .ods are yet missing, but WK1 should allow data transfer
+  including formulas.
+
+- Extensibility
+
+  teapot can easily be extended by new functions in C. Instead of just adding
+  all functions offered by other spread sheets, as few as possible were
+  implemented as canonical as possible. So, if a function is lacking, it means
+  that so far nobody needed it or there is a more general way to solve the
+  problem. Don't hesitate to send me email to solve such issues.
+
+- Internationalization
+
+  teapot can be internationalized and comes with English, Dutch, German and
+  Polish message catalogs.
+
+- Interoperability
+
+  Where possible, the KISS (Keep It Simple, Stupid) principle and the UNIX
+  philosophy of "do one thing, and do it well" is employed. That means, instead
+  of exporting every known format on earth, doing any task remotely related to
+  spreadsheet calculation, there are interfaces to troff/tbl, LATEX, HTML and
+  CSV which are well-suited for further processing, be it graphing, typesetting,
+  accounting or anything else.
+
+** Requirements
+
+teapot is portable and doesn't depend on exotic libraries. It's quite probable
+that all dependencies are already available on your system:
+
+- The Sun XDR library. It usually comes with the base operating system of modern
+  UNIX variants, as part of the Sun-RPC subsystem. For example, the GNU C
+  Library (glibc) includes the neccessary files. For Win32, Portable XDR is a
+  compact implementation.
+
+- Floating-point math, or an equivalent emulation. Usually only an issue for
+  embedded devices.
+
+- For the console version: A curses compatible library like ncurses or pdcurses
+
+- UTF-8 in the console needs libncursesw, i.e. a moderately recent ncurses, and
+  a UTF-8 locale setting.
+
+- A build environment supported by CMake
+
+- If you want the graphical user interface: A C++ compiler and the FLTK library,
+  version 1.3.
+
+** Downloads / Version History
+
+- Version 2.3.0, 2012-02-06
+
+  Bug fixes, usability enhancements.
+
+- Version 2.2.1, 2012-01-16
+
+  Bug fixes, Font styles.
+
+- Version 2.2.0, 2010-10-04
+
+  UTF-8 support.
+
+- Version 2.1.0, 2010-09-30
+
+  New build system, improved documentation, Win32 portability.
+
+- Version 2.0.2
+
+  Improved low-resource builds, support linking without GUI help browser.
+
+- Version 2.0.1
+
+  Improved cell editing for FLTK interface, now supports inserting values
+  from/pointers to other cells via mouse or keyboard. Fixed one crash, a few
+  other bugs and quirks.
+
+- Version 2.0
+
+  Dumped GTK+ code in favour of FLTK. Faster, smaller, easier to understand and
+  less buggy. Fixed a few other bugs and quirks.
+
+- Version 1.9
+
+  Inital GTK+ support, mostly complete and usable, but with a few caveats, thus
+  considered beta quality.
+
+- Version 1.09
+
+  Last version written and maintained by Michael Haardt.
+
+** License
+
+teapot is distributed under the terms of the GNU General Public License (GPL)
+Version 3.
