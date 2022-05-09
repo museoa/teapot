@@ -183,10 +183,10 @@ void adjust(Adjust a, char *s, size_t n)
       size_t len;
 
       len=mbslen(s);
-      if (len!=n)
+      if (len < n)
       {
-        memmove(s+n-len,s,strlen(s)+1);
-        (void)memset(s,' ',n-len);
+        memmove(s+n-len, s, strlen(s)+1);
+        memset(s, ' ', n-len);
       }
       break;
     }
@@ -199,10 +199,10 @@ void adjust(Adjust a, char *s, size_t n)
       len=mbslen(s);
       pad=(n-len)/2;
       assert((pad+len)<=n);
-      memmove(s+pad,s,strlen(s)+1);
-      (void)memset(s,' ',pad);
-      *(s+strlen(s)+n-pad-len)='\0';
-      (void)memset(s+strlen(s),' ',n-pad-len-1);
+      memmove(s+pad, s, strlen(s)+1);
+      memset(s, ' ', pad);
+      //*(s+strlen(s)+n-pad-len)='\0';
+      //(void)memset(s+strlen(s),' ',n-pad-len-1);
       break;
     }
     /*}}}*/

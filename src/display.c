@@ -66,14 +66,13 @@ static int do_attribute(Sheet *cursheet)
   adjmenu[0].str=mystrmalloc(_("lL)eft"));     adjmenu[0].c='\0';
   adjmenu[1].str=mystrmalloc(_("rR)ight"));    adjmenu[1].c='\0';
   adjmenu[2].str=mystrmalloc(_("cC)entered")); adjmenu[2].c='\0';
-  adjmenu[3].str=mystrmalloc(_("00).123e1"));      adjmenu[3].c='\0';
-  adjmenu[4].str=mystrmalloc(_("11).23"));      adjmenu[4].c='\0';
-  adjmenu[5].str=mystrmalloc(_("pP)recision"));  adjmenu[5].c='\0';
-  adjmenu[6].str=mystrmalloc(_("sS)hadow"));     adjmenu[6].c='\0';
-  adjmenu[7].str=mystrmalloc(_("bB)old"));     adjmenu[7].c='\0';
-  adjmenu[8].str=mystrmalloc(_("uU)nderline"));     adjmenu[8].c='\0';
-  adjmenu[9].str=mystrmalloc(_("oO)utput special characters"));   adjmenu[9].c='\0';
-  adjmenu[10].str=(char*)0;
+  adjmenu[3].str=mystrmalloc(_("11).23e1 <-> 12.3"));      adjmenu[3].c='\0';
+  adjmenu[4].str=mystrmalloc(_("pP)recision"));  adjmenu[4].c='\0';
+  adjmenu[5].str=mystrmalloc(_("sS)hadow"));     adjmenu[5].c='\0';
+  adjmenu[6].str=mystrmalloc(_("bB)old"));     adjmenu[6].c='\0';
+  adjmenu[7].str=mystrmalloc(_("uU)nderline"));     adjmenu[7].c='\0';
+  adjmenu[8].str=mystrmalloc(_("oO)utput special characters"));   adjmenu[8].c='\0';
+  adjmenu[9].str=(char*)0;
 
   mainmenu[0].str=mystrmalloc(_("rR)epresentation"));    mainmenu[0].c='\0';
   mainmenu[1].str=mystrmalloc(_("lL)abel"));     mainmenu[1].c='\0';
@@ -100,13 +99,12 @@ static int do_attribute(Sheet *cursheet)
 			case 0: c = ADJUST_LEFT; break;
 			case 1: c = ADJUST_RIGHT; break;
 			case 2: c = ADJUST_CENTER; break;
-			case 3: c = ADJUST_SCIENTIFIC_ON; break;
-			case 4: c = ADJUST_SCIENTIFIC_OFF; break;
-			case 5: c = ADJUST_PRECISION; break;
-			case 6: c = ADJUST_SHADOW; break;
-			case 7: c = ADJUST_BOLD; break;
-			case 8: c = ADJUST_UNDERLINE; break;
-			case 9: c = ADJUST_TRANSPARENT; break;
+			case 3: c = ADJUST_SCIENTIFIC; break;
+			case 4: c = ADJUST_PRECISION; break;
+			case 5: c = ADJUST_SHADOW; break;
+			case 6: c = ADJUST_BOLD; break;
+			case 7: c = ADJUST_UNDERLINE; break;
+			case 8: c = ADJUST_TRANSPARENT; break;
 			default: assert(0);
 		  }
 		  break;
@@ -432,21 +430,19 @@ void redraw_sheet(Sheet *sheet)
   assert(sheet->offx>=0);
   assert(sheet->offy>=0);
 
-  (void)wattron(stdscr,DEF_NUMBER);
-
   /* correct offsets to keep cursor visible */
   while (shadowed(sheet,sheet->curx,sheet->cury,sheet->curz))
   {
 	--(sheet->curx);
 	assert(sheet->curx>=0);
   }
-  if (sheet->cury-sheet->offy>(sheet->maxy-3)) sheet->offy=sheet->cury-sheet->maxy+3;
+  if (sheet->cury-sheet->offy>(sheet->maxy-2-header)) sheet->offy=sheet->cury-sheet->maxy+2+header;
   if (sheet->cury<sheet->offy) sheet->offy=sheet->cury;
   if (sheet->curx<sheet->offx) sheet->offx=sheet->curx;
   do
   {
 	again=0;
-	for (width=4,x=sheet->offx,col=0; width<=sheet->maxx; width+=columnwidth(sheet,x,sheet->curz),++x,++col);
+	for (width=4*header,x=sheet->offx,col=0; width<=sheet->maxx; width+=columnwidth(sheet,x,sheet->curz),++x,++col);
 	--col;
 	sheet->width=col;
 	if (sheet->curx!=sheet->offx)
@@ -456,51 +452,55 @@ void redraw_sheet(Sheet *sheet)
 	}
   } while (again);
 
-  /* draw x numbers */
-  for (width=4; width<sheet->maxx; ++width) mvwaddch(stdscr,0+sheet->oriy,sheet->orix+width,(chtype)(unsigned char)' ');
-  for (width=4,x=sheet->offx; width<sheet->maxx; width+=col,++x)
-  {
-	col=columnwidth(sheet,x,sheet->curz);
-	if (bufsz<(size_t)(col*UTF8SZ+1)) buf=realloc(buf,bufsz=(size_t)(col*UTF8SZ+1));
-	snprintf(buf,bufsz,"%d",x);
-	if (mbslen(buf)>col) {
-	  buf[col-1]='$';
-	  buf[col]='\0';
+  if (header) {
+    (void)wattron(stdscr,DEF_NUMBER);
+
+	/* draw x numbers */
+	for (width=4; width<sheet->maxx; ++width) mvwaddch(stdscr,0+sheet->oriy,sheet->orix+width,(chtype)(unsigned char)' ');
+	for (width=4,x=sheet->offx; width<sheet->maxx; width+=col,++x)
+	{
+	  col=columnwidth(sheet,x,sheet->curz);
+	  if (bufsz<(size_t)(col*UTF8SZ+1)) buf=realloc(buf,bufsz=(size_t)(col*UTF8SZ+1));
+	  snprintf(buf,bufsz,"%d",x);
+	  if (mbslen(buf)>col) {
+		buf[col-1]='$';
+		buf[col]='\0';
+	  }
+	  adjust(CENTER,buf,(size_t)col);
+	  assert(sheet->maxx>=width);
+	  if ((sheet->maxx-width)<col) buf[sheet->maxx-width]='\0';
+	  mvwaddstr(stdscr,sheet->oriy,sheet->orix+width,buf);
 	}
-	adjust(CENTER,buf,(size_t)col);
-	assert(sheet->maxx>=width);
-	if ((sheet->maxx-width)<col) buf[sheet->maxx-width]='\0';
-	mvwaddstr(stdscr,sheet->oriy,sheet->orix+width,buf);
+
+	/* draw y numbers */
+	for (y=1; y<(sheet->maxy-1); ++y) (void)mvwprintw(stdscr,sheet->oriy+y,sheet->orix,"%-4d",y-1+sheet->offy);
+
+	(void)wattroff(stdscr,DEF_NUMBER);
+
+	/* draw z number */
+	(void)mvwprintw(stdscr,sheet->oriy,sheet->orix,"%3d",sheet->curz);
   }
 
-  /* draw y numbers */
-  for (y=1; y<(sheet->maxy-1); ++y) (void)mvwprintw(stdscr,sheet->oriy+y,sheet->orix,"%-4d",y-1+sheet->offy);
-
-  (void)wattroff(stdscr,DEF_NUMBER);
-
-  /* draw z number */
-  (void)mvwprintw(stdscr,sheet->oriy,sheet->orix,"%3d",sheet->curz);
-
   /* draw elements */
-  for (y=1; y<sheet->maxy-1; ++y) for (width=4,x=sheet->offx; width<sheet->maxx; width+=columnwidth(sheet,x,sheet->curz),++x)
+  for (y=header; y<sheet->maxy-1; ++y) for (width=4*header,x=sheet->offx; width<sheet->maxx; width+=columnwidth(sheet,x,sheet->curz),++x)
   {
 	size_t size,realsize,fill,cutoff;
 	int realx;
 
 	realx=x;
 	cutoff=0;
-	if (x==sheet->offx) while (shadowed(sheet,realx,y-1+sheet->offy,sheet->curz))
+	if (x==sheet->offx) while (shadowed(sheet,realx,y-header+sheet->offy,sheet->curz))
 	{
 	  --realx;
 	  cutoff+=columnwidth(sheet,realx,sheet->curz);
 	}
-	if ((size=cellwidth(sheet,realx,y-1+sheet->offy,sheet->curz)))
+	if ((size=cellwidth(sheet,realx,y-header+sheet->offy,sheet->curz)))
 	{
 	  int invert;
 
 	  if (bufsz<(size*UTF8SZ+1)) buf=realloc(buf,bufsz=(size*UTF8SZ+1));
-	  printvalue(buf,(size*UTF8SZ+1),size,quote,getscientific(sheet,realx,y-1+sheet->offy,sheet->curz),getprecision(sheet,realx,y-1+sheet->offy,sheet->curz),sheet,realx,y-1+sheet->offy,sheet->curz);
-	  adjust(getadjust(sheet,realx,y-1+sheet->offy,sheet->curz),buf,size);
+	  printvalue(buf,(size*UTF8SZ+1),size,quote,getscientific(sheet,realx,y-header+sheet->offy,sheet->curz),getprecision(sheet,realx,y-header+sheet->offy,sheet->curz),sheet,realx,y-header+sheet->offy,sheet->curz);
+	  adjust(getadjust(sheet,realx,y-header+sheet->offy,sheet->curz),buf,size);
 	  assert(size>=cutoff);
 	  if (width+((int)(size-cutoff))>=sheet->maxx)
 	  {
@@ -512,13 +512,13 @@ void redraw_sheet(Sheet *sheet)
 	  (
 	  (sheet->mark1x!=-1) &&
 	  ((x>=sheet->mark1x && x<=sheet->mark2x) || (x>=sheet->mark2x && x<=sheet->mark1x)) &&
-	  ((y-1+sheet->offy>=sheet->mark1y && y-1+sheet->offy<=sheet->mark2y) || (y-1+sheet->offy>=sheet->mark2y && y-1+sheet->offy<=sheet->mark1y)) &&
+	  ((y-header+sheet->offy>=sheet->mark1y && y-header+sheet->offy<=sheet->mark2y) || (y-header+sheet->offy>=sheet->mark2y && y-header+sheet->offy<=sheet->mark1y)) &&
 	  ((sheet->curz>=sheet->mark1z && sheet->curz<=sheet->mark2z) || (sheet->curz>=sheet->mark2z && sheet->curz<=sheet->mark1z))
 	  );
-	  if (x==sheet->curx && (y-1+sheet->offy)==sheet->cury) invert=(sheet->marking ? 1 : 1-invert);
+	  if (x==sheet->curx && (y-header+sheet->offy)==sheet->cury) invert=(sheet->marking ? 1 : 1-invert);
 	  if (invert) (void)wattron(stdscr,DEF_CELLCURSOR);
-	  if (isbold(sheet,realx,y-1+sheet->offy,sheet->curz)) wattron(stdscr,A_BOLD);
-	  if (underlined(sheet,realx,y-1+sheet->offy,sheet->curz)) wattron(stdscr,A_UNDERLINE);
+	  if (isbold(sheet,realx,y-header+sheet->offy,sheet->curz)) wattron(stdscr,A_BOLD);
+	  if (underlined(sheet,realx,y-header+sheet->offy,sheet->curz)) wattron(stdscr,A_UNDERLINE);
 	  (void)mvwaddstr(stdscr,sheet->oriy+y,sheet->orix+width,buf+cutoff);
 	  for (fill=mbslen(buf+cutoff); fill<realsize; ++fill) (void)waddch(stdscr,(chtype)(unsigned char)' ');
 	  wstandend(stdscr);

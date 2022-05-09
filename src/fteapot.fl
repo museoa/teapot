@@ -1,75 +1,75 @@
 # data file for the Fltk User Interface Designer (fluid)
-version 1.0300 
-header_name {.h} 
+version 1.0300
+header_name {.h}
 code_name {.cxx}
 decl {\#include <stdint.h>} {private global
-} 
+}
 
 decl {\#include <limits.h>} {private global
-} 
+}
 
 decl {\#include <fcntl.h>} {private global
-} 
+}
 
 decl {\#define shadow _shadow} {private global
-} 
+}
 
 decl {\#define transparent _transparent} {private global
-} 
+}
 
 decl {\#define MenuChoice _MenuChoice} {private global
-} 
+}
 
 decl {\#define Cell _Cell} {private global
-} 
+}
 
 decl {\#include <FL/fl_message.H>} {private local
-} 
+}
 
 decl {\#include <FL/fl_draw.H>} {private global
-} 
+}
 
 decl {\#include <FL/Fl_Native_File_Chooser.H>} {private global
-} 
+}
 
 decl {\#include <FL/Fl_File_Icon.H>} {private global
-} 
+}
 
 decl {\#include <FL/filename.H>} {private global
-} 
+}
 
 decl {\#include <FL/Fl_Table.H>} {public global
-} 
+}
 
 decl {\#include <FL/Fl_Select_Browser.H>} {public global
-} 
+}
 
 decl {\#include <FL/Fl_Sys_Menu_Bar.H>} {public global
-} 
+}
 
 decl {\#undef shadow} {private global
-} 
+}
 
 decl {\#undef transparent} {private global
-} 
+}
 
 decl {\#undef MenuChoice} {private global
-} 
+}
 
 decl {\#undef Cell} {private global
-} 
+}
 
 decl {\#include "misc.h"} {private global
-} 
+}
 
 decl {\#include "display.h"} {public global
-} 
+}
 
 decl {\#define SHEET(s,x,y,z) (*(s->sheet+(x)*s->dimz*s->dimy+(y)*s->dimz+(z)))} {private global
-} 
+}
 
 decl {\#define SHADOWED(sheet,x,y,z) (x<sheet->dimx && y<sheet->dimy && z<sheet->dimz && SHEET(sheet,x,y,z)!=(Cell*)0 && SHEET(sheet,x,y,z)->shadowed)} {private global
-} 
+}
 
 class TeapotTable {open : {public Fl_Table}
 } {
@@ -83,21 +83,21 @@ class TeapotTable {open : {public Fl_Table}
   }
   Function {TeapotTable(int x, int y, int w, int h, const char *l=0) : Fl_Table(x, y, w, h, l), cut(false), updating(false)} {open
   } {
-    code {end();
+	code {end();
 col_resize_min(10);
 col_resize(true);
-col_header(1);
+col_header(header);
 row_resize(false);
-row_header(1);
+row_header(header);
 set_visible_focus();
 table_box(FL_THIN_UP_FRAME);} {}
   }
   Function {~TeapotTable()} {} {
-    code {} {}
+	code {} {}
   }
   Function {sheet(Sheet *s)} {open return_type void
   } {
-    code {cursheet = s;
+	code {cursheet = s;
 s->display = (void *)this;
 clear();
 update_table();
@@ -105,11 +105,11 @@ do_callback(CONTEXT_NONE, 0, 0);} {}
   }
   Function {sheet()} {return_type {Sheet *}
   } {
-    code {return cursheet;} {}
+	code {return cursheet;} {}
   }
   Function {draw_cell(TableContext context, int R, int C, int X, int Y, int W, int H)} {open return_type void
   } {
-    code {char s[1024];
+	code {char s[1024];
 //printf("DRAW: %i @%i,%i - (%i,%i) %ix%i\\n", context, C,R, X,Y, W,H);
 switch (context) {
 case CONTEXT_ENDPAGE:
@@ -189,11 +189,11 @@ case CONTEXT_CELL: {
 default:
 	return;
 }} {selected
-    }
+	}
   }
   Function {update_table()} {open return_type void
   } {
-    code {if (updating) return;
+	code {if (updating) return;
 
 updating = true;
 //printf("update_table: %ix%i@%i,%i; %i[%i], %i[%i]\\n", cursheet->dimx, cursheet->dimy, cursheet->curx, cursheet->cury, cursheet->offx, cursheet->maxx, cursheet->offy, cursheet->maxy);
@@ -214,7 +214,7 @@ updating = false;} {}
   }
   Function {update_sheet()} {return_type void
   } {
-    code {int x1, x2, y1, y2;
+	code {int x1, x2, y1, y2;
 
 if (updating) return;
 updating = true;
@@ -246,7 +246,7 @@ updating = false;
   }
   Function {handle(int event)} {open return_type int
   } {
-    code {if (event == FL_KEYDOWN) {
+	code {if (event == FL_KEYDOWN) {
 	int ctrl = Fl::event_ctrl();
 	int alt = Fl::event_alt();
 	int shift = Fl::event_shift();
@@ -277,7 +277,7 @@ updating = false;
 	}
 
 	if (k > 0 && (ctrl || alt))  return 0;
-	
+
 	// Quick and dirty upper-case fix, fails for international chars on keyboards...
 	if (shift && !alt && !ctrl && k >= 'a' && k <= 'z') k = (Key)(k - 'a' + 'A');
 
@@ -305,7 +305,7 @@ return 1;} {}
   }
   Function {adjust_outside()} {open protected return_type void
   } {
-    code {int x1, x2, y1, y2;
+	code {int x1, x2, y1, y2;
 
 if (!cols() || !rows()) {
 	cols(1);
@@ -331,7 +331,7 @@ else if (y2+1 == rows()) {
 	rows(y2+1);
 }} {}
   }
-} 
+}
 
 class MainWindow {open
 } {
@@ -341,17 +341,17 @@ class MainWindow {open
   }
   Function {MainWindow(Sheet *sheet)} {open
   } {
-    Fl_Window window {
-      label teapot
-      callback {if (Fl::event_key(FL_Escape)) table->take_focus();
+	Fl_Window window {
+	  label teapot
+	  callback {if (Fl::event_key(FL_Escape)) table->take_focus();
 else if (do_sheetcmd(table->sheet(), K_QUIT, 0) && doanyway(table->sheet(), _("Sheet modified, leave anyway?"))) {
 	line_label->deactivate();
 	window->hide();
 }} open
-      protected xywh {866 342 800 600} type Double when 0 hide resizable
-    } {
-      Fl_Menu_Bar menu {
-        callback {Sheet *sheet = table->sheet();
+	  protected xywh {866 342 800 600} type Double when 0 hide resizable
+	} {
+	  Fl_Menu_Bar menu {
+		callback {Sheet *sheet = table->sheet();
 Key action = (Key)(intptr_t)o->mvalue()->user_data();
 
 if (do_sheetcmd(sheet, action, sheet->moveonly) && doanyway(sheet, _("Sheet modified, leave anyway?"))) {
@@ -361,206 +361,200 @@ if (do_sheetcmd(sheet, action, sheet->moveonly) && doanyway(sheet, _("Sheet modi
 
 table->update_table();
 table->redraw();} open
-        xywh {0 0 800 25}
-        class Fl_Sys_Menu_Bar
-      } {
-        Submenu {} {
-          label {&File}
-          xywh {25 25 67 24}
-        } {
-          MenuItem {} {
-            label {&Open...}
-            user_data K_LOADMENU
-            xywh {5 5 30 20} shortcut 0x4006f
-          }
-          MenuItem {} {
-            label {&Save}
-            user_data K_SAVE
-            xywh {0 0 30 20} shortcut 0x40073
-          }
-          MenuItem {} {
-            label {Save &As...}
-            user_data K_NAME
-            xywh {0 0 30 20} shortcut 0x50053 divider
-          }
-          MenuItem {} {
-            label {&Quit}
-            user_data K_QUIT
-            xywh {0 0 30 20} shortcut 0x40071
-          }
-        }
-        Submenu {} {
-          label {&Block}
-          xywh {25 25 67 24}
-        } {
-          MenuItem {} {
-            label {&Insert}
-            user_data BLOCK_INSERT
-            xywh {0 0 30 20} shortcut 0x90069
-          }
-          MenuItem {} {
-            label {&Delete}
-            user_data BLOCK_DELETE
-            xywh {0 0 30 20} shortcut 0x90064 divider
-          }
-          MenuItem {} {
-            label {&Move}
-            user_data BLOCK_MOVE
-            xywh {0 0 30 20} shortcut 0x9006d
-          }
-          MenuItem {} {
-            label {&Copy}
-            user_data BLOCK_COPY
-            xywh {0 0 36 21} shortcut 0x90063 divider
-          }
-          MenuItem {} {
-            label {&Fill}
-            user_data BLOCK_FILL
-            xywh {0 0 36 21} shortcut 0x90066
-          }
-          MenuItem {} {
-            label {C&lear}
-            user_data BLOCK_CLEAR
-            xywh {0 0 36 21} shortcut 0x9006c divider
-          }
-          MenuItem {} {
-            label {&Sort}
-            user_data BLOCK_SORT
-            xywh {0 0 36 21} shortcut 0x90073
-          }
-          MenuItem {} {
-            label {Mi&rror}
-            user_data BLOCK_MIRROR
-            xywh {0 0 36 21} shortcut 0x90072
-          }
-        }
-        Submenu {} {
-          label {&View}
-          xywh {0 0 70 21}
-        } {
-          MenuItem {} {
-            label {Column &Width...}
-            user_data K_COLWIDTH
-            xywh {0 0 36 21} shortcut 0x80077
-          }
-          MenuItem {} {
-            label {&Goto}
-            user_data K_GOTO
-            xywh {0 0 36 21} shortcut 0x40067
-          }
-        }
-        Submenu {} {
-          label {F&ormat} open
-          xywh {5 5 70 21}
-        } {
-          MenuItem {} {
-            label {L&abel...}
-            user_data ADJUST_LABEL
-            xywh {0 0 36 21} shortcut 0x80061 divider
-          }
-          MenuItem bold {
-            label {&Bold}
-            user_data ADJUST_BOLD
-            protected xywh {0 0 34 21} shortcut 0x80062
-            code0 {o->flags |= FL_MENU_TOGGLE;}
-          }
-          MenuItem underline {
-            label {&Underline}
-            user_data ADJUST_UNDERLINE
-            protected xywh {0 0 34 21} shortcut 0x80075 divider
-            code0 {o->flags |= FL_MENU_TOGGLE;}
-          }
-          MenuItem left {
-            label {&Left}
-            user_data ADJUST_LEFT
-            protected xywh {0 0 36 21} shortcut 0x8006c
-            code0 {o->flags |= FL_MENU_RADIO;}
-          }
-          MenuItem right {
-            label {&Right}
-            user_data ADJUST_RIGHT
-            protected xywh {0 0 36 21} shortcut 0x80072
-            code0 {o->flags |= FL_MENU_RADIO;}
-          }
-          MenuItem center {
-            label {&Center}
-            user_data ADJUST_CENTER
-            protected xywh {0 0 36 21} shortcut 0x80063 divider
-            code0 {o->flags |= FL_MENU_RADIO;}
-          }
-          MenuItem sci {
-            label {&Scientific}
-            user_data ADJUST_SCIENTIFIC_ON
-            protected xywh {0 0 36 21} shortcut 0x80073
-            code0 {o->flags |= FL_MENU_RADIO;}
-          }
-          MenuItem dec {
-            label {&Decimal}
-            user_data ADJUST_SCIENTIFIC_OFF
-            protected xywh {0 0 36 21} shortcut 0x80064
-            code0 {o->flags |= FL_MENU_RADIO;}
-          }
-          MenuItem {} {
-            label {&Precision...}
-            user_data ADJUST_PRECISION
-            xywh {0 0 36 21} shortcut 0x80070 divider
-          }
-          MenuItem shadow {
-            label {Shadow&ed}
-            user_data ADJUST_SHADOW
-            protected xywh {0 0 36 21} shortcut 0x80065
-            code0 {o->flags |= FL_MENU_TOGGLE;}
-          }
-          MenuItem transparent {
-            label {&Transparent}
-            user_data ADJUST_TRANSPARENT
-            protected xywh {0 0 36 21} shortcut 0x80074 divider
-            code0 {o->flags |= FL_MENU_TOGGLE;}
-          }
-          MenuItem lock {
-            label {Lo&ck}
-            user_data ADJUST_LOCK
-            protected xywh {0 0 36 21} shortcut 0x80063
-            code0 {o->flags |= FL_MENU_TOGGLE;}
-          }
-          MenuItem ignore {
-            label {&Ignore}
-            user_data ADJUST_IGNORE
-            protected xywh {0 0 36 21} shortcut 0x80069
-            code0 {o->flags |= FL_MENU_TOGGLE;}
-          }
-        }
-        Submenu {} {
-          label {&Help} open
-          xywh {25 25 67 24}
-        } {
-          MenuItem {} {
-            label {&Manual}
-            user_data K_HELP
-            xywh {0 0 30 20} shortcut 0xffbe
-          }
-          MenuItem {} {
-            label {&About}
-            user_data K_ABOUT
-            xywh {0 0 30 20}
-          }
-        }
-      }
-      Fl_Group line_label {
-        label { Input:} open
-        protected xywh {0 25 800 25} box ROUND_UP_BOX align 20 deactivate
-      } {
-        Fl_Input line_input {
-          callback {bool enterkey = Fl::event_key(FL_Enter) || Fl::event_key(FL_KP_Enter);
+		xywh {0 0 800 25}
+		class Fl_Sys_Menu_Bar
+	  } {
+		Submenu {} {
+		  label {&File}
+		  xywh {25 25 67 24}
+		} {
+		  MenuItem {} {
+			label {&Open...}
+			user_data K_LOADMENU
+			xywh {5 5 30 20} shortcut 0x4006f
+		  }
+		  MenuItem {} {
+			label {&Save}
+			user_data K_SAVE
+			xywh {0 0 30 20} shortcut 0x40073
+		  }
+		  MenuItem {} {
+			label {Save &As...}
+			user_data K_NAME
+			xywh {0 0 30 20} shortcut 0x50053 divider
+		  }
+		  MenuItem {} {
+			label {&Quit}
+			user_data K_QUIT
+			xywh {0 0 30 20} shortcut 0x40071
+		  }
+		}
+		Submenu {} {
+		  label {&Block}
+		  xywh {25 25 67 24}
+		} {
+		  MenuItem {} {
+			label {&Insert}
+			user_data BLOCK_INSERT
+			xywh {0 0 30 20} shortcut 0x90069
+		  }
+		  MenuItem {} {
+			label {&Delete}
+			user_data BLOCK_DELETE
+			xywh {0 0 30 20} shortcut 0x90064 divider
+		  }
+		  MenuItem {} {
+			label {&Move}
+			user_data BLOCK_MOVE
+			xywh {0 0 30 20} shortcut 0x9006d
+		  }
+		  MenuItem {} {
+			label {&Copy}
+			user_data BLOCK_COPY
+			xywh {0 0 36 21} shortcut 0x90063 divider
+		  }
+		  MenuItem {} {
+			label {&Fill}
+			user_data BLOCK_FILL
+			xywh {0 0 36 21} shortcut 0x90066
+		  }
+		  MenuItem {} {
+			label {C&lear}
+			user_data BLOCK_CLEAR
+			xywh {0 0 36 21} shortcut 0x9006c divider
+		  }
+		  MenuItem {} {
+			label {&Sort}
+			user_data BLOCK_SORT
+			xywh {0 0 36 21} shortcut 0x90073
+		  }
+		  MenuItem {} {
+			label {Mi&rror}
+			user_data BLOCK_MIRROR
+			xywh {0 0 36 21} shortcut 0x90072
+		  }
+		}
+		Submenu {} {
+		  label {&View}
+		  xywh {0 0 70 21}
+		} {
+		  MenuItem {} {
+			label {Column &Width...}
+			user_data K_COLWIDTH
+			xywh {0 0 36 21} shortcut 0x80077
+		  }
+		  MenuItem {} {
+			label {&Goto}
+			user_data K_GOTO
+			xywh {0 0 36 21} shortcut 0x40067
+		  }
+		}
+		Submenu {} {
+		  label {F&ormat} open
+		  xywh {5 5 70 21}
+		} {
+		  MenuItem {} {
+			label {L&abel...}
+			user_data ADJUST_LABEL
+			xywh {0 0 36 21} shortcut 0x80061 divider
+		  }
+		  MenuItem bold {
+			label {&Bold}
+			user_data ADJUST_BOLD
+			protected xywh {0 0 34 21} shortcut 0x80062
+			code0 {o->flags |= FL_MENU_TOGGLE;}
+		  }
+		  MenuItem underline {
+			label {&Underline}
+			user_data ADJUST_UNDERLINE
+			protected xywh {0 0 34 21} shortcut 0x80075 divider
+			code0 {o->flags |= FL_MENU_TOGGLE;}
+		  }
+		  MenuItem left {
+			label {&Left}
+			user_data ADJUST_LEFT
+			protected xywh {0 0 36 21} shortcut 0x8006c
+			code0 {o->flags |= FL_MENU_RADIO;}
+		  }
+		  MenuItem right {
+			label {&Right}
+			user_data ADJUST_RIGHT
+			protected xywh {0 0 36 21} shortcut 0x80072
+			code0 {o->flags |= FL_MENU_RADIO;}
+		  }
+		  MenuItem center {
+			label {&Center}
+			user_data ADJUST_CENTER
+			protected xywh {0 0 36 21} shortcut 0x80063 divider
+			code0 {o->flags |= FL_MENU_RADIO;}
+		  }
+		  MenuItem {} {
+			label {&Precision...}
+			user_data ADJUST_PRECISION
+			xywh {0 0 36 21} shortcut 0x80070 divider
+		  }
+		  MenuItem sci {
+			label {&Scientific}
+			user_data ADJUST_SCIENTIFIC
+			protected xywh {0 0 36 21} shortcut 0x80073
+			code0 {o->flags |= FL_MENU_TOGGLE;}
+		  }
+		  MenuItem shadow {
+			label {Shadow&ed}
+			user_data ADJUST_SHADOW
+			protected xywh {0 0 36 21} shortcut 0x80065
+			code0 {o->flags |= FL_MENU_TOGGLE;}
+		  }
+		  MenuItem transparent {
+			label {&Transparent}
+			user_data ADJUST_TRANSPARENT
+			protected xywh {0 0 36 21} shortcut 0x80074 divider
+			code0 {o->flags |= FL_MENU_TOGGLE;}
+		  }
+		  MenuItem lock {
+			label {Lo&ck}
+			user_data ADJUST_LOCK
+			protected xywh {0 0 36 21} shortcut 0x80063
+			code0 {o->flags |= FL_MENU_TOGGLE;}
+		  }
+		  MenuItem ignore {
+			label {&Ignore}
+			user_data ADJUST_IGNORE
+			protected xywh {0 0 36 21} shortcut 0x80069
+			code0 {o->flags |= FL_MENU_TOGGLE;}
+		  }
+		}
+		Submenu {} {
+		  label {&Help} open
+		  xywh {25 25 67 24}
+		} {
+		  MenuItem {} {
+			label {&Manual}
+			user_data K_HELP
+			xywh {0 0 30 20} shortcut 0xffbe
+		  }
+		  MenuItem {} {
+			label {&About}
+			user_data K_ABOUT
+			xywh {0 0 30 20}
+		  }
+		}
+	  }
+	  Fl_Group line_label {
+		label { Input:} open
+		protected xywh {0 25 800 25} box ROUND_UP_BOX align 20 deactivate
+	  } {
+		Fl_Input line_input {
+		  callback {bool enterkey = Fl::event_key(FL_Enter) || Fl::event_key(FL_KP_Enter);
 if (Fl::focus() && (Fl::focus() != table || enterkey || Fl::event_key(FL_Escape))) {
 	if (enterkey) edit_rc = 0;
 	line_label->deactivate();
 }}
-          protected xywh {75 27 723 21} box ROUND_DOWN_BOX labeltype NO_LABEL align 20 when 6 deactivate
-        }
-      }
-      Fl_Box table {
-        callback {Sheet *sheet = table->sheet();
+		  protected xywh {75 27 723 21} box ROUND_DOWN_BOX labeltype NO_LABEL align 20 when 6 deactivate
+		}
+	  }
+	  Fl_Box table {
+		callback {Sheet *sheet = table->sheet();
 table->update_sheet();
 
 const char *label = getlabel(sheet,sheet->curx,sheet->cury,sheet->curz);
@@ -602,8 +596,6 @@ int adj = getadjust(sheet, x, y, z);
 if (adj == LEFT) left->setonly();
 else if (adj == RIGHT) right->setonly();
 else if (adj == CENTER) center->setonly();
-if (getscientific(sheet, x, y, z)) sci->setonly();
-else dec->setonly();
 if (shadowed(sheet, x+1, y, z)) shadow->set();
 else shadow->clear();
 if (::transparent(sheet, x, y, z)) transparent->set();
@@ -615,21 +607,23 @@ else ignore->clear();
 if (isbold(sheet, x, y, z)) bold->set();
 else bold->clear();
 if (underlined(sheet, x, y, z)) underline->set();
-else underline->clear();}
-        protected xywh {0 50 800 525} box DOWN_FRAME labeltype NO_LABEL resizable
-        code0 {table->sheet(sheet);}
-        class TeapotTable
-      }
-      Fl_Box status {
-        label {teapot ready.}
-        protected xywh {0 575 800 25} box GTK_ROUND_DOWN_BOX align 20
-      }
-    }
-    code {current = this;} {}
+else underline->clear();
+if (getscientific(sheet, x, y, z)) sci->set();
+else sci->clear();}
+		protected xywh {0 50 800 525} box DOWN_FRAME labeltype NO_LABEL resizable
+		code0 {table->sheet(sheet);}
+		class TeapotTable
+	  }
+	  Fl_Box status {
+		label {teapot ready.}
+		protected xywh {0 575 800 25} box GTK_ROUND_DOWN_BOX align 20
+	  }
+	}
+	code {current = this;} {}
   }
   Function {line_edit(Sheet *sheet, char *buf, size_t size, const char *prompt, size_t *x, size_t *offx)} {open return_type int
   } {
-    code {if (line_label->active()) {
+	code {if (line_label->active()) {
 	if (x) line_msg(NULL, "Action not possible at this time.");
 	return -1;
 }
@@ -661,13 +655,13 @@ return edit_rc;} {}
   }
   Function {line_msg(const char *prompt, const char *msg)} {return_type void
   } {
-    code {char label[1024];
+	code {char label[1024];
 snprintf(label, sizeof(label), "%s%s%s", prompt?prompt:"", prompt?" ":"", msg);
 status->copy_label(label);} {}
   }
   decl {friend void line_msg(const char*, const char*);} {private local
   }
-} 
+}
 
 Function {line_file(const char *file, const char *pattern, const char *title, int create)} {open C return_type {const char *}
 } {
@@ -690,7 +684,7 @@ if (chooser.show()) return NULL;
 strncpy(buf, chooser.filename(), sizeof(buf));
 buf[sizeof(buf)-1] = 0;
 return buf;} {}
-} 
+}
 
 Function {line_edit(Sheet *sheet, char *buf, size_t size, const char *prompt, size_t *x, size_t *offx)} {C return_type int
 } {
@@ -703,47 +697,47 @@ if (val) {
 }
 
 return !val;} {}
-} 
+}
 
 Function {line_ok(const char *prompt, int curx)} {C return_type int
 } {
   code {int rc = !!fl_choice("%s", "&No", NULL, "&Yes", prompt);
 if (Fl::event_key(FL_Escape)) return -1;
 return rc;} {}
-} 
+}
 
 Function {line_msg(const char *prompt, const char *msg)} {C return_type void
 } {
   code {MainWindow::current->line_msg(prompt, msg);} {}
-} 
+}
 
 Function {keypressed()} {open C return_type int
 } {
   code {while (Fl::wait(.01)) if (Fl::event_key(FL_Escape)) return 1;
 return 0;} {}
-} 
+}
 
 Function {line_menu(const char *prompt, const MenuChoice *choice, int curx)} {C return_type int
 } {
   Fl_Window line_menu_menu {
-    label {Please Choose} open
-    xywh {706 58 250 245} type Double hide resizable modal
+	label {Please Choose} open
+	xywh {706 58 250 245} type Double hide resizable modal
   } {
-    Fl_Group {} {
-      label {Please Choose:} open
-      xywh {0 0 250 200} box ENGRAVED_BOX align 21
-    } {
-      Fl_Browser line_menu_browser {
-        callback {line_menu_menu->hide();}
-        xywh {5 25 240 170}
-        class Fl_Select_Browser
-      }
-    }
-    Fl_Button {} {
-      label Cancel
-      callback {line_menu_menu->hide();}
-      xywh {5 205 240 35}
-    }
+	Fl_Group {} {
+	  label {Please Choose:} open
+	  xywh {0 0 250 200} box ENGRAVED_BOX align 21
+	} {
+	  Fl_Browser line_menu_browser {
+		callback {line_menu_menu->hide();}
+		xywh {5 25 240 170}
+		class Fl_Select_Browser
+	  }
+	}
+	Fl_Button {} {
+	  label Cancel
+	  callback {line_menu_menu->hide();}
+	  xywh {5 205 240 35}
+	}
   }
   code {line_menu_browser->clear();
 while (choice->str) {
@@ -755,19 +749,19 @@ line_menu_menu->show();
 while (line_menu_menu->shown()) Fl::wait();
 
 return line_menu_browser->value()-1;} {}
-} 
+}
 
 Function {redraw_sheet(Sheet *sheet)} {C return_type void
 } {
   code {TeapotTable *t = (TeapotTable*)sheet->display;
 t->update_table();
 t->redraw();} {}
-} 
+}
 
 Function {redraw_cell(Sheet *sheet, int x, int y, int z)} {C return_type void
 } {
   code {redraw_sheet(sheet);} {}
-} 
+}
 
 Function {display_init(Sheet *sheet, int always_redraw)} {open C return_type void
 } {
@@ -780,26 +774,26 @@ int ch = sheet->changed;
 resize(sheet, 1, 1, 1);
 sheet->changed = ch;
 new MainWindow(sheet);} {}
-} 
+}
 
 Function {display_end()} {C return_type void
 } {
   code {} {}
-} 
+}
 
 Function {display_main(Sheet *cursheet)} {C return_type void
 } {
   code {((TeapotTable *)cursheet->display)->parent()->show();
 Fl::run();} {}
-} 
+}
 
 Function {show_menu(Sheet *sheet)} {C return_type Key
 } {
   code {return K_NONE;} {}
-} 
+}
 
 decl {MainWindow *MainWindow::current;} {private global
-} 
+}
 
 declblock {\#ifdef ENABLE_HELP} {after {\#endif}
 } {
@@ -807,7 +801,7 @@ declblock {\#ifdef ENABLE_HELP} {after {\#endif}
   }
   Function {show_text(const char *text)} {open C return_type void
   } {
-    code {Fl_Help_Dialog *d = new Fl_Help_Dialog();
+	code {Fl_Help_Dialog *d = new Fl_Help_Dialog();
 if (strchr(text, '<')) {
 	d->value(text);
 } else {
@@ -816,17 +810,17 @@ if (strchr(text, '<')) {
 d->resize(d->x(), d->y(), d->w()*3/2, d->h()*3/2);
 d->show();} {}
   }
-} 
+}
 
 declblock {\#ifndef ENABLE_HELP} {after {\#endif}
 } {
   Function {show_text(const char *text)} {open C return_type void
   } {
-    code {char *txt = striphtml(text);
+	code {char *txt = striphtml(text);
 fl_message("%s", txt);
 free(txt);} {}
   }
-} 
+}
 
 Function {find_helpfile(char *buf, int size, const char *argv0)} {open C return_type void
 } {
@@ -854,4 +848,4 @@ else close(test);
 buf[size-1] = 0;
 
 } {}
-} 
+}

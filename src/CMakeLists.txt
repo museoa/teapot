@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 2.6)
 project(Teapot)
 
 set(Teapot_VERSION_MAJOR 2)
-set(Teapot_VERSION_MINOR 2)
-set(Teapot_VERSION_PATCH 1)
+set(Teapot_VERSION_MINOR 3)
+set(Teapot_VERSION_PATCH 0)
 
 option(ENABLE_HELP "Enable built-in documentation" ON)
 option(ENABLE_UTF8 "Enable UTF-8 support" ON)
@@ -105,12 +105,17 @@ if (ENABLE_HELP)
 endif ()
 
 install(FILES COPYING README DESTINATION share/doc/teapot)
+install(FILES teapot.1 DESTINATION share/man/man1)
 
 add_custom_target(dist
 	COMMAND ${CMAKE_COMMAND} -E remove_directory teapot-${Teapot_VERSION_MAJOR}.${Teapot_VERSION_MINOR}.${Teapot_VERSION_PATCH}
 	COMMAND ${CMAKE_COMMAND} -E make_directory teapot-${Teapot_VERSION_MAJOR}.${Teapot_VERSION_MINOR}.${Teapot_VERSION_PATCH}
-	COMMAND cp -r ${CMAKE_CURRENT_SOURCE_DIR}/doc ${CMAKE_CURRENT_SOURCE_DIR}/examples ${CMAKE_CURRENT_SOURCE_DIR}/[A-Z]*[A-Z] ${CMAKE_CURRENT_SOURCE_DIR}/*.*[a-z] teapot-${Teapot_VERSION_MAJOR}.${Teapot_VERSION_MINOR}.${Teapot_VERSION_PATCH}
+	COMMAND LANG=C bash -c "cp -r ${CMAKE_CURRENT_SOURCE_DIR}/doc ${CMAKE_CURRENT_SOURCE_DIR}/examples ${CMAKE_CURRENT_SOURCE_DIR}/[A-Z]*[A-Z] ${CMAKE_CURRENT_SOURCE_DIR}/*.*[a-z1] teapot-${Teapot_VERSION_MAJOR}.${Teapot_VERSION_MINOR}.${Teapot_VERSION_PATCH}"
 	COMMAND tar czf teapot-${Teapot_VERSION_MAJOR}.${Teapot_VERSION_MINOR}.${Teapot_VERSION_PATCH}.tar.gz teapot-${Teapot_VERSION_MAJOR}.${Teapot_VERSION_MINOR}.${Teapot_VERSION_PATCH}
+	COMMAND setarch ${CPACK_RPM_PACKAGE_ARCHITECTURE} cpack
+	COMMAND bash -c "[ ! -f fteapot ] || for i in Teapot-*-Linux.*; do mv \"\$i\" \"\${i%-Linux.*}-Linux-${CPACK_RPM_PACKAGE_ARCHITECTURE}.\${i##*-Linux.}\"; done"
+	COMMAND bash -c "[ ! -f fteapot.exe -o ${ENABLE_HELP} != OFF ] || { rm Teapot-*.zip; i586-mingw32msvc-strip fteapot.exe && upx -9 -o Teapot-${Teapot_VERSION_MAJOR}.${Teapot_VERSION_MINOR}.${Teapot_VERSION_PATCH}-win32-minimal.exe fteapot.exe; }"
+	VERBATIM
 )
 
 configure_file("${PROJECT_SOURCE_DIR}/config.h.in" "${PROJECT_BINARY_DIR}/config.h")

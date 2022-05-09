@@ -14,6 +14,7 @@ extern "C" {
 extern int batch;
 extern int def_precision;
 extern int quote;
+extern int header;
 extern unsigned int batchln;
 
 /* A variable of type Key is either a special symbol from this enum, representing
@@ -58,8 +59,8 @@ typedef enum {
   ADJUST_LEFT = -34,
   ADJUST_RIGHT = -35,
   ADJUST_CENTER = -36,
-  ADJUST_SCIENTIFIC_ON = -37,
-  ADJUST_SCIENTIFIC_OFF = -38,
+  ADJUST_SCIENTIFIC = -37,
+  ADJUST_BOLD = -38,
   ADJUST_PRECISION = -39,
   ADJUST_SHADOW = -40,
   ADJUST_TRANSPARENT = -41,
@@ -77,8 +78,7 @@ typedef enum {
   BLOCK_MIRROR = -53,
   K_ABOUT = -54,
   K_HELP = -55,
-  ADJUST_BOLD = -56,
-  ADJUST_UNDERLINE = -57
+  ADJUST_UNDERLINE = -56
 } Key;
 
 extern int do_sheetcmd(Sheet *cursheet, Key c, int moveonly);

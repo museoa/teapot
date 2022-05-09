@@ -48,7 +48,8 @@ char helpfile[PATH_MAX];
 int batch=0;
 unsigned int batchln=0;
 int def_precision=DEF_PRECISION;
-int quote=1;
+int quote=0;
+int header=1;
 static int usexdr=1;
 /*}}}*/
 
@@ -350,6 +351,7 @@ static void do_attribute(Sheet *cursheet, Key action)
     /* 0       -- adjust left */ /*{{{*/
     case ADJUST_LEFT:
     {
+      if (cursheet->mark1x != -1 && line_ok(_("Make block left-adjusted:"), 0) <= 0) break;
       for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z) setadjust(cursheet,x,y,z,LEFT);
       break;
     }
@@ -357,6 +359,7 @@ static void do_attribute(Sheet *cursheet, Key action)
     /* 1       -- adjust right */ /*{{{*/
     case ADJUST_RIGHT:
     {
+      if (cursheet->mark1x != -1 && line_ok(_("Make block right-adjusted:"), 0) <= 0) break;
       for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z) setadjust(cursheet,x,y,z,RIGHT);
       break;
     }
@@ -364,21 +367,19 @@ static void do_attribute(Sheet *cursheet, Key action)
     /* 2       -- adjust centered */ /*{{{*/
     case ADJUST_CENTER:
     {
+      if (cursheet->mark1x != -1 && line_ok(_("Make block centered:"), 0) <= 0) break;
       for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z) setadjust(cursheet,x,y,z,CENTER);
       break;
     }
     /*}}}*/
     /* 3       -- set scientific notation flag */ /*{{{*/
-    case ADJUST_SCIENTIFIC_ON:
+    case ADJUST_SCIENTIFIC:
     {
-      for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z) setscientific(cursheet,x,y,z,1);
-      break;
-    }
-    /*}}}*/
-    /* 4       -- clear scientific notation flag */ /*{{{*/
-    case ADJUST_SCIENTIFIC_OFF:
-    {
-      for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z) setscientific(cursheet,x,y,z,0);
+      int n;
+
+      if (cursheet->mark1x==-1) n = !getscientific(cursheet,x1,y1,z1);
+      else n = line_ok(_("Make block notation scientific:"), getscientific(cursheet,x1,y1,z1));
+      if (n >= 0) for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z) setscientific(cursheet,x,y,z,n);
       break;
     }
     /*}}}*/
@@ -401,8 +402,14 @@ static void do_attribute(Sheet *cursheet, Key action)
     {
       int n;
 
-      if ((n=line_ok(cursheet->mark1x==-1 ? _("Shadow cell:") : _("Shadow block:"),shadowed(cursheet,x1,y1,z1)))!=-1)
-      {
+      if (cursheet->mark1x==-1) n = !shadowed(cursheet,x1,y1,z1);
+      else n = line_ok(_("Shadow block:"), shadowed(cursheet,x1,y1,z1));
+      if (x1 == 0 && n == 1) {
+        line_msg(_("Shadow cell:"),_("You can not shadow cells in column 0"));
+        break;
+      }
+
+      if (n >= 0) {
         for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z)
         {
           int rx;
@@ -411,7 +418,6 @@ static void do_attribute(Sheet *cursheet, Key action)
           else if (x>0) shadow(cursheet,x,y,z,1);
         }
       }
-      if (x1==0 && n==1) line_msg(_("Shadow cell:"),_("You can not shadow cells in column 0"));
       break;
     }
     /*}}}*/
@@ -420,8 +426,9 @@ static void do_attribute(Sheet *cursheet, Key action)
     {
       int n;
 
-      if ((n=line_ok(cursheet->mark1x==-1 ? _("Make cell transparent:") : _("Make block transparent:"),transparent(cursheet,x1,y1,z1)))!=-1)
-      for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z) maketrans(cursheet,x,y,z,n);
+      if (cursheet->mark1x==-1) n = !transparent(cursheet,x1,y1,z1);
+      else n = line_ok(_("Make block transparent:"), transparent(cursheet,x1,y1,z1));
+      if (n >= 0) for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z) maketrans(cursheet,x,y,z,n);
       break;
     }
     /*}}}*/
@@ -430,8 +437,9 @@ static void do_attribute(Sheet *cursheet, Key action)
     {
       int n;
 
-      if ((n=line_ok(cursheet->mark1x==-1 ? _("Make cell bold:") : _("Make block bold:"),isbold(cursheet,x1,y1,z1)))!=-1)
-      for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z) bold(cursheet,x,y,z,n);
+      if (cursheet->mark1x==-1) n = !isbold(cursheet,x1,y1,z1);
+      else n = line_ok(_("Make block bold:"), isbold(cursheet,x1,y1,z1));
+      if (n >= 0) for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z) bold(cursheet,x,y,z,n);
       break;
     }
     /*}}}*/
@@ -440,8 +448,9 @@ static void do_attribute(Sheet *cursheet, Key action)
     {
       int n;
 
-      if ((n=line_ok(cursheet->mark1x==-1 ? _("Make cell underlined:") : _("Make block underlined:"),underlined(cursheet,x1,y1,z1)))!=-1)
-      for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z) underline(cursheet,x,y,z,n);
+      if (cursheet->mark1x==-1) n = !underlined(cursheet,x1,y1,z1);
+      else n = line_ok(_("Make block underlined:"), underlined(cursheet,x1,y1,z1));
+      if (n >= 0) for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z) underline(cursheet,x,y,z,n);
       break;
     }
     /*}}}*/
@@ -457,8 +466,10 @@ static void do_attribute(Sheet *cursheet, Key action)
     {
       int n;
 
-      if ((n=line_ok(cursheet->mark1x==-1 ? _("Lock cell:") : _("Lock block:"),locked(cursheet,x1,y1,z1)))==-1) c=-1;
-      else if (n!=-1) for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z) lockcell(cursheet,x,y,z,n);
+      if (cursheet->mark1x==-1) n = !locked(cursheet,x1,y1,z1);
+      else n = line_ok(_("Lock block:"), locked(cursheet,x1,y1,z1));
+      if (n >= 0) for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z) lockcell(cursheet,x,y,z,n);
+
       break;
     }
     /*}}}*/
@@ -467,8 +478,9 @@ static void do_attribute(Sheet *cursheet, Key action)
     {
       int n;
 
-      if ((n=line_ok(cursheet->mark1x==-1 ? _("Ignore cell value:") : _("Ignore values of all cells in this block:"),ignored(cursheet,x1,y1,z1)))==-1) c=-1;
-      else for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z) igncell(cursheet,x,y,z,n);
+      if (cursheet->mark1x==-1) n = !ignored(cursheet,x1,y1,z1);
+      else n = line_ok(_("Ignore values of all cells in this block:"), ignored(cursheet,x1,y1,z1));
+      if (n >= 0) for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z) igncell(cursheet,x,y,z,n);
       break;
     }
     /*}}}*/
@@ -1480,8 +1492,7 @@ int do_sheetcmd(Sheet *cursheet, Key c, int moveonly)
     case ADJUST_LEFT:
     case ADJUST_RIGHT:
     case ADJUST_CENTER:
-    case ADJUST_SCIENTIFIC_ON:
-    case ADJUST_SCIENTIFIC_OFF:
+    case ADJUST_SCIENTIFIC:
     case ADJUST_PRECISION:
     case ADJUST_SHADOW:
     case ADJUST_BOLD:
@@ -1754,7 +1765,7 @@ int main(int argc, char *argv[])
   find_helpfile(helpfile, sizeof(helpfile), argv[0]);
 
   /* parse options */ /*{{{*/
-  while ((o=getopt(argc,argv,"abhnrp:?"))!=EOF) switch (o)
+  while ((o=getopt(argc,argv,"abhnrqHp:?"))!=EOF) switch (o)
   {
     /* a       -- use ascii as default */ /*{{{*/
     case 'a':
@@ -1768,6 +1779,12 @@ int main(int argc, char *argv[])
     /*}}}*/
     /* n       -- no quoted strings */ /*{{{*/
     case 'n': quote=0; break;
+    /*}}}*/
+    /* q       -- force quoted strings */ /*{{{*/
+    case 'q': quote=1; break;
+    /*}}}*/
+    /* H       -- no row/column headers */ /*{{{*/
+    case 'H': header=0; break;
     /*}}}*/
     /* r       -- always redraw */ /*{{{*/
     case 'r':
@@ -1795,7 +1812,15 @@ int main(int argc, char *argv[])
     /* default -- includes ? and h */ /*{{{*/
     default:
     {
-      fprintf(stderr,"%s",_("Usage: teapot [-a] [-b] [-n] [-r] [-p digits] [file]\n"));
+      fprintf(stderr,_(
+          "Usage: %s [-a] [-b] [-n] [-H] [-r] [-p digits] [file]\n"
+          "       -a: use ASCII file format as default\n"
+          "       -b: batch mode\n"
+          "       -q: display strings in quotes\n"
+          "       -H: hide row/column headers\n"
+          "       -r: redraw more often\n"
+          "       -p: set decimal precision\n"
+          ), argv[0]);
       exit(1);
     }
     /*}}}*/

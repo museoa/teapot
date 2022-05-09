@@ -1,0 +1,84 @@
+.\" teapot.1: teapot manual
+.\" Copyright(c) 2010 by wave++ "Yuri D'Elia" <wavexx@users.sf.net>
+.\" Distributed under GNU GPL WITHOUT ANY WARRANTY.
+.\"
+.Dd Dicember 8, 2010
+.Dt TEAPOT 1
+.\"
+.\"
+.Sh NAME
+.Nm teapot
+.Nd Table Editor And Planner, Or: Teapot!
+.\"
+.\"
+.Sh SYNOPSIS
+.Nm
+.Op Fl abHqr
+.Op Fl p Ar digits
+.Op Ar file
+.\"
+.\"
+.Sh DESCRIPTION
+.Nm
+(Table Editor And Planner, Or Teapot!) is a compact spreadsheet program, featuring three
+dimensions with linear addressing, relative references, formula references,
+type safety of computations, iterative expressions and platform independent
+file format.
+.Pp
+This document only describes command-line arguments. Please refer to the
+complete manual that can be found under
+.Pa /usr/share/doc/teapot
+in both html and pdf format.
+The manual can also be viewed from within the graphical version, fteapot,
+using the Help menu.
+.\"
+.\"
+.Sh OPTIONS
+.Bl -tag -compact -width " \-p digits "
+.It Fl a
+Use ASCII instead of XDR as default file format when loading or saving.
+.It Fl b
+Read batch commands from standard input.
+.It Fl H
+Hide row and column headers.
+.It Fl q
+Display strings quoted.
+.It Fl r
+Redraw the terminal window more often.
+.It Fl p Ar digits
+Set default precision of displayed numbers.
+.El
+.\"
+.\"
+.Sh ENVIRONMENT
+.Ev DISPLAY See Xr X 7 .
+.\"
+.\"
+.Sh SEE ALSO
+.Pa /usr/share/doc/teapot/
+.\"
+.\"
+.Sh LICENSE
+Copyright (C) 1995-2006
+.An "Michael Haardt"
+.Pp
+Copyright (C) 2009-2012 
+.Mt info@syntax-k.de
+J\(:org Walter
+.Me
+.Pp
+Manual page written by
+.Mt wavexx@users.sf.net
+Yuri D'Elia
+.Me
+.Pp
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+.Pp
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE .
+See the GNU General Public License for more details.
+.Pp
+You should have received a copy of the GNU General Public License along with this program.
+If not, see
+.Ur http://www.gnu.org/licenses/
+http://www.gnu.org/licenses/
+.Ue .

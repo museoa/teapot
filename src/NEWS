@@ -1,5 +1,13 @@
-This is release 2.2.1 of teapot (Table Editor And Planner, Or: Teapot),
+This is release 2.3.0 of teapot (Table Editor And Planner, Or: Teapot),
 a spread sheet program for UNIX.
+
+The changes compared to 2.2.1 are:
+
+o visual garbage fixed (curses version)
+o made unquoted strings default, added "-q" flag to turn quotes back on
+o made attributes menu more user friendly: no more question when changing a single cell, one menu option optimized away
+o added "-H" command line flag to hide row/column headers; in FLTK, this means you can only change sheets via Ctrl-Shift-PgUp/PgDn
+o expanded command line help
 
 The changes compared to 2.2.0 are:
 
