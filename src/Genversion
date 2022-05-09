@@ -1,0 +1,55 @@
+#!/bin/sh
+awk 'BEGIN {
+  y=0
+  printf("#ifndef NO_POSIX_SOURCE\n")
+  printf("#undef _POSIX_SOURCE\n#define _POSIX_SOURCE 1\n")
+  printf("#undef _POSIX_C_SOURCE\n#define _POSIX_C_SOURCE 2\n")
+  printf("#endif\n\n")
+  printf("#include <curses.h>\n\n")
+  printf("#include %cversion.h%c\n\n",34,34)
+  printf("void do_about(void)\n{\n  int offset;\n\n")
+  printf("  offset=(COLS-41)/2;\n")
+  printf("  (void)clear();\n");
+}
+{
+  if (length($0)>1)
+  {
+    for (x=1; substr($0,x,1)==" "; ++x);
+    printf("  (void)move(%d,offset+%d); (void)addstr(\"",y,x-1)
+    for (; x<=length($0); ++x)
+    {
+      if (substr($0,x,1)=="\\") printf("\\\\");
+      else printf("%s",substr($0,x,1))
+    }
+    printf("\");\n")
+  }
+  ++y;
+}
+END{
+  printf("  (void)refresh();\n  (void)getch();\n");
+  printf("}\n");
+}' >version.c << 'eof'
+             ` ',`    '  '
+              `   '  ` ' '
+               `' '   '`'
+               ' `   ' '`
+  '           '` ' ` '`` `
+  `.   Table Editor And Planner, or:
+    ,         . ,   ,  . .
+              ` '   `  ' '
+   `::\    /:::::::::::::::::\   ___
+    `::\  /:::::::::::::::::::\,'::::\
+     :::\/:::::::::::::::::::::\/   \:\
+     :::::::::::::::::::::::::::\    :::
+     ::::::::::::::::::::::::::::;  /:;'
+     `::::::::::::::::::::::::::::_/:;'
+       `::::::::::::::::::::::::::::'
+        `////////////////////////'
+         `:::::::::::::::::::::'
+  
+                 Teapot
+
+Version " VERSION ", Copyright by Michael Haardt
+
+        Press any key to continue
+eof

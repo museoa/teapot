@@ -1,0 +1,4 @@
+This is a sheet which contains the well known game of life.  Load it and
+clock the sheet with control-s a few times, and you will see the glider
+moving.  Layer 0 contains the grid and layer 1 contains some help
+formulas.

@@ -1,0 +1,6 @@
+This sheet demonstrates the use of the time functions strftime and
+strptime.
+The associated shell script shows how to use teapot in batch mode,
+with the definitions and output formulas in level 0, and variable data
+loaded to level 1.
+

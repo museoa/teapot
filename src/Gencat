@@ -1,0 +1,1264 @@
+#!/bin/sh
+
+awk 'BEGIN{
+  msgid=1
+  languages=4
+  cat_h[0]="cat-en.h"
+  cat[0]="cat-en"
+  cat_h[1]="cat-de.88591.h"
+  cat[1]="cat-de.88591"
+  cat_h[2]="cat-nl.h"
+  cat[2]="cat-nl"
+  cat_h[3]="cat-pl.h"
+  cat[3]="cat-pl"
+  for (i=0; i<languages; ++i) {
+    printf("#ifndef CAT_H\n#define CAT_H\n\n#include <nl_types.h>\n\n") > cat_h[i]
+    printf("$quote %c\n$set 1\n",34) > cat[i]
+  }
+}
+/#/{
+  def=$2
+  for (i=0; i<languages; ++i) {
+    getline
+    printf("#define %s catgets(catd,1,%d,%s)\n",def,msgid,$0) > cat_h[i]
+    printf("%d %s\n",msgid,$0) > cat[i]
+  }
+  ++msgid
+}
+END{
+  for (i=0; i<languages; ++i) {
+    printf("\n#endif\n") > cat_h[i]
+  }
+}' << 'eof'
+
+# USAGE
+"Usage: teapot [-a] [-b] [-n] [-r] [-p digits] [file]\n"
+"Aufruf: teapot [-a] [-b] [-n] [-r] [-p Stellen] [Datei]\n"
+"Gebruik: teapot [-a] [-b] [-n] [-r] [-p cijfers] [bestand]\n"
+"Uruchomienie: teapot [-a] [-b] [-n] [-r] [-p ile_miejsc] [plik]\n"
+
+# OHWELL
+"ERROR"
+"FEHLER"
+"FOUTJE"
+"B£¡D"
+
+# DIV0
+"division by 0"
+"Division durch 0"
+"Deling door 0"
+"Dzielenie przez 0"
+
+# DIVTYPE
+"wrong types for / operator"
+"Falscher Typ für / Operator"
+"Verkeerd type voor de / operator"
+"Niew³a¶ciwy typ dla operatora /"
+
+# MOD0
+"modulo 0"
+"Modulo 0"
+"Modulo 0"
+"Modulo 0"
+
+# MODTYPE
+"wrong types for % operator"
+"Falscher Typ für % Operator"
+"Verkeerd type voor de % operator"
+"Niew³a¶ciwe typy dla operatora %"
+
+# MULTYPE
+"wrong types for * operator"
+"Falscher Typ für * Operator"
+"Verkeerd type voor de * operator"
+"Niew³a¶ciwe typy dla operatora *"
+
+# ADDTYPE
+"wrong types for + operator"
+"Falscher Typ für + Operator"
+"Verkeerd type voor de + operator"
+"Niew³a¶ciwe typy dla operatora +"
+
+# SUBTYPE
+"wrong types for - operator"
+"Falscher Typ für - Operator"
+"Verkeerd type voor de - operator"
+"Niew³a¶ciwe typy dla operatora -"
+
+# NEGTYPE
+"wrong type for - operator"
+"Falscher Typ für - Operator"
+"Verkeerd type voor de - operator"
+"Niew³a¶ciwy typ dla operatora -"
+
+# POWTYPE
+"wrong types for ^ operator"
+"Falscher Typ für ^ Operator"
+"Verkeerd type voor de ^ operator"
+"Niew³a¶ciwe typy dla operatora ^"
+
+# MISSOPR
+"missing operator"
+"Fehlender Operator"
+"Ontbrekende operator"
+"Brak operatora"
+
+# TOOMANY
+"too many arguments"
+"Zu viele Argumente"
+"Teveel argumenten"
+"Zbyt wiele argumentów"
+
+# NESTEVAL
+"nested eval()"
+"Verschachtelte eval()s"
+"Geneste eval()s"
+"Zagnie¿d¿ony eval()"
+
+# CPEXPCT
+") expected"
+") erwartet"
+") verwacht"
+"oczekuje siê znaku )"
+
+# OPEXPECT
+"( expected"
+"( erwartet"
+"( verwacht"
+"oczekuje siê znaku ("
+
+# VLEXPCT
+"value expected"
+"Wert erwartet"
+"Waarde verwacht"
+"oczekuje siê warto¶ci"
+
+# PARSERR
+"parse error after term"
+"Parse-Fehler nach Term"
+"Ontleedfout na term"
+"B³±d parsera w odpowiedzi na wyra¿enie"
+
+# NOINT
+"int(string): invalid string"
+"int(Zeichenkette): Ungültige Zeichenkette"
+"int(letterrij): ongeldige letterrij"
+"int(litera³): ³añcuch znaków niedozwolonej postaci"
+
+# INFINT
+"int(string): domain error"
+"int(Zeichenkette): Bereichsfehler"
+"int(letterrij): buiten bereik"
+"int(litera³): b³±d zakresu"
+
+# RELTYPE
+"type mismatch for relational operator"
+"Falscher Typ für relationalen Operator"
+"Verkeerd type voor relationele operator"
+"niew³a¶ciwy typ dla operatora relacji"
+
+# NOLABEL
+"No such label"
+"Label existiert nicht"
+"Label bestaat niet"
+"nieistniej±ca etykieta"
+
+# NEGLOC
+"Negative index"
+"Negativer Index"
+"Negatieve index"
+"indeks ujemny"
+
+# POW00
+"0^0 is not defined"
+"0^0 ist undefiniert"
+"0^0 is niet gedefinieerd"
+"brak definicji 0^0"
+
+# POWDOM
+"^ caused a domain error"
+"^ verursachte einen Bereichsfehler"
+"^ veroorzaakte een bereikfout"
+"^ wywo³a³a b³±d zakresu"
+
+# ISLOCKED
+"Cell is locked"
+"Zelle ist geschützt"
+"Cel is geblokkeerd"
+"Komórka zabezpieczona"
+
+# NOTAG
+"Unknown tag %c in line %d"
+"Unbekanntes 'Tag' %c in Zeile %d"
+"Onbekend teken %c in regel %d"
+"Nieznany 'Tag' %c w wierszu %d"
+
+# MOVEONLY
+"V"
+"B"
+"V"
+"B"
+
+# MOVEEDIT
+"E"
+"Ä"
+"E"
+"Ä"
+
+# SHADOWBOO2
+"Trying to shadow cell (%d,%d,%d) in line %d"
+"Versuch Zelle (%d,%d,%d) in Zeile %d zu verdecken"
+"Proberen cel (%d,%d,%d) in regel %d te bedekken"
+"Próba przykrycia komórki (%d,%d,%d) w wierszu %d"
+
+# XERR
+"Parse error for x position in line %d"
+"Syntaxfehler der x-Position in Zeile %d"
+"Syntaxfout voor de x-positie in regel %d"
+"B³±d sk³adniowy na pozycji x w wierszu %d"
+
+# YERR
+"Parse error for y position in line %d"
+"Syntaxfehler der y-Position in Zeile %d"
+"Syntaxfout voor de y-positie in regel %d"
+"B³±d sk³adniowy na pozycji y w wierszu %d"
+
+# ZERR
+"Parse error for z position in line %d"
+"Syntaxfehler der z-Position in Zeile %d"
+"Syntaxfout voor de z-positie in regel %d"
+"B³±d sk³adniowy na pozycji z w wierszu %d"
+
+# OPTERR
+"Invalid option %c in line %d"
+"Falsche Option %c in Zeile %d"
+"Verkeerde optie %c in regel %d"
+"Niedopuszczalna opcja %c w wierszu %d"
+
+# SYNERR
+"Expression syntax error in line %d"
+"Syntaxfehler im Ausdruck in Zeile %d"
+"Syntaxfout in de expressie in regel %d"
+"B³±d sk³adniowy wyra¿enia w wierszu %d"
+
+# WIDTHERR
+"Parse error for width in line %d"
+"Syntaxfehler der Breite in Zeile %d"
+"Syntaxfout voor de breedte in regel %d"
+"B³±d sk³adniowy przy podaniu szeroko¶ci w wierszu %d"
+
+# PRECERR
+"Parse error for precision in line %d"
+"Syntaxfehler der Genauigkeit in Zeile %d"
+"Syntaxfout voor de nauwkeurigheid in regel %d"
+"B³±d sk³adniowy przy podaniu precyzji w wierszu %d"
+
+# ADJERR
+"Parse error for adjustment in line %d"
+"Syntaxfehler in der Ausrichtung in Zeile %d"
+"Syntaxfout voor de aanpassing in regel %d"
+"B³±d sk³adniowy przy podaniu po³o¿enia w wierszu %d"
+
+# SCFEATURE
+"Unimplemented SC feature in line %d"
+"Nicht implementiertes SC Feature in Zeile %d"
+"Niet-geimplementeerd SC-mogelijkheid in regel %d"
+"Niezaimplementowana mo¿liwo¶æ SC w wierszu %d"
+
+# NOTFINITE
+"Not a (finite) floating point number"
+"Keine (endliche) Fließkommazahl"
+"Niet een (eindig) schuivendekomma-getal"
+"To nie jest (skoñczona) liczba zmiennoprzecinkowa"
+
+# UFLOW
+"Floating point range underflow"
+"Unterhalb des Fließkommabereichs"
+"Te klein voor het bereik van de schuivende komma"
+"Poni¿ej zakresu liczb zmiennoprzecinkowych"
+
+# OFLOW
+"Floating point range overflow"
+"Oberhalb des Fließkommabereichs"
+"Te groot voor het bereik van de schuivende komma"
+"Przekroczony zakres liczb zmiennoprzecinkowych"
+
+# UNCOMPAR
+"uncomparable elements"
+"Elemente nicht vergleichbar"
+"Elementen niet vergelijkbaar"
+"Elementy nieporównywalne"
+
+# NOREGION
+"No region selected"
+"Keine Region selektiert"
+"Geen regio geselecteerd"
+"Nie wybrano ¿adnego regionu"
+
+# SHELL
+"Spawn sub shell"
+"Shell starten"
+"Shell opstarten"
+"Uruchomienie pow³oki"
+
+# SUBSHELL
+"Sub shell started"
+"Shell gestartet"
+"Shell gestart"
+"Pow³oka uruchomiona"
+
+# BACKGROUND
+"Teapot stopped"
+"Teapot ist gestoppt"
+"Teapot is gestopt"
+"Praca Teapot-a wstrzymana"
+
+# NOTSUSPENDED
+"The susp character is undefined"
+"Das susp Zeichen ist nicht gesetzt"
+"Het susp-teken is niet gedefinieerd"
+"Niezdefiniowany znak susp"
+
+# BROKENSHEET
+"Invalid record, loading aborted"
+"Ungültiger Datensatz, das Laden wurde abgebrochen"
+"Verkeerde dataset. Het inlezen is gestopt"
+"Rekord o b³êdnej postaci, zaniechano wczytania"
+
+# WRONGXDRMAGIC
+"This is not a teapot worksheet in XDR format"
+"Dies ist kein Teapot Arbeitsblatt im XDR Format"
+"Dit is geen teapot-werkblad in XDR-formaat"
+"To nie jest arkusz Teapot-a w formacie XDR"
+
+# TRUNCHEADER
+"The record header appears to be truncated"
+"Der Kopf eines Datensatzes ist abgeschnitten"
+"Het begin van de dataset is onderbroken"
+"Skrócony nag³ówek rekordu"
+
+# TRUNCBODY
+"The record body appears to be truncated"
+"Der Rumpf eines Datensatzes ist abgeschnitten"
+"Het midden van de dataset is onderbroken"
+"Brak czê¶ci zawarto¶ci rekordu"
+
+# NOBOF
+"This is not a WK1 file"
+"Dies ist keine WK1 Datei"
+"Dit is geen WK1-bestand"
+"To nie jest plik WK1"
+
+# NOEOF
+"File truncated"
+"Datei endet unerwartet"
+"Het bestand is onderbroken"
+"Brak czê¶ci pliku"
+
+# INVALIDBODYLEN
+"Invalid record body length"
+"Die Länge eines Datensatzes ist falsch"
+"Het bestand is te lang of te kort"
+"Niew³a¶ciwy rozmiar zawarto¶ci rekordu"
+
+# NOMEM
+"Out of memory"
+"Es steht nicht mehr genügend Speicher zur Verfügung"
+"Geen geheugen meer ter beschikking"
+"Zbyt ma³o wolnej pamiêci"
+
+# YES
+"yY)es"
+"jJ)a"
+"jJ)a"
+"tT)ak"
+
+# NO
+"nN)o"
+"nN)ein"
+"nN)een"
+"nN)ie"
+
+# ADJUST
+"rR)epresentation"
+"rR)epräsentation"
+"wW)eergave"
+"rR)eprezentacja"
+
+# ADLEFT
+"lL)eft"
+"lL)inks"
+"lL)inks"
+"lL)ewo"
+
+# ADRIGHT
+"rR)ight"
+"rR)echts"
+"rR)echts"
+"pP)rawo"
+
+# ADCENTERED
+"cC)entered"
+"zZ)entriert"
+"cgeC)entreerd"
+"cC)entruj"
+
+# PRECISION
+"pP)recision"
+"gG)enauigkeit"
+"pP)recisie"
+"dD)ok³adno¶æ"
+
+# DOLOCK
+"oLo)ck"
+"sS)chützen"
+"bB)lokkeren"
+"zZ)abezpiecz"
+
+# DOIGNORE
+"iI)gnore"
+"iI)gnorieren"
+"nN)egeren"
+"iI)gnoruj"
+
+# DOSCI
+"00).123e1"
+"00).123e1"
+"00).123e1"
+"00).123e1"
+
+# NOSCI
+"11).23"
+"11).23"
+"11).23"
+"11).23"
+
+# LABEL
+"lL)abel"
+"mM)arke"
+"lL)abel"
+"eE)tykieta"
+
+# ASXDR
+"xX)DR"
+"xX)DR"
+"xX)DR"
+"xX)DR"
+
+# ASASCII
+"aA)SCII"
+"aA)SCII"
+"aA)SCII"
+"aA)SCII"
+
+# ASSC
+"sS)C"
+"sS)C"
+"sS)C"
+"sS)C"
+
+# ASWK1
+"wW)K1"
+"wW)K1"
+"wW)K1"
+"wW)K1"
+
+# TBL
+"tT)bl"
+"tT)bl"
+"tT)bl"
+"tT)bl"
+
+# LATEX
+"lL)aTeX"
+"lL)aTeX"
+"lL)aTex"
+"lL)aTeX"
+
+# HTML
+"hH)TML"
+"hH)TML"
+"hH)TML"
+"hH)TML"
+
+# CSV
+"cC)SV"
+"cC)SV"
+"cC)SV"
+"cC)SV"
+
+# GCSV
+"cG)CSV"
+"cG)CSV"
+"cG)CSV"
+"cG)CSV"
+
+# SAVETEXT
+"fF)ormatted text"
+"fF)ormatierter Text"
+"fgeF)ormateerde tekst"
+"fF)ormatowany tekst"
+
+# CONTEXT
+"oCo)nTeXt"
+"oCo)nTeXt"
+"oCo)nTeXt"
+"oCo)nTeXt"
+
+# LOAD
+"lL)oad"
+"lL)aden"
+"iI)nlezen"
+"wW)czytaj"
+
+# SAVE
+"sS)ave"
+"sS)peichern"
+"oO)pslaan"
+"zZ)apisz"
+
+# NAME
+"nN)ame"
+"dD)ateiname"
+"nN)aam"
+"nN)azwa pliku"
+
+# FILER
+"fF)ile"
+"dD)atei"
+"bB)estand"
+"pP)lik"
+
+# QUIT
+"qQ)uit"
+"eE)nde"
+"eE)inde"
+"kK)oniec pracy"
+
+# ATTR
+"aA)ttributes"
+"aA)ttribute"
+"aA)ttributen"
+"aA)trybuty"
+
+# SHADOW
+"sS)hadow"
+"vV)erdecken"
+"bB)edekken"
+"uU)kryj"
+
+# TRANSPAR
+"oO)utput special characters"
+"sS)onderzeichen ausgeben"
+"sS)peciale tekens aangeven"
+"wW)prowad¼ znak specjalny"
+
+# INX
+"cC)olumn"
+"sS)palte"
+"kK)olom"
+"kK)olumna"
+
+# INY
+"rR)ow"
+"zZ)eile"
+"rR)egel"
+"wW)iersz"
+
+# INZ
+"dD)epth"
+"tT)iefe"
+"dD)iepte"
+"gG)³êboko¶æ"
+
+# INSERT
+"iI)nsert"
+"iEi)nfügen"
+"iI)nvoegen"
+"wW)staw"
+
+# CLEAR
+"ecle)ar"
+"zZ)elle löschen"
+"sS)choonvegen"
+"uU)suñ komórkê"
+
+# MOVE
+"mM)ove"
+"vV)erschieben"
+"vV)erschuiven"
+"mPrzem)ie¶æ"
+
+# COPY
+"cC)opy"
+"kK)opieren"
+"cC)opieren"
+"kK)opiuj"
+
+# FILL
+"fF)ill"
+"fF)üllen"
+"vV)ullen"
+"yWy)pe³nij"
+
+# MIRROR
+"rMir)ror"
+"sS)piegeln"
+"XXX"
+"lOdwróæ (L)ustro)"
+
+# TOMENU
+"Use F0, F10 or / for menu"
+"F0, F10 oder / für Menü"
+"Gebruik F0, F10 of / voor het menu"
+"F0, F10 lub / - menu g³ówne"
+
+# ABOUT
+"vV)ersion"
+"vV)ersion"
+"vV)ersie"
+"wW)ersja"
+
+# MSHELL
+"sS)hell"
+"sS)hell"
+"sS)hell"
+"oPo)w³oka"
+
+# MGOTO
+"gG)oto"
+"pP)osition"
+"pP)ositie"
+"zPoz)ycja"
+
+# CWIDTH
+"wW)idth"
+"sS)paltenbreite"
+"kK)olombreedte"
+"sS)zeroko¶æ"
+
+# DELETE
+"dD)elete"
+"eE)ntfernen"
+"uU)itvegen"
+"sS)kasuj"
+
+# SORT
+"sS)ort"
+"sS)ortieren"
+"sS)orteren"
+"oSo)rtuj"
+
+# ADDKEY
+"aA)dd key"
+"hTaste h)inzufügen"
+"tT)oets tT)oevoegen"
+"dD)odaj klawisz"
+
+# ASCEND
+"aA)scending"
+"--) aufsteigend"
+"sS)tijgend"
+"rR)osn±co"
+
+# DESCEND
+"dD)escending"
+"++) absteigend"
+"dD)alend"
+"mM)alej±co"
+
+# SORTIT
+"sS)ort region"
+"sBereich s)ortieren"
+"sS)orteren van regio"
+"sS)ortuj zakres"
+
+# WHOLECOL
+"wW)hole column"
+"gG)anze Spalte"
+"gG)ehele kolom"
+"cC)a³± kolumnê"
+
+# WHOLELINE
+"wW)hole line"
+"gG)anze Zeile"
+"gG)ehele regel"
+"cC)a³y wiersz"
+
+# WHOLELAYER
+"wW)hole sheet"
+"gG)anzes Blatt"
+"gG)ehele werkblad"
+"cC)a³y arkusz"
+
+# SINGLECELL
+"sS)ingle cell"
+"eE)inzelne Zelle"
+"eE)en losse cel"
+"pP)ojedyñcz± komórkê"
+
+# BLOCK
+"bB)lock"
+"bB)lock"
+"bB)lok"
+"bB)lok"
+
+# LOADXSHEET
+"Load sheet from XDR file:"
+"Arbeitsblatt als XDR Datei laden:"
+"Inlezen werkblad uit XDR-bestand:"
+"Wczytaæ arkusz z pliku XDR:"
+
+# LOADPSHEET
+"Load sheet from ASCII file:"
+"Arbeitsblatt als ASCII Datei laden:"
+"Inlezen werkblad uit ASCII-bestand:"
+"Wczytaæ arkusz z pliku ASCII:"
+
+# LOADCSVSHEET
+"Load sheet from CSV file:"
+"Arbeitsblatt als CSV Datei laden:"
+"Inlezen werkblad uit CSV-bestand:"
+"Wczytaæ arkusz z pliku CSV:"
+
+# LOADSCSHEET
+"Load sheet from SC file:"
+"Arbeitsblatt als SC Datei laden:"
+"Inlezen werkblad uit SC-bestand:"
+"Wczytaæ arkusz z pliku SC:"
+
+# LOADWK1SHEET
+"Load sheet from WK1 file:"
+"Arbeitsblatt als WK1 Datei laden:"
+"Inlezen werkblad uit WK1-bestand:"
+"Wczytaæ arkusz z pliku WK1:"
+
+# SAVEXSHEET
+"Save sheet to XDR file:"
+"Arbeitsblatt als XDR File speichern:"
+"Opslaan werkblad als XDR-bestand:"
+"Zapisaæ arkusz jako plik XDR:"
+
+# WROTECELLS
+"%u cells written"
+"%u Zellen gespeichert"
+"%u cellen opgeslagen"
+"zapisano zawarto¶æ %u komórek"
+
+# SAVEPSHEET
+"Save sheet to ASCII file:"
+"Arbeitsblatt als ASCII File speichern:"
+"Opslaan werkblad als ASCII-bestand:"
+"Zapisaæ arkusz jako plik ASCII:"
+
+# SAVEMENU
+"Save sheet file format:"
+"Format der zu speichernden Datei:"
+"Bestandsformaat om in op te slaan:"
+"Format zapisywanego pliku:"
+
+# LOADMENU
+"Load sheet file format:"
+"Format der zu ladenden Datei:"
+"Bestandsformaat om in te lezen:"
+"Format wczytywanego pliku:"
+
+# NAMESHEET
+"New file name:"
+"Neuer Dateiname:"
+"Nieuwe bestandsnaam:"
+"Nowa nazwa pliku:"
+
+# FILERMENU
+"File:"
+"Datei:"
+"Bestand:"
+"Plik:"
+
+# LOADANYWAY
+"Sheet modified, load new file anyway?"
+"Das Arbeitsblatt ist verändert, trotzdem eine neue Datei laden?"
+"Het werkblad is veranderd. Toch een nieuw bestand inlezen?"
+"Bie¿±cy arkusz zmodyfikowano - jednak wczytaæ nowy plik?"
+
+# LEAVE
+"Sheet modified, leave anyway?"
+"Das Arbeitsblatt ist verändert, trotzdem beenden?"
+"Het werkblad is veranderd. Toch eindigen?"
+"Bie¿±cy arkusz zmodyfikowano - koñczyæ bez zapisu?"
+
+# MAINMENU
+"Main menu:"
+"Hauptmenü:"
+"Hoofdmenu:"
+"Menu g³ówne:"
+
+# COLWIDTH
+"Column width:"
+"Spaltenbreite:"
+"Kolombreedte"
+"Szeroko¶æ kolumny:"
+
+# CELLATTR
+"Cell attribute:"
+"Zellenattribute:"
+"Celattribuut:"
+"Atrybuty komórki:"
+
+# SHADOWCELL
+"Shadow cell:"
+"Zelle verdecken:"
+"Cel bedekken:"
+"Ukryj komórkê:"
+
+# TRANSCELL
+"Make cell transparent:"
+"Sonderzeichen in dieser Zelle ausgeben:"
+"Cel transparant maken:"
+"Nadaæ komórce przejrzysto¶æ:"
+
+# TRANSCUBE
+"Make block transparent:"
+"Sonderzeichen in diesem Block ausgeben:"
+"Blok transparant maken:"
+"Nadaæ blokowi przejrzysto¶æ:"
+
+# CONTENTS
+"Cell contents:"
+"Zelleninhalt:"
+"Celinhoud:"
+"Zawarto¶æ komórki:"
+
+# CCONTENTS
+"Clocked cell contents:"
+"Getakteter Zelleninhalt:"
+"Geklokte celinhoud:"
+"Zawarto¶æ komórki taktowanej:"
+
+# GOTO
+"Go to location:"
+"Cursor auf Position:"
+"Cursor op positie:"
+"Przejd¼ na pozycjê:"
+
+# LOCBOO
+"Not a valid location"
+"Keine gültige Position"
+"Geen geldige positie"
+"¬le okre¶lona pozycja"
+
+# SHADOWBOO
+"You can not shadow cells in column 0"
+"Zellen in Spalte 0 können nicht verdeckt werden"
+"Cellen in kolom 0 kunnen niet bedekt worden"
+"Niemo¿liwe ukrycie komórek z kolumny 0"
+
+# WHAT
+"Unknown batch command:"
+"Unbekannter Batch-Befehl:"
+"Onbekend batch-commando:"
+"Nierozpoznany rozkaz trybu wsadowego:"
+
+# PRECCELL
+"Precision for cell:"
+"Genauigkeit der Zelle:"
+"Precisie voor de cel:"
+"Dok³adno¶æ w komórce:"
+
+# PRECBLOCK
+"Precision for block:"
+"Genauigkeit des Blocks:"
+"Precisie voor het blok:"
+"Dok³adno¶æ w bloku:"
+
+# SAVETEXTF
+"Save in plain text format to file:"
+"Speichere Datei im Text-Format:"
+"Opslaan in tekstformaat in bestand:"
+"Zapisz jako czysty tekst w pliku:"
+
+# SAVECSVF
+"Save in CSV format to file:"
+"Speichere Datei im CSV-Format:"
+"Opslaan in CSV-formaat in bestand:"
+"Zapisz w formacie CSV w pliku:"
+
+# SAVETBLF
+"Save in tbl format to file:"
+"Speichere Datei im tbl-Format:"
+"Opslaan in tbl-formaat in bestand:"
+"Zapisz w formacie tbl w pliku:"
+
+# SAVELATEXF
+"Save in LaTeX format to file:"
+"Speichere Datei im LaTex-Format:"
+"Opslaan in LaTeX-formaat in bestand:"
+"Zapisz w formacie LaTeX w pliku:"
+
+# SAVEHTMLF
+"Save in HTML format to file:"
+"Speichere Datei im HTML-Format:"
+"Opslaan in HTML-formaat in bestand:"
+"Zapisz w formacie HTML w pliku:"
+
+# SAVECONTEXTF
+"Save in ConTeXt format to file:"
+"Speichere Datei im ConTeXt-Format:"
+"Opslaan in ConTeXt-formaat in bestand:"
+"Zapisz w formacie ConTeXt w pliku:"
+
+# BLOCKATTR
+"Block attribute:"
+"Block Attribut:"
+"Blokattribuut:"
+"Atrybut bloku:"
+
+# CLEARBLOCK
+"Clear block:"
+"Block löschen:"
+"Blok uitvegen:"
+"Wyczy¶æ blok:"
+
+# CLEARCELL
+"Clear cell:"
+"Zelle löschen:"
+"Cel uitvegen:"
+"Wyczy¶æ komórkê:"
+
+# SHADOWCUBE
+"Shadow block:"
+"Block verdecken:"
+"Blok bedekken:"
+"Ukryj blok:"
+
+# INSERTBLOCK
+"Insert:"
+"Einfügen:"
+"Invoegen:"
+"Wstaw:"
+
+# DELETEBLOCK
+"Delete:"
+"Entfernen:"
+"Uitvegen:"
+"Usuñ:"
+
+# MODIFYCELL
+"Edit cell:"
+"Zelle editieren:"
+"Cel aanpassen:"
+"Edycja zawarto¶ci komórki:"
+
+# LOCKCELL
+"Lock cell:"
+"Zelle schützen:"
+"Cel blokkeren:"
+"Zabezpiecz komórkê:"
+
+# LOCKBLOCK
+"Lock block:"
+"Block schützen:"
+"Blok blokkeren:"
+"Zabezpiecz blok:"
+
+# IGNCELL
+"Ignore cell value:"
+"Wert der Zelle ignorieren:"
+"Waarde van de cel negeren:"
+"Zignoruj zawarto¶æ komórki:"
+
+# IGNBLOCK
+"Ignore values of all cells in this block:"
+"Werte aller Zellen des Blockes ignorieren:"
+"Waardes van alle cellen in dit blok negeren:"
+"Zignoruj zawarto¶ci wszystkich komórek bloku:"
+
+# DOLABEL
+"Cell label:"
+"Zellen Marke:"
+"Cel label:"
+"Etykieta komórki:"
+
+# MOVEBLOCK
+"Move block:"
+"Block verschieben:"
+"Blok verschuiven:"
+"Przemie¶æ blok:"
+
+# NOMARK
+"No block marked"
+"Kein Block markiert"
+"Geen blok aangegeven"
+"Nie zaznaczono bloku"
+
+# COPYBLOCK
+"Copy block:"
+"Block kopieren:"
+"Blok copieren:"
+"Kopiuj blok:"
+
+# FILLBLOCK
+"Fill block:"
+"Block füllen:"
+"Blok vullen:"
+"Wype³nij blok:"
+
+# FILLCOLS
+"Number of column-wise repetitions:"
+"Anzahl der spaltenweisen Wiederholungen:"
+"Aantal kolomgewijze herhalingen:"
+"Ilo¶æ powtórzeñ kolumnami:"
+
+# FILLROWS
+"Number of row-wise repetitions:"
+"Anzahl der zeilenweisen Wiederholungen:"
+"Aantal regelgewijze herhalingen:"
+"Ilo¶æ powtórzeñ wierszami:"
+
+# FILLLAYERS
+"Number of depth-wise repetitions:"
+"Anzahl der Wiederholungen in die Tiefe:"
+"Aantal herhalingen in de diepte:"
+"Ilo¶æ powtórzeñ g³êboko¶ciami:"
+
+# SORTBLOCK
+"Sort block:"
+"Block sortieren:"
+"Blok sorteren:"
+"Sortowanie bloku:"
+
+# XPOS
+"X position of key vector:"
+"X-Position der Schlüsselvektoren:"
+"X-positie van de sleutelvector:"
+"Pozycja X wektora-klucza:"
+
+# YPOS
+"Y position of key vector:"
+"Y-Position der Schlüsselvektoren:"
+"Y-positie van de sleutelvector:"
+"Pozycja Y wektora-klucza:"
+
+# ZPOS
+"Z position of key vector:"
+"Z-Position der Schlüsselvektoren:"
+"Z-positie van de sleutelvector:"
+"Pozycja Z wektora-klucza:"
+
+# MIRRORBLOCK
+"Mirror block:"
+"Block spiegeln:"
+"Blok XXX:"
+"Odwróæ blok (lustro):"
+
+# LEFTRIGHT
+"lL)eft-right"
+"lL)inks-rechts"
+"XXX"
+"lL)ewo-prawo"
+
+# UPSIDEDOWN
+"uU)pside-down"
+"oO)ben-unten"
+"XXX"
+"gG)óra-dó³"
+
+# FRONTBACK
+"fF)ront-back"
+"vV)orn-hinten"
+"XXX"
+"pP)rzód-ty³"
+
+# STANDALONE
+"Save as stand-alone document:"
+"Speicher als alleinstehendes Dokument:"
+"Opslaan als losstaand document:"
+"Zapisz jako dokument samodzielny:"
+
+# BLOCKMENU
+"Block menu:"
+"Block Menü:"
+"Blokmenu:"
+"Menu operacji na blokach:"
+
+# NOSHADOW
+"Shadowed cells in first column"
+"Verdeckte Zellen in der ersten Spalte"
+"Bedekte cellen in de eerste kolom"
+"Ilo¶æ ukrytych komórek pierwszej kolumny"
+
+# INVALPRECISION
+"teapot: precision must be between 0 and %d.\n"
+"teapot: Die Genauigkeit muß zwischen 0 und %d liegen.\n"
+"teapot: De nauwkeurigheid moet tussen 0 en %d zijn.\n"
+"teapot: dok³adno¶æ musi zawieraæ siê pomiêdzy 0 a %d.\n"
+
+# USAGE_ERROR
+"Usage: error(string message)"
+"Aufruf: error(Zeichenkette Nachricht)"
+"Gebruik: error(letterrij bericht)"
+"Wywo³anie: error(³añcuch znakowy informacji)"
+
+# USAGE_ADR
+"Usage: &([integer x][,[integer y][,[integer z]]])"
+"Aufruf: &([Ganzzahl x][,[Ganzzahl y][,[Ganzzahl z]]])"
+"Gebruik: &([integer x][,[integer y][,[integer z]]])"
+"Wywo³anie: &([l.ca³kowita x][,[l.ca³kowita y][,[l.ca³kowita z]]])"
+
+# USAGE_AT
+"Usage: @([integer x][,[integer y][,[integer z]]]) or @(location)"
+"Aufruf: @([Ganzzahl x][,[Ganzzahl y][,[Ganzzahl z]]]) oder @(Position)"
+"Gebruik: @([integer x][,[integer y][,[integer z]]]) of @(positie)"
+"Wywo³anie: @([l.ca³kowita x][,[l.ca³k. y][,[l.ca³k. z]]]) albo @(pozycja)"
+
+# XTYPE
+"Usage: x([location])"
+"Aufruf: x([Position])"
+"Gebruik: x([positie])"
+"Wywo³anie: x([pozycja])"
+
+# YTYPE
+"Usage: y([location])"
+"Aufruf: y([Position])"
+"Gebruik: y([positie])"
+"Wywo³anie: y([pozycja])"
+
+# ZTYPE
+"Usage: z([location])"
+"Aufruf: z([Position])"
+"Gebruik: z([positie])"
+"Wywo³anie: z([pozycja])"
+
+# STRINGTYPE
+"Usage: string(location) or string(float[,[integer][,integer]])"
+"Aufruf: string(Position) oder string(Fließkommazahl[,[Ganzzahl][,Ganzzahl]])"
+"Gebruik: string(positie) of string(float[,[integer][,integer]])"
+"Wywo³anie: string(pozycja) oder string(l.zmiennoprz.[,[l.ca³k.][,l.ca³k.]])"
+
+# SUMTYPE
+"Usage: sum(location,location)"
+"Aufruf: sum(Position,Position)"
+"Gebruik: sum(positie,positie)"
+"Wywo³anie: sum(pozycja,pozycja)"
+
+# NTYPE
+"Usage: n(location,location)"
+"Aufruf: n(Position,Position)"
+"Gebruik: n(positie,positie)"
+"Wywo³anie: n(pozycja,pozycja)"
+
+# INTTYPE
+"Usage: int(float[,integer,integer])"
+"Aufruf: int(Fließkommazahl[,Ganzzahl,Ganzzahl])"
+"Gebruik: int(float[,integer,integer])"
+"Wywo³anie: int(l.zmiennoprzecinkowa[,l.ca³kowita,l.ca³kowita])"
+
+# FRACTYPE
+"Usage: frac(float)"
+"Aufruf: frac(Fließkommazahl)"
+"Gebruik: frac(float)"
+"Wywo³anie: frac(l.zmiennoprzecinkowa)"
+
+# LENTYPE
+"Usage: len(string)"
+"Aufruf: len(Zeichenkette)"
+"Gebruik: len(letterrij)"
+"Wywo³anie: len(³añcuch znakowy)"
+
+# MINTYPE
+"Usage: min(location,location)"
+"Aufruf: min(Position,Position)"
+"Gebruik: min(positie,positie)"
+"Wywo³anie: min(pozycja,pozycja)"
+
+# MAXTYPE
+"Usage: max(location,location)"
+"Aufruf: max(Position,Position)"
+"Gebruik: max(positie,positie)"
+"Wywo³anie: max(pozycja,pozycja)"
+
+# ABSTYPE
+"Usage: abs(float|integer)"
+"Aufruf: abs(Fließkommazahl|Ganzzahl)"
+"Gebruik: abs(float|integer)"
+"Wywo³anie: abs(l.zmiennoprzecinkowa|l.ca³kowita)"
+
+# USAGE_EVAL
+"Usage: eval(location)"
+"Aufruf: eval(Position)"
+"Gebruik: eval(positie)"
+"Wywo³anie: eval(pozycja)"
+
+# USAGE_ENV
+"Usage: $(string)"
+"Aufruf: $(Zeichenkette)"
+"Gebruik: $(letterrij)"
+"Wywo³anie: $(³añcuch znakowy)"
+
+# FLOATTYPE
+"Usage: float(string)"
+"Aufruf: float(Zeichenkette)"
+"Gebruik: float(letterrij)"
+"Wywo³anie: float(³añcuch znakowy)"
+
+# STRFTIMETYPE
+"Usage: strftime(string[,integer])"
+"Aufruf: strftime(Zeichenkette[,Ganzzahl])"
+"Gebruik: strftime(letterrij[,integer])"
+"Wywo³anie: strftime(³añcuch znakowy[,l.ca³kowita])"
+
+# CLOCK
+"Usage: clock(condition,location[,location])"
+"Aufruf: clock(Bedingung,Position[,Position])"
+"Gebruik: clock(conditie,positie[,positie])"
+"Wywo³anie: clock(warunek,pozycja[,pozycja])"
+
+# POLYTYPE
+"Usage: poly(float|integer,float|integer,...)"
+"Aufruf: poly(Fließkommazahl|Ganzzahl,Fließkommazahl|Ganzzahl,...)"
+"Gebruik: poly(float|integer,float|integer,...)"
+"Wywo³anie: poly(l.zmiennoprzecinkowa|l.ca³kowita,l.zmiennoprz.|l.ca³k.,...)"
+
+# ETYPE
+"Usage: e()"
+"Aufruf: e()"
+"Gebruik: e()"
+"Wywo³anie: e()"
+
+# LOGTYPE
+"Usage: log(float[,float])"
+"Aufruf: log(Fließkommazahl[,Fließkommazahl])"
+"Gebruik: log(float[,float])"
+"Wywo³anie: log(l.zmiennoprzecinkowa[,l.zmiennoprzecinkowa])"
+
+# WRONGTYPE
+"Usage: %s(float)"
+"Aufruf: %s(Fließkommazahl)"
+"Gebruik: %s(float)"
+"Wywo³anie: %s(l.zmiennoprzecinkowa)"
+
+# USAGE_RND
+"Usage: rnd()"
+"Aufruf: rnd()"
+"Gebruik: rnd()"
+"Wywo³anie: rnd()"
+
+# USAGE_SUBSTR
+"Usage: substr(string,integer,integer)"
+"Aufruf: substr(Zeichenkette,Ganzzahl,Ganzzahl)"
+"Gebruik: substr(letterrij,integer,integer)"
+"Wywo³anie: substr(³añcuch znakowy,l.ca³kowita,l.ca³kowita)"
+
+# STRPTIMETYPE
+"Usage: strptime(string,string)"
+"Aufruf: strptime(Zeichenkette,Zeichenkette)"
+"Gebruik: strptime(letterrij,letterrij)"
+"Wywo³anie: strptime(³añcuch znakowy,³añcuch znakowy)"
+
+# USAGE_TIME
+"Usage: time()"
+"Aufruf: time()"
+"Gebruik: time()"
+"Wywo³anie: time()"
+
+eof

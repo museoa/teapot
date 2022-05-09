@@ -1,0 +1,15 @@
+#!/bin/sh
+
+sed -e 's|\\\*V|<var>|g
+s|\\\*v|</var>|g
+s|\\\*C|<code>|g
+s|\\\*c|</code>|g
+s|\\\*A\(.*\)\\\*a|<a href="\1">\1</a>|g
+s|\\\*E|<em>|g
+s|\\\*e|</em>|g
+s|\\\*K|<kbd>|g
+s|\\\*k|</kbd>|g
+s|\\-|-|g
+s|\\(en|-|g
+s|\\&||g
+s|\\\*F||g'

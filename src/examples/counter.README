@@ -1,0 +1,3 @@
+This sheet shows how to use clock() to model a counter which
+automatically counts up to 1000 once the sheet gets clocked with
+control-s.
