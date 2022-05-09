@@ -1,0 +1,12 @@
+/* configuration values */
+
+
+#define VERSION "@Teapot_VERSION_MAJOR@.@Teapot_VERSION_MINOR@.@Teapot_VERSION_PATCH@"
+
+#define HELPFILE "@HELPFILE@"
+
+#cmakedefine ENABLE_HELP
+#cmakedefine CURSES_HAVE_CURSES_H
+#cmakedefine CURSES_HAVE_NCURSES_H
+#cmakedefine CURSES_HAVE_NCURSES_NCURSES_H
+#cmakedefine CURSES_HAVE_NCURSES_CURSES_H

@@ -19,7 +19,7 @@
 extern double strtod(const char *nptr, char **endptr); /* SunOS 4 hack */
 #include <string.h>
 
-#include "cat.h"
+
 #include "default.h"
 #include "func.h"
 #include "main.h"
@@ -343,7 +343,7 @@ void print(char *s, size_t size, int star, int quote, int scientific, int precis
     /* EEK */ /*{{{*/
     case EEK:
     {
-      (void)strncpy(s+cur,OHWELL,size-cur-1);
+      (void)strncpy(s+cur,_("ERROR"),size-cur-1);
       cur+=5;
       break;
     }

@@ -1,8 +1,21 @@
-At first, check if your system is listed in the Makefile variable
-settings.  If so, uncomment it, everything should work and you can skip
-the next paragraph.
+The new build system uses CMake (http://www.cmake.org). It handles
+all platform differences.
 
-Before you can install teapot, you will have to make sure your system
+See the README for required third-party libraries.
+
+The documentation can only be built if you have latex2html (version
+2008), pdflatex and lyx installed. If you don't, turn off the
+ENABLE_HELP option (using the ccmake command or any other CMake
+frontend).
+
+Note that the GUI version definitely needs FLTK-1.3, so you may need
+to download and build an SVN snapshot. SVN r7704 was used for development.
+You MUST use CMake to configure FLTK, not "./configure". You don't need
+to install it, as FLTK is so small that statically linking it (the default)
+is safe. If you don't install FLTK, set the path to your FLTK directory
+ using ccmake.
+
+For the console version, you will have to make sure your system
 offers a SYSV compatible curses.  You can check that you do by looking
 at its include file curses.h; it should e.g. contain KEY_ macros.  If you
 have a system which contains BSD and SYSV curses libraries, make sure (by
@@ -13,18 +26,3 @@ correctly and you get corrupted screen output.  Since version 4 makes
 it easy to be built as shared (ELF) library, this can reduce the size
 of the teapot binary considerably.
 
-To use a different language than English, change the symlink cat.h to
-point to the cat-*.h file you want to use and recompile teapot.  That way,
-you get a different default language.  I can't give you hints on how
-to use message catalogs, as this differs a lot from system to system.
-In particular, the Linux libc 5.x breaks message catalogs by always
-expanding %L to C in NLSPATH.  Either you don't use NLSPATH and put the
-message catalog in a default location searched by the library or you
-don't use %L.
-
-Check the Makefile for FLTK-related settings. If you want to use the
-built-in help browser, adjust the help file path according to its
-installed location. You need FLTK 1.3, and the code was developed and
-tested with SVN r7704.
-
-Michael

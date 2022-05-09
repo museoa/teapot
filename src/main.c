@@ -17,7 +17,6 @@
 #include <float.h>
 #include <limits.h>
 #include <locale.h>
-#include <nl_types.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,7 +26,7 @@ int getopt(int argc, char * const *argv, const char *optstring);
 #include <string.h>
 #include <unistd.h>
 
-#include "cat.h"
+
 #include "default.h"
 #include "display.h"
 #include "eval.h"
@@ -41,11 +40,10 @@ int getopt(int argc, char * const *argv, const char *optstring);
 #include "parser.h"
 #include "sheet.h"
 #include "wk1.h"
-#include "version.h"
 /*}}}*/
 
 /* variables */ /*{{{*/
-nl_catd catd;
+char helpfile[PATH_MAX];
 int batch=0;
 unsigned int batchln=0;
 int def_precision=DEF_PRECISION;
@@ -174,9 +172,9 @@ int doanyway(Sheet *sheet, const char *msg)
 {
   int result;
   
-  if (sheet->changed)
-  {
+  if (sheet->changed) {
     result=line_ok(msg,0);
+    if (result < 0) return 0;
     return result;
   }
   return 1;
@@ -194,7 +192,7 @@ static int do_edit(Sheet *cursheet, Key c, const char *expr, int clocked)
   Token **t;
   /*}}}*/
     
-  if (locked(cursheet,cursheet->curx,cursheet->cury,cursheet->curz)) line_msg(MODIFYCELL,ISLOCKED);
+  if (locked(cursheet,cursheet->curx,cursheet->cury,cursheet->curz)) line_msg(_("Edit cell:"),_("Cell is locked"));
   else
   {
     curx=cursheet->curx;
@@ -204,7 +202,7 @@ static int do_edit(Sheet *cursheet, Key c, const char *expr, int clocked)
     {
       s=expr;
       t=scan(&s);
-      if (*s!='\0' && t==(Token**)0) line_msg(clocked ? CCONTENTS : CONTENTS,"XXX invalid expression");
+      if (*s!='\0' && t==(Token**)0) line_msg(clocked ? _("Clocked cell contents:") : _("Cell contents:"),"XXX invalid expression");
     }
     else
     {
@@ -226,6 +224,13 @@ static int do_edit(Sheet *cursheet, Key c, const char *expr, int clocked)
         memmove(buf,buf+1,strlen(buf));
         s=buf;
       }
+      else if (isalpha(c))
+      {
+        buf[0] = '"';
+        buf[1] = c;
+        buf[2] = 0;
+        s=buf+2;
+      }
       else
       {
         if (c < 256) buf[0]=c;
@@ -238,8 +243,12 @@ static int do_edit(Sheet *cursheet, Key c, const char *expr, int clocked)
         int r;
 
         x=s-buf;
-        if ((r=line_edit(cursheet,buf,sizeof(buf),clocked ? CCONTENTS : CONTENTS,&x,&offx))<0) return r;
+        if ((r=line_edit(cursheet,buf,sizeof(buf),clocked ? _("Clocked cell contents:") : _("Cell contents:"),&x,&offx))<0) return r;
         s=buf;
+		if (buf[0] == '"' && buf[strlen(buf)-1] != '"' && strlen(buf)+1 < sizeof(buf)) {
+			buf[strlen(buf)+1] = 0;
+			buf[strlen(buf)] = '"';
+		}
         t=scan(&s);
       } while (*s!='\0' && t==(Token**)0);
     }
@@ -263,7 +272,7 @@ static int do_label(Sheet *sheet)
   /*}}}*/
 
   assert(sheet!=(Sheet*)0);
-  if (sheet->mark1x==-1 && locked(sheet,sheet->curx,sheet->cury,sheet->curz)) line_msg(DOLABEL,ISLOCKED);
+  if (sheet->mark1x==-1 && locked(sheet,sheet->curx,sheet->cury,sheet->curz)) line_msg(_("Cell label:"),_("Cell is locked"));
   else
   {
     get_mark(sheet, &x1, &x2, &y1, &y2, &z1, &z2, 0);
@@ -272,7 +281,7 @@ static int do_label(Sheet *sheet)
     (void)strcpy(oldlabel,buf);
     do
     {
-      if ((c=line_idedit(buf,sizeof(buf),DOLABEL,&edx,&offx))<0) return c;
+      if ((c=line_idedit(buf,sizeof(buf),_("Cell label:"),&edx,&offx))<0) return c;
       if (buf[0]=='\0') ok=1;
       else
       {
@@ -299,7 +308,7 @@ static int do_columnwidth(Sheet *cursheet)
   offx=0;
   edx=0;
   n=columnwidth(cursheet,cursheet->curx,cursheet->curz);
-  do if ((c=line_numedit(&n,COLWIDTH,&edx,&offx))<0) return c; while (n<=0);
+  do if ((c=line_numedit(&n,_("Column width:"),&edx,&offx))<0) return c; while (n<=0);
   if (cursheet->mark1x==-1)
   /* range is the current cell */ /*{{{*/
   {
@@ -332,7 +341,7 @@ static void do_attribute(Sheet *cursheet, Key action)
 
   if (action != ADJUST_LOCK && cursheet->mark1x==-1 &&  action != ADJUST_LOCK && locked(cursheet,cursheet->curx,cursheet->cury,cursheet->curz))
   {
-    line_msg(CELLATTR,ISLOCKED);
+    line_msg(_("Cell attribute:"),_("Cell is locked"));
     return;
   }
   switch ((int)action)
@@ -381,7 +390,7 @@ static void do_attribute(Sheet *cursheet, Key action)
       offx=0;
       ex=0;
       n=getprecision(cursheet,x1,y1,z1);
-      do if (line_numedit(&n,cursheet->mark1x==-1 ? PRECCELL : PRECBLOCK,&ex,&offx)==-1) return; while (n!=-1 && (n==0 || n>20));
+      do if (line_numedit(&n,cursheet->mark1x==-1 ? _("Precision for cell:") : _("Precision for block:"),&ex,&offx)==-1) return; while (n!=-1 && (n==0 || n>20));
       for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z) setprecision(cursheet,x,y,z,n);
       break;
     }
@@ -391,7 +400,7 @@ static void do_attribute(Sheet *cursheet, Key action)
     {
       int n;
     
-      if ((n=line_ok(cursheet->mark1x==-1 ? SHADOWCELL : SHADOWCUBE,shadowed(cursheet,x1,y1,z1)))!=-1)
+      if ((n=line_ok(cursheet->mark1x==-1 ? _("Shadow cell:") : _("Shadow block:"),shadowed(cursheet,x1,y1,z1)))!=-1)
       {          
         for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z)
         {
@@ -401,7 +410,7 @@ static void do_attribute(Sheet *cursheet, Key action)
           else if (x>0) shadow(cursheet,x,y,z,1);
         }
       }
-      if (x1==0 && n==1) line_msg(SHADOWCELL,SHADOWBOO);
+      if (x1==0 && n==1) line_msg(_("Shadow cell:"),_("You can not shadow cells in column 0"));
       break;
     }
     /*}}}*/
@@ -410,7 +419,7 @@ static void do_attribute(Sheet *cursheet, Key action)
     {
       int n;
     
-      if ((n=line_ok(cursheet->mark1x==-1 ? TRANSCELL : TRANSCUBE,transparent(cursheet,x1,y1,z1)))!=-1)
+      if ((n=line_ok(cursheet->mark1x==-1 ? _("Make cell transparent:") : _("Make block transparent:"),transparent(cursheet,x1,y1,z1)))!=-1)
       for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z) maketrans(cursheet,x,y,z,n);
       break;
     }
@@ -427,7 +436,7 @@ static void do_attribute(Sheet *cursheet, Key action)
     {
       int n;
     
-      if ((n=line_ok(cursheet->mark1x==-1 ? LOCKCELL : LOCKBLOCK,locked(cursheet,x1,y1,z1)))==-1) c=-1;
+      if ((n=line_ok(cursheet->mark1x==-1 ? _("Lock cell:") : _("Lock block:"),locked(cursheet,x1,y1,z1)))==-1) c=-1;
       else if (n!=-1) for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z) lockcell(cursheet,x,y,z,n);
       break;
     }
@@ -437,7 +446,7 @@ static void do_attribute(Sheet *cursheet, Key action)
     {
       int n;
     
-      if ((n=line_ok(cursheet->mark1x==-1 ? IGNCELL : IGNBLOCK,ignored(cursheet,x1,y1,z1)))==-1) c=-1;
+      if ((n=line_ok(cursheet->mark1x==-1 ? _("Ignore cell value:") : _("Ignore values of all cells in this block:"),ignored(cursheet,x1,y1,z1)))==-1) c=-1;
       else for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z) igncell(cursheet,x,y,z,n);
       break;
     }
@@ -458,7 +467,7 @@ static void do_attribute(Sheet *cursheet, Key action)
 /* do_savexdr     -- save sheet as XDR file */ /*{{{*/
 static int do_savexdr(Sheet *cursheet, const char *name)
 {
-  char buf[_POSIX_PATH_MAX];
+  char buf[PATH_MAX];
   const char *msg;
   unsigned int count;
 
@@ -472,38 +481,38 @@ static int do_savexdr(Sheet *cursheet, const char *name)
   }
 
   if ((msg = savexdr(cursheet, name, &count))) {
-    line_msg(SAVEXSHEET, msg);
+    line_msg(_("Save sheet to XDR file:"), msg);
     return -2;
   }
 
-  snprintf(buf, sizeof(buf), WROTECELLS, count);
-  if (!batch) line_msg(SAVEXSHEET,buf);
+  snprintf(buf, sizeof(buf), _("%u cells written"), count);
+  if (!batch) line_msg(_("Save sheet to XDR file:"),buf);
   return -1;
 }
 /*}}}*/
 /* do_saveport    -- save sheet as portable ASCII file */ /*{{{*/
 static int do_saveport(Sheet *cursheet, const char *name)
 {
-  char buf[_POSIX_PATH_MAX];
+  char buf[PATH_MAX];
   const char *msg;
   unsigned int count;
 
   if (!name) name = cursheet->name;
 
   if ((msg = saveport(cursheet, name, &count))) {
-    line_msg(SAVEPSHEET,msg);
+    line_msg(_("Save sheet to ASCII file:"),msg);
     return -2;
   }
 
-  snprintf(buf, sizeof(buf), WROTECELLS, count);
-  if (!batch) line_msg(SAVEPSHEET,buf);
+  snprintf(buf, sizeof(buf), _("%u cells written"), count);
+  if (!batch) line_msg(_("Save sheet to ASCII file:"),buf);
   return -1;
 }
 /*}}}*/
 /* do_savetbl     -- save sheet as tbl file */ /*{{{*/
 static int do_savetbl(Sheet *cursheet, const char *name)
 {
-  char buf[_POSIX_PATH_MAX];
+  char buf[PATH_MAX];
   const char *msg;
   int standalone=0;
   int x1,y1,z1,x2,y2,z2;
@@ -512,23 +521,23 @@ static int do_savetbl(Sheet *cursheet, const char *name)
   get_mark(cursheet, &x1, &x2, &y1, &y2, &z1, &z2, 1);
   if (!name) {
     name = cursheet->name;
-    if ((standalone=line_ok(STANDALONE,1))<0) return standalone;
+    if ((standalone=line_ok(_("Save as stand-alone document:"),1))<0) return standalone;
   }
 
   if ((msg = savetbl(cursheet, name, !standalone, x1, y1, z1, x2, y2, z2, &count))) {
-    line_msg(SAVETBLF,msg);
+    line_msg(_("Save in tbl format to file:"),msg);
     return -2;
   }
 
-  snprintf(buf, sizeof(buf), WROTECELLS, count);
-  if (!batch) line_msg(SAVETBLF, buf);
+  snprintf(buf, sizeof(buf), _("%u cells written"), count);
+  if (!batch) line_msg(_("Save in tbl format to file:"), buf);
   return -1;
 }
 /*}}}*/
 /* do_savelatex   -- save sheet as LaTeX file */ /*{{{*/
 static int do_savelatex(Sheet *cursheet, const char *name)
 {
-  char buf[_POSIX_PATH_MAX];
+  char buf[PATH_MAX];
   const char *msg;
   int standalone=0;
   int x1,y1,z1,x2,y2,z2;
@@ -537,23 +546,23 @@ static int do_savelatex(Sheet *cursheet, const char *name)
   get_mark(cursheet, &x1, &x2, &y1, &y2, &z1, &z2, 1);
   if (!name) {
     name = cursheet->name;
-    if ((standalone=line_ok(STANDALONE,1))<0) return standalone;
+    if ((standalone=line_ok(_("Save as stand-alone document:"),1))<0) return standalone;
   }
 
   if ((msg = savelatex(cursheet, name, !standalone, x1, y1, z1, x2, y2, z2, &count))) {
-    line_msg(SAVELATEXF,msg);
+    line_msg(_("Save in LaTeX format to file:"),msg);
     return -2;
   }
 
-  snprintf(buf, sizeof(buf), WROTECELLS, count);
-  if (!batch) line_msg(SAVELATEXF, buf);
+  snprintf(buf, sizeof(buf), _("%u cells written"), count);
+  if (!batch) line_msg(_("Save in LaTeX format to file:"), buf);
   return -1;
 }
 /*}}}*/
 /* do_savecontext   -- save sheet as ConTeXt file */ /*{{{*/
 static int do_savecontext(Sheet *cursheet, const char *name)
 {
-  char buf[_POSIX_PATH_MAX];
+  char buf[PATH_MAX];
   const char *msg;
   int standalone=0;
   int x1,y1,z1,x2,y2,z2;
@@ -562,23 +571,23 @@ static int do_savecontext(Sheet *cursheet, const char *name)
   get_mark(cursheet, &x1, &x2, &y1, &y2, &z1, &z2, 1);
   if (!name) {
     name = cursheet->name;
-    if ((standalone=line_ok(STANDALONE,1))<0) return standalone;
+    if ((standalone=line_ok(_("Save as stand-alone document:"),1))<0) return standalone;
   }
 
   if ((msg = savecontext(cursheet, name, !standalone, x1, y1, z1, x2, y2, z2, &count))) {
-    line_msg(SAVECONTEXTF,msg);
+    line_msg(_("Save in ConTeXt format to file:"),msg);
     return -2;
   }
 
-  snprintf(buf, sizeof(buf), WROTECELLS, count);
-  if (!batch) line_msg(SAVECONTEXTF, buf);
+  snprintf(buf, sizeof(buf), _("%u cells written"), count);
+  if (!batch) line_msg(_("Save in ConTeXt format to file:"), buf);
   return -1;
 }
 /*}}}*/
 /* do_savehtml    -- save sheet as HTML file */ /*{{{*/
 static int do_savehtml(Sheet *cursheet, const char *name)
 {
-  char buf[_POSIX_PATH_MAX];
+  char buf[PATH_MAX];
   const char *msg;
   int standalone=0;
   int x1,y1,z1,x2,y2,z2;
@@ -587,23 +596,23 @@ static int do_savehtml(Sheet *cursheet, const char *name)
   get_mark(cursheet, &x1, &x2, &y1, &y2, &z1, &z2, 1);
   if (!name) {
     name = cursheet->name;
-    if ((standalone=line_ok(STANDALONE,1))<0) return standalone;
+    if ((standalone=line_ok(_("Save as stand-alone document:"),1))<0) return standalone;
   }
 
   if ((msg = savehtml(cursheet, name, !standalone, x1, y1, z1, x2, y2, z2, &count))) {
-    line_msg(SAVEHTMLF,msg);
+    line_msg(_("Save in HTML format to file:"),msg);
     return -2;
   }
 
-  snprintf(buf, sizeof(buf), WROTECELLS, count);
-  if (!batch) line_msg(SAVEHTMLF, buf);
+  snprintf(buf, sizeof(buf), _("%u cells written"), count);
+  if (!batch) line_msg(_("Save in HTML format to file:"), buf);
   return -1;
 }
 /*}}}*/
 /* do_savetext    -- save sheet as formatted text file */ /*{{{*/
 static int do_savetext(Sheet *cursheet, const char *name)
 {
-  char buf[_POSIX_PATH_MAX];
+  char buf[PATH_MAX];
   const char *msg;
   int x1,y1,z1,x2,y2,z2;
   unsigned int count;
@@ -612,19 +621,19 @@ static int do_savetext(Sheet *cursheet, const char *name)
   if (!name) name = cursheet->name;
 
   if ((msg = savetext(cursheet, name, x1, y1, z1, x2, y2, z2, &count))) {
-    line_msg(SAVETEXTF,msg);
+    line_msg(_("Save in plain text format to file:"),msg);
     return -2;
   }
 
-  snprintf(buf, sizeof(buf), WROTECELLS, count);
-  if (!batch) line_msg(SAVETEXTF, buf);
+  snprintf(buf, sizeof(buf), _("%u cells written"), count);
+  if (!batch) line_msg(_("Save in plain text format to file:"), buf);
   return -1;
 }
 /*}}}*/
 /* do_savecsv     -- save sheet as CSV file */ /*{{{*/
 static int do_savecsv(Sheet *cursheet, const char *name)
 {
-  char buf[_POSIX_PATH_MAX];
+  char buf[PATH_MAX];
   const char *msg;
   int x1,y1,z1,x2,y2,z2;
   unsigned int count;
@@ -636,21 +645,21 @@ static int do_savecsv(Sheet *cursheet, const char *name)
     MenuChoice menu[3];
     name = cursheet->name;
 
-    menu[0].str=mystrmalloc("cC)omma (,)"); menu[0].c='\0';
-    menu[1].str=mystrmalloc("sS)emicolon (;)"); menu[1].c='\0';
-    menu[2].str=mystrmalloc("tT)ab (\\t)"); menu[2].c='\0';
+    menu[0].str=mystrmalloc(_("cC)omma (,)")); menu[0].c='\0';
+    menu[1].str=mystrmalloc(_("sS)emicolon (;)")); menu[1].c='\0';
+    menu[2].str=mystrmalloc(_("tT)ab (\\t)")); menu[2].c='\0';
     menu[3].str=(char*)0;
-    sep=line_menu("Choose separator:",menu,0);
+    sep=line_menu(_("Choose separator:"),menu,0);
     if (sep < 0) return sep;
   }
 
   if ((msg = savecsv(cursheet, name, seps[sep], x1, y1, z1, x2, y2, z2, &count))) {
-    line_msg(SAVECSVF,msg);
+    line_msg(_("Save in CSV format to file:"),msg);
     return -2;
   }
 
-  snprintf(buf, sizeof(buf), WROTECELLS, count);
-  if (!batch) line_msg(SAVECSVF, buf);
+  snprintf(buf, sizeof(buf), _("%u cells written"), count);
+  if (!batch) line_msg(_("Save in CSV format to file:"), buf);
   return -1;
 }
 /*}}}*/
@@ -659,7 +668,7 @@ static int do_loadxdr(Sheet *cursheet)
 {
   const char *msg;
 
-  if ((msg=loadxdr(cursheet,cursheet->name))!=(const char*)0) line_msg(LOADXSHEET,msg);
+  if ((msg=loadxdr(cursheet,cursheet->name))!=(const char*)0) line_msg(_("Load sheet from XDR file:"),msg);
   return -1;
 }
 /*}}}*/
@@ -669,7 +678,7 @@ static int do_loadport(Sheet *cursheet)
   const char *msg;
   /*}}}*/
       
-  if ((msg=loadport(cursheet,cursheet->name))!=(const char*)0) line_msg(LOADPSHEET,msg);
+  if ((msg=loadport(cursheet,cursheet->name))!=(const char*)0) line_msg(_("Load sheet from ASCII file:"),msg);
   return -1;
 }
 /*}}}*/
@@ -678,7 +687,7 @@ static int do_loadsc(Sheet *cursheet)
 {
   const char *msg;
 
-  if ((msg=loadsc(cursheet,cursheet->name))!=(const char*)0) line_msg(LOADSCSHEET,msg);
+  if ((msg=loadsc(cursheet,cursheet->name))!=(const char*)0) line_msg(_("Load sheet from SC file:"),msg);
   return -1;
 }
 /*}}}*/
@@ -687,7 +696,7 @@ static int do_loadwk1(Sheet *cursheet)
 {
   const char *msg;
 
-  if ((msg=loadwk1(cursheet,cursheet->name))!=(const char*)0) line_msg(LOADWK1SHEET,msg);
+  if ((msg=loadwk1(cursheet,cursheet->name))!=(const char*)0) line_msg(_("Load sheet from WK1 file:"),msg);
   return -1;
 }
 /*}}}*/
@@ -696,7 +705,7 @@ static int do_loadcsv(Sheet *cursheet)
 {
   const char *msg;
 
-  if ((msg=loadcsv(cursheet,cursheet->name))!=(const char*)0) line_msg(LOADCSVSHEET,msg);
+  if ((msg=loadcsv(cursheet,cursheet->name))!=(const char*)0) line_msg(_("Load sheet from CSV file:"),msg);
   return -1;
 }
 /*}}}*/
@@ -757,7 +766,7 @@ static int do_name(Sheet *cursheet)
 {
 	const char *name;
 
-	name = line_file(cursheet->name, "teapot (*.tp)\tASCII (*.tpa)\ttbl (*.tbl)\tLaTeX (*.latex)\tHTML (*.html)\tCSV (*.csv)\tPlain Text (*.txt)\tConTeXt (*.tex)", NAMESHEET, 1);
+	name = line_file(cursheet->name, _("Teapot \t*.tp\nTeapot ASCII \t*.tpa\ntbl \t*.tbl\nLaTeX \t*.latex\nHTML \t*.html\nCSV \t*.csv\nFormatted ASCII \t*.txt\nConTeXt \t*.tex"), _("New file name:"), 1);
 	if (!name) return -1;
 
 	if (cursheet->name!=(char*)0) free(cursheet->name);
@@ -770,9 +779,9 @@ static int do_load(Sheet *cursheet)
 {
 	const char *name, *ext;
 
-	if (doanyway(cursheet, LOADANYWAY) != 1) return -1;
+	if (doanyway(cursheet, _("Sheet modified, load new file anyway?")) != 1) return -1;
 
-	name = line_file(cursheet->name, "teapot (*.tp)\tASCII (*.tpa)\tspreadsheet calculator (*.sc)\tLotus 1-2-3 (*.wk1)\tCSV (*.csv)", LOADXSHEET, 0);
+	name = line_file(cursheet->name, _("Teapot \t*.tp\nTeapot ASCII \t*.tpa\nSC Spreadsheet Calculator \t*.sc\nLotus 1-2-3 \t*.wk1\nCSV \t*.csv"), _("Load sheet:"), 0);
 	if (!name) return -1;
 	if (cursheet->name!=(char*)0) free(cursheet->name);
 	cursheet->name=strdup(name);
@@ -796,12 +805,12 @@ static int do_clear(Sheet *sheet)
   int c;
   /*}}}*/
 
-  if (sheet->mark1x==-1 && locked(sheet,sheet->curx,sheet->cury,sheet->curz)) line_msg(CLEARCELL,ISLOCKED);
+  if (sheet->mark1x==-1 && locked(sheet,sheet->curx,sheet->cury,sheet->curz)) line_msg(_("Clear cell:"),_("Cell is locked"));
   else
   {
     if (sheet->mark1x!=-1) 
     {
-      if ((c=line_ok(CLEARBLOCK,0))<0) return c;
+      if ((c=line_ok(_("Clear block:"),0))<0) return c;
       else if (c!=1) return -1;
     }
     get_mark(sheet, &x1, &x2, &y1, &y2, &z1, &z2, 0);
@@ -823,11 +832,11 @@ static int do_insert(Sheet *sheet)
   {
     MenuChoice menu[4];
 
-    menu[0].str=mystrmalloc(INX); menu[0].c='\0';
-    menu[1].str=mystrmalloc(INY); menu[1].c='\0';
-    menu[2].str=mystrmalloc(INZ); menu[2].c='\0';
+    menu[0].str=mystrmalloc(_("cC)olumn")); menu[0].c='\0';
+    menu[1].str=mystrmalloc(_("rR)ow")); menu[1].c='\0';
+    menu[2].str=mystrmalloc(_("dD)epth")); menu[2].c='\0';
     menu[3].str=(char*)0;
-    reply=line_menu(INSERTBLOCK,menu,0);
+    reply=line_menu(_("Insert:"),menu,0);
     free(menu[0].str);
     free(menu[1].str);
     free(menu[2].str);
@@ -845,14 +854,14 @@ static int do_insert(Sheet *sheet)
     /* show menu */ /*{{{*/
     switch (reply)
     {
-      case 0: menu[0].str=mystrmalloc(WHOLECOL); break;
-      case 1: menu[0].str=mystrmalloc(WHOLELINE); break;
-      case 2: menu[0].str=mystrmalloc(WHOLELAYER); break;
+      case 0: menu[0].str=mystrmalloc(_("wW)hole column")); break;
+      case 1: menu[0].str=mystrmalloc(_("wW)hole line")); break;
+      case 2: menu[0].str=mystrmalloc(_("wW)hole sheet")); break;
       default: assert(0);
     }
-    menu[1].str=mystrmalloc(SINGLECELL); menu[1].c='\0';
+    menu[1].str=mystrmalloc(_("sS)ingle cell")); menu[1].c='\0';
     menu[2].str=(char*)0;
-    r=line_menu(INSERTBLOCK,menu,0);
+    r=line_menu(_("Insert:"),menu,0);
     free(menu[0].str);
     free(menu[1].str);
     /*}}}*/
@@ -949,11 +958,11 @@ static int do_delete(Sheet *sheet)
   {
     MenuChoice menu[4];
 
-    menu[0].str=mystrmalloc(INX); menu[0].c='\0';
-    menu[1].str=mystrmalloc(INY); menu[1].c='\0';
-    menu[2].str=mystrmalloc(INZ); menu[2].c='\0';
+    menu[0].str=mystrmalloc(_("cC)olumn")); menu[0].c='\0';
+    menu[1].str=mystrmalloc(_("rR)ow")); menu[1].c='\0';
+    menu[2].str=mystrmalloc(_("dD)epth")); menu[2].c='\0';
     menu[3].str=(char*)0;
-    reply=line_menu(DELETEBLOCK,menu,0);
+    reply=line_menu(_("Delete:"),menu,0);
     free(menu[0].str);
     free(menu[1].str);
     free(menu[2].str);
@@ -971,14 +980,14 @@ static int do_delete(Sheet *sheet)
     /* show menu */ /*{{{*/
     switch (reply)
     {
-      case 0: menu[0].str=mystrmalloc(WHOLECOL); break;
-      case 1: menu[0].str=mystrmalloc(WHOLELINE); break;
-      case 2: menu[0].str=mystrmalloc(WHOLELAYER); break;
+      case 0: menu[0].str=mystrmalloc(_("wW)hole column")); break;
+      case 1: menu[0].str=mystrmalloc(_("wW)hole line")); break;
+      case 2: menu[0].str=mystrmalloc(_("wW)hole sheet")); break;
       default: assert(0);
     }
-    menu[1].str=mystrmalloc(SINGLECELL); menu[1].c='\0';
+    menu[1].str=mystrmalloc(_("sS)ingle cell")); menu[1].c='\0';
     menu[2].str=(char*)0;
-    r=line_menu(DELETEBLOCK,menu,0);
+    r=line_menu(_("Delete:"),menu,0);
     free(menu[0].str);
     free(menu[1].str);
     /*}}}*/
@@ -1071,8 +1080,8 @@ static int do_move(Sheet *sheet, int copy, int force)
   int c;
 
   c=-1;
-  if (sheet->mark1x==-1) line_msg(copy ? COPYBLOCK : MOVEBLOCK,NOMARK);
-  else if (force || (c=line_ok(copy ? COPYBLOCK : MOVEBLOCK,0))==1)
+  if (sheet->mark1x==-1) line_msg(copy ? _("Copy block:") : _("Move block:"),_("No block marked"));
+  else if (force || (c=line_ok(copy ? _("Copy block:") : _("Move block:"),0))==1)
   {
     int x1,y1,z1;
     int x2,y2,z2;
@@ -1096,7 +1105,7 @@ static int do_fill(Sheet *sheet)
   int c;
   /*}}}*/
     
-  if (sheet->mark1x==-1) line_msg(FILLBLOCK,NOMARK);
+  if (sheet->mark1x==-1) line_msg(_("Fill block:"),_("No block marked"));
   else
   {
     get_mark(sheet, &x1, &x2, &y1, &y2, &z1, &z2, 0);
@@ -1104,13 +1113,13 @@ static int do_fill(Sheet *sheet)
     firstmenu:
     offx=0;
     edx=0;
-    do if ((c=line_numedit(&cols,FILLCOLS,&edx,&offx))<0) return c; while (cols<=0);
+    do if ((c=line_numedit(&cols,_("Number of column-wise repetitions:"),&edx,&offx))<0) return c; while (cols<=0);
     secondmenu:
     offx=0;
     edx=0;
     do
     {
-      c=line_numedit(&rows,FILLROWS,&edx,&offx);
+      c=line_numedit(&rows,_("Number of row-wise repetitions:"),&edx,&offx);
       if (c==-1) return -1;
       else if (c==-2) goto firstmenu;
     } while (rows<=0);
@@ -1118,7 +1127,7 @@ static int do_fill(Sheet *sheet)
     edx=0;
     do
     {
-      c=line_numedit(&layers,FILLLAYERS,&edx,&offx);
+      c=line_numedit(&layers,_("Number of depth-wise repetitions:"),&edx,&offx);
       if (c==-1) return -1;
       else if (c==-2) goto secondmenu;
     } while (layers<=0);
@@ -1147,21 +1156,21 @@ static int do_sort(Sheet *sheet)
   get_mark(sheet, &x1, &x2, &y1, &y2, &z1, &z2, 1);
   /*}}}*/
   /* build menues */ /*{{{*/
-  menu1[0].str=mystrmalloc(INX);     menu1[0].c='\0';
-  menu1[1].str=mystrmalloc(INY);     menu1[1].c='\0';
-  menu1[2].str=mystrmalloc(INZ);     menu1[2].c='\0';
+  menu1[0].str=mystrmalloc(_("cC)olumn"));     menu1[0].c='\0';
+  menu1[1].str=mystrmalloc(_("rR)ow"));     menu1[1].c='\0';
+  menu1[2].str=mystrmalloc(_("dD)epth"));     menu1[2].c='\0';
   menu1[3].str=(char*)0;
-  menu2[0].str=mystrmalloc(SORTIT);  menu2[0].c='\0';
-  menu2[1].str=mystrmalloc(ADDKEY);  menu2[1].c='\0';
+  menu2[0].str=mystrmalloc(_("sS)ort region"));  menu2[0].c='\0';
+  menu2[1].str=mystrmalloc(_("aA)dd key"));  menu2[1].c='\0';
   menu2[2].str=(char*)0;
-  menu3[0].str=mystrmalloc(ASCEND);  menu3[0].c='\0';
-  menu3[1].str=mystrmalloc(DESCEND); menu3[0].c='\0';
+  menu3[0].str=mystrmalloc(_("aA)scending"));  menu3[0].c='\0';
+  menu3[1].str=mystrmalloc(_("dD)escending")); menu3[0].c='\0';
   menu3[2].str=(char*)0;
   /*}}}*/
   
   last=-1;
   /* ask for sort direction */ /*{{{*/
-  zero: switch (c=line_menu(SORTBLOCK,menu1,0))
+  zero: switch (c=line_menu(_("Sort block:"),menu1,0))
   {
     /*  0      -- in X */ /*{{{*/
     case 0: in_dir=IN_X; break;
@@ -1193,7 +1202,7 @@ static int do_sort(Sheet *sheet)
       sk[key].x=0;
       do
       {
-        c=line_numedit(&(sk[key].x),XPOS,&x,&offx);
+        c=line_numedit(&(sk[key].x),_("X position of key vector:"),&x,&offx);
         if (c==-1) goto greak;
         else if (c==-2) switch (last)
         {
@@ -1214,7 +1223,7 @@ static int do_sort(Sheet *sheet)
       sk[key].y=0;
       do 
       {
-        c=line_numedit(&(sk[key].y),YPOS,&x,&offx);
+        c=line_numedit(&(sk[key].y),_("Y position of key vector:"),&x,&offx);
         if (c==-1) goto greak;
         else if (c==-2) switch (last)
         {
@@ -1236,7 +1245,7 @@ static int do_sort(Sheet *sheet)
       sk[key].z=0;
       do 
       {
-        c=line_numedit(&(sk[key].z),ZPOS,&x,&offx);
+        c=line_numedit(&(sk[key].z),_("Z position of key vector:"),&x,&offx);
         if (c==-1) goto greak;
         else if (c==-2) switch (last)
         {
@@ -1254,7 +1263,7 @@ static int do_sort(Sheet *sheet)
     /*}}}*/
     /* ask for sort key */ /*{{{*/
     four: sk[key].sortkey=0;
-    switch (c=line_menu(SORTBLOCK,menu3,0))
+    switch (c=line_menu(_("Sort block:"),menu3,0))
     {
       /*  0      -- ascending */ /*{{{*/
       case 0: sk[key].sortkey|=ASCENDING; break;
@@ -1285,14 +1294,14 @@ static int do_sort(Sheet *sheet)
     five:
     if (key==MAX_SORTKEYS) /* ask for sort comfirmation */ /*{{{*/
     {
-      c=line_ok(SORTBLOCK,0);
+      c=line_ok(_("Sort block:"),0);
       if (c==-1) goto greak;
       else if (c==-2) goto four;
       else if (c==0) doit=1;
     }
     /*}}}*/
     else /* ask for sort or adding another key */ /*{{{*/
-    switch (line_menu(SORTBLOCK,menu2,0))
+    switch (line_menu(_("Sort block:"),menu2,0))
     {
       /*       0 -- sort it */ /*{{{*/
       case 0: doit=1; break;
@@ -1312,7 +1321,7 @@ static int do_sort(Sheet *sheet)
     last=5;
   } while (!doit);
   c=-1;
-  if ((msg=sortblock(sheet,x1,y1,z1,x2,y2,z2,in_dir,sk,key))!=(const char*)0) line_msg(SORTBLOCK,msg);
+  if ((msg=sortblock(sheet,x1,y1,z1,x2,y2,z2,in_dir,sk,key))!=(const char*)0) line_msg(_("Sort block:"),msg);
   greak:
   /* free menues */ /*{{{*/
   free((char*)menu1[0].str);
@@ -1367,11 +1376,11 @@ static int do_mirror(Sheet *sheet)
   {
     MenuChoice menu[4];
 
-    menu[0].str=mystrmalloc(LEFTRIGHT); menu[0].c='\0';
-    menu[1].str=mystrmalloc(UPSIDEDOWN); menu[1].c='\0';
-    menu[2].str=mystrmalloc(FRONTBACK); menu[2].c='\0';
+    menu[0].str=mystrmalloc(_("lL)eft-right")); menu[0].c='\0';
+    menu[1].str=mystrmalloc(_("uU)pside-down")); menu[1].c='\0';
+    menu[2].str=mystrmalloc(_("fF)ront-back")); menu[2].c='\0';
     menu[3].str=(char*)0;
-    reply=line_menu(MIRRORBLOCK,menu,0);
+    reply=line_menu(_("Mirror block:"),menu,0);
     free(menu[0].str);
     free(menu[1].str);
     free(menu[2].str);
@@ -1409,7 +1418,7 @@ static int do_goto(Sheet *sheet, const char *expr)
   buf[0]='\0';
   x=offx=0;
   if (expr) strcpy(buf,expr);
-  else if ((c=line_edit(sheet,buf,sizeof(buf),GOTO,&x,&offx))<0) return c;
+  else if ((c=line_edit(sheet,buf,sizeof(buf),_("Go to location:"),&x,&offx))<0) return c;
   s=buf;
   t=scan(&s);
   if (t!=(Token**)0)
@@ -1425,7 +1434,7 @@ static int do_goto(Sheet *sheet, const char *expr)
     if (value.type==LOCATION && value.u.location[0]>=0 && value.u.location[1]>=0 && value.u.location[2]>=0)
 		moveto(sheet,value.u.location[0],value.u.location[1],value.u.location[2]);
     else
-		line_msg(GOTO,LOCBOO);
+		line_msg(_("Go to location:"),_("Not a valid location"));
     tfree(&value);
   }
   return -1;
@@ -1574,18 +1583,22 @@ int do_sheetcmd(Sheet *cursheet, Key c, int moveonly)
     case '.':
     case K_MARK: if (moveonly) break; do_mark(cursheet,0); break;
     /*}}}*/
-    /* SAVEMENU   -- save menu */ /*{{{*/
+    /* _("Save sheet file format:")   -- save menu */ /*{{{*/
     case K_SAVEMENU: if (moveonly) break; do_save(cursheet); break;
     /*}}}*/
-    /* LOADMENU   -- load menu */ /*{{{*/
+    /* _("Load sheet file format:")   -- load menu */ /*{{{*/
     case K_LOAD:
     case K_LOADMENU: if (moveonly) break; do_load(cursheet); break;
     /*}}}*/
-    /* NAME       -- set name */ /*{{{*/
+    /* _("nN)ame")       -- set name */ /*{{{*/
     case K_NAME: if (moveonly) break; do_name(cursheet); break;
     /*}}}*/
-	case K_HELP: show_text(HELPFILE); break;
-	case K_ABOUT: show_text("<html><head><title>About teapot</title></head><body><center><pre>"
+#ifdef ENABLE_HELP
+	case K_HELP: show_text(helpfile); break;
+#else
+	case K_HELP: show_text(_("Sorry, manual is not installed.")); break;
+#endif
+	case K_ABOUT: show_text(_("<html><head><title>About teapot</title></head><body><center><pre>\n\n"
 		"               ` ',`    '  '                   \n"
 		"                `   '  ` ' '                   \n"
 		"                 `' '   '`'                    \n"
@@ -1603,37 +1616,43 @@ int do_sheetcmd(Sheet *cursheet, Key c, int moveonly)
 		"         `::::::::::::::::::::::::::::'        \n"
 		"          `////////////////////////'           \n"
 		"           `:::::::::::::::::::::'             \n"
+		"</pre>\n"
+		"<p>Teapot " VERSION "</p>\n"
 		"\n"
-		"Teapot " VERSION "\n</pre>"
-		"<p>Original version: Michael Haardt<br>"
-		"Current Maintainer: J&ouml;rg Walter<br>"
-		"Home page: <a href='http://www.syntax-k.de/projekte/teapot/'>http://www.syntax-k.de/projekte/teapot/</a></p>"
-		"<p>Copyright 1995-2006 Michael Haardt, 2009-2010 J&ouml;rg Walter &lt;<a href='mailto:info@syntax-k.de'>info@syntax-k.de</a>&gt;</p></center>"
-		"<p>This program is free software: you can redistribute it and/or modify "
-		"it under the terms of the GNU General Public License as published by "
-		"the Free Software Foundation, either version 3 of the License, or "
-		"(at your option) any later version.</p>"
-		"<p>This program is distributed in the hope that it will be useful, "
-		"but WITHOUT ANY WARRANTY; without even the implied warranty of "
-		"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the "
-		"GNU General Public License for more details.</p>"
-		"You should have received a copy of the GNU General Public License "
+		"<p>Original Version: Michael Haardt<br>\n"
+		"Current Maintainer: Joerg Walter<br>\n"
+		"Home Page: <a href='http://www.syntax-k.de/projekte/teapot/'>http://www.syntax-k.de/projekte/teapot/</a></p>\n"
+		"\n"
+		"<p>Copyright 1995-2006 Michael Haardt,<br>\n"
+		"Copyright 2009-2010 Joerg Walter (<a href='mailto:info@syntax-k.de'>info@syntax-k.de</a>)</p></center>\n"
+		"\f"
+		"<p>This program is free software: you can redistribute it and/or modify\n"
+		"it under the terms of the GNU General Public License as published by\n"
+		"the Free Software Foundation, either version 3 of the License, or\n"
+		"(at your option) any later version.</p>\n"
+		"\n"
+		"<p>This program is distributed in the hope that it will be useful,\n"
+		"but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+		"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+		"GNU General Public License for more details.</p>\n"
+		"\n"
+		"<p>You should have received a copy of the GNU General Public License\n"
 		"along with this program.  If not, see <a href='http://www.gnu.org/licenses/'>http://www.gnu.org/licenses/</a>.</p>"
-		"</body></html>");
+		"</body></html>"));
 		break;
     /* MENU, / -- main menu */ /*{{{*/
     case '/': if (!moveonly && do_sheetcmd(cursheet, show_menu(cursheet), 0)) return 1; break;
     /*}}}*/
-    /* SAVE       -- save in current native format */ /*{{{*/
-    case K_SAVE: if (usexdr) do_savexdr(cursheet, cursheet->name); else do_saveport(cursheet, cursheet->name); break;
+    /* _("sS)ave")       -- save in current native format */ /*{{{*/
+    case K_SAVE: do_save(cursheet); break;
     /*}}}*/
-    /* COPY       -- copy block */ /*{{{*/
+    /* _("cC)opy")       -- copy block */ /*{{{*/
     case K_COPY: if (moveonly) break; do_move(cursheet,1,1); break;
     /*}}}*/
     /* RECALC     -- recalculate */ /*{{{*/
     case K_RECALC: if (moveonly) break; forceupdate(cursheet); break;
     /*}}}*/
-    /* CLOCK      -- clock */ /*{{{*/
+    /* _("Usage: clock(condition,location[,location])")      -- clock */ /*{{{*/
     case K_CLOCK:
     {
       int x,y,z;
@@ -1686,10 +1705,12 @@ int do_sheetcmd(Sheet *cursheet, Key c, int moveonly)
       break;
     }
     /*}}}*/
-    /* QUIT       -- quit */ /*{{{*/
+    /* _("qQ)uit")       -- quit */ /*{{{*/
     case K_QUIT: if (moveonly) break; return 1;
     /*}}}*/
-    default: break;
+    default:
+        if (isalpha(c) && !moveonly) do_edit(cursheet,c,(const char*)0,0);
+        break;
   }
   return 0;
 }
@@ -1706,14 +1727,8 @@ int main(int argc, char *argv[])
   char ln[1024];
   /*}}}*/
 
-  /* set locale */ /*{{{*/
-  #ifdef LC_MESSAGES
-  (void)setlocale(LC_MESSAGES,"");
-  #endif
-  (void)setlocale(LC_CTYPE,"");
-  (void)setlocale(LC_TIME,"");
-  catd=catopen("teapot",0);
-  /*}}}*/
+  find_helpfile(helpfile, sizeof(helpfile), argv[0]);
+
   /* parse options */ /*{{{*/
   while ((o=getopt(argc,argv,"abhnrp:?"))!=EOF) switch (o)
   {
@@ -1746,7 +1761,7 @@ int main(int argc, char *argv[])
       n=strtol(optarg,&end,0);
       if (*end || n<0 || n>DBL_DIG)
       {
-        fprintf(stderr,INVALPRECISION,DBL_DIG);
+        fprintf(stderr,_("teapot: precision must be between 0 and %d.\n"),DBL_DIG);
         exit(1);
       }
       def_precision=n;
@@ -1756,15 +1771,12 @@ int main(int argc, char *argv[])
     /* default -- includes ? and h */ /*{{{*/
     default:
     {
-      fprintf(stderr,"%s",USAGE);
+      fprintf(stderr,"%s",_("Usage: teapot [-a] [-b] [-n] [-r] [-p digits] [file]\n"));
       exit(1);
     }
     /*}}}*/
   }
   loadfile=(optind<argc ? argv[optind] : (const char*)0);
-  /*}}}*/
-  /* start display */ /*{{{*/
-  if (!batch) display_init(&sheet, always_redraw);
   /*}}}*/
   /* create empty sheet */ /*{{{*/
   cursheet=&sheet;
@@ -1785,8 +1797,11 @@ int main(int argc, char *argv[])
   cursheet->clk=0;
   (void)memset(cursheet->labelcache,0,sizeof(cursheet->labelcache));
   /*}}}*/
-  /* say hi */ /*{{{*/
-  if (!batch) line_msg((const char*)0,TOMENU);
+  /* start display */ /*{{{*/
+  if (!batch) {
+	display_init(&sheet, always_redraw);
+    line_msg((const char*)0,"");
+  }
   /*}}}*/
   if (loadfile) /* load given sheet */ /*{{{*/
   {
@@ -1795,11 +1810,11 @@ int main(int argc, char *argv[])
     cursheet->name=mystrmalloc(loadfile);
     if (usexdr)
     {
-      if ((msg=loadxdr(cursheet,cursheet->name))!=(const char*)0) line_msg(LOADXSHEET,msg);
+      if ((msg=loadxdr(cursheet,cursheet->name))!=(const char*)0) line_msg(_("Load sheet from XDR file:"),msg);
     }
     else
     {
-      if ((msg=loadport(cursheet,cursheet->name))!=(const char*)0) line_msg(LOADPSHEET,msg);
+      if ((msg=loadport(cursheet,cursheet->name))!=(const char*)0) line_msg(_("Load sheet from ASCII file:"),msg);
     }
   }
   /*}}}*/
@@ -1866,7 +1881,7 @@ int main(int argc, char *argv[])
     else if (strcmp(cmd,"sort-z")==0) do_batchsort(cursheet, IN_Z, arg);
     /*}}}*/
     /* this is an unknown command */ /*{{{*/
-    else line_msg(WHAT,cmd);
+    else line_msg(_("Unknown batch command:"),cmd);
     /*}}}*/
   }
   /*}}}*/

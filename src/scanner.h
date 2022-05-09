@@ -7,7 +7,12 @@
 extern "C" {
 #endif
 
-typedef enum { EMPTY, STRING, FLOAT, INT, OPERATOR, LIDENT, FIDENT, LOCATION, EEK } Type;
+typedef enum {
+	EMPTY
+#ifndef __cplusplus
+	, STRING, FLOAT, INT, OPERATOR, LIDENT, FIDENT, LOCATION, EEK
+#endif
+} Type;
 
 typedef enum { PLUS, MINUS, MUL, DIV, OP, CP, COMMA, LT, LE, GE, GT, ISEQUAL, ABOUTEQ, NE, POW, MOD } Operator;
 

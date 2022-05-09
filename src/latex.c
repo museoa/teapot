@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "cat.h"
+
 #include "latex.h"
 #include "main.h"
 #include "misc.h"
@@ -31,7 +31,7 @@ const char *savelatex(Sheet *sheet, const char *name, int body, int x1, int y1, 
   int x,y,z;
   char buf[1024];
   char num[20];
-  char fullname[_POSIX_PATH_MAX];
+  char fullname[PATH_MAX];
   /*}}}*/
   
   /* asserts */ /*{{{*/
@@ -39,7 +39,7 @@ const char *savelatex(Sheet *sheet, const char *name, int body, int x1, int y1, 
   assert(name!=(const char*)0);
   /*}}}*/
   *count=0;
-  for (z=z1; z<=z2; ++z) for (y=y1; y<=y2; ++y) if (shadowed(sheet,x1,y,z)) return NOSHADOW;
+  for (z=z1; z<=z2; ++z) for (y=y1; y<=y2; ++y) if (shadowed(sheet,x1,y,z)) return _("Shadowed cells in first column");
   if (!body && (fp=fopen(name,"w"))==(FILE*)0) return strerror(errno);
   for (z=z1; z<=z2; ++z)
   {
@@ -48,8 +48,8 @@ const char *savelatex(Sheet *sheet, const char *name, int body, int x1, int y1, 
     {
       sprintf(num,".%d",z);
 
-      fullname[_POSIX_PATH_MAX-strlen(num)-1]='\0';
-      (void)strncpy(fullname,name,_POSIX_PATH_MAX-strlen(num)-1);
+      fullname[sizeof(fullname)-strlen(num)-1]='\0';
+      (void)strncpy(fullname,name,sizeof(fullname)-strlen(num)-1);
       fullname[sizeof(fullname)-1]='\0';
       (void)strncat(fullname,num,sizeof(fullname)-strlen(num)-1);
       fullname[sizeof(fullname)-1]='\0';  

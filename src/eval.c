@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "cat.h"
+
 #include "default.h"
 #include "eval.h"
 #include "func.h"
@@ -153,7 +153,7 @@ Token tadd(Token l, Token r)
   /* result is type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(ADDTYPE)+1),ADDTYPE);
+    result.u.err=strcpy(malloc(strlen(_("wrong types for + operator"))+1),_("wrong types for + operator"));
   }
   /*}}}*/
   if (result.type==FLOAT && (msg=dblfinite(result.u.flt))!=(const char*)0)
@@ -224,7 +224,7 @@ Token tsub(Token l, Token r)
   /* result is difference type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(SUBTYPE)+1),SUBTYPE);
+    result.u.err=strcpy(malloc(strlen(_("wrong types for - operator"))+1),_("wrong types for - operator"));
   }
   /*}}}*/
   if (result.type==FLOAT && (msg=dblfinite(result.u.flt))!=(const char*)0)
@@ -259,7 +259,7 @@ Token tdiv(Token l, Token r)
   /* result is division by 0 error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(DIV0)+1),DIV0);
+    result.u.err=strcpy(malloc(strlen(_("division by 0"))+1),_("division by 0"));
   }
   /*}}}*/
   else if (l.type==INT && r.type==INT)
@@ -308,7 +308,7 @@ Token tdiv(Token l, Token r)
   /* result is quotient type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(DIVTYPE)+1),DIVTYPE);
+    result.u.err=strcpy(malloc(strlen(_("wrong types for / operator"))+1),_("wrong types for / operator"));
   }
   /*}}}*/
   if (result.type==FLOAT && (msg=dblfinite(result.u.flt))!=(const char*)0)
@@ -340,7 +340,7 @@ Token tmod(Token l, Token r)
   else if ((r.type==INT && r.u.integer==0) || (r.type==FLOAT && r.u.flt==0.0) || (r.type==EMPTY)) /* result is modulo 0 error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(MOD0)+1),MOD0);
+    result.u.err=strcpy(malloc(strlen(_("modulo 0"))+1),_("modulo 0"));
   }
   /*}}}*/
   else if (l.type==INT && r.type==INT) /* result is remainder of left int and right int */ /*{{{*/
@@ -382,7 +382,7 @@ Token tmod(Token l, Token r)
   else /* result is remainder type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(MODTYPE)+1),MODTYPE);
+    result.u.err=strcpy(malloc(strlen(_("wrong types for % operator"))+1),_("wrong types for % operator"));
   }
   /*}}}*/
   if (result.type==FLOAT && (msg=dblfinite(result.u.flt))!=(const char*)0) /* result is error  */ /*{{{*/
@@ -464,7 +464,7 @@ Token tmul(Token l, Token r)
   /* result is product type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(MULTYPE)+1),MULTYPE);
+    result.u.err=strcpy(malloc(strlen(_("wrong types for * operator"))+1),_("wrong types for * operator"));
   }
   /*}}}*/
   if (result.type==FLOAT && (msg=dblfinite(result.u.flt))!=(const char*)0)
@@ -514,7 +514,7 @@ Token tneg(Token x)
   /* result is negation error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(NEGTYPE)+1),NEGTYPE);
+    result.u.err=strcpy(malloc(strlen(_("wrong type for - operator"))+1),_("wrong type for - operator"));
   }
   /*}}}*/
   return result;
@@ -548,7 +548,7 @@ Token tpow(Token l, Token r)
       if (x==0 && y==0)
       {
         result.type=EEK;
-        result.u.err=strcpy(malloc(strlen(POW00)+1),POW00);
+        result.u.err=strcpy(malloc(strlen(_("0^0 is not defined"))+1),_("0^0 is not defined"));
       }
       else
       {
@@ -587,7 +587,7 @@ Token tpow(Token l, Token r)
       {
         case 0: result.type=FLOAT; break;
         case ERANGE:
-        case EDOM: result.type=EEK; result.u.err=strcpy(malloc(strlen(POWDOM)+1),POWDOM); break;
+        case EDOM: result.type=EEK; result.u.err=strcpy(malloc(strlen(_("^ caused a domain error"))+1),_("^ caused a domain error")); break;
         default: assert(0);
       }
     }
@@ -597,7 +597,7 @@ Token tpow(Token l, Token r)
   else /* result is type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(POWTYPE)+1),POWTYPE);
+    result.u.err=strcpy(malloc(strlen(_("wrong types for ^ operator"))+1),_("wrong types for ^ operator"));
   }
   /*}}}*/
   if (result.type==FLOAT && (msg=dblfinite(result.u.flt))!=(const char*)0) /* result is error */ /*{{{*/
@@ -688,7 +688,7 @@ Token tlt(Token l, Token r)
   else /* return < type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(RELTYPE)+1),RELTYPE);
+    result.u.err=strcpy(malloc(strlen(_("type mismatch for relational operator"))+1),_("type mismatch for relational operator"));
   }
   /*}}}*/
   return result;
@@ -771,7 +771,7 @@ Token tle(Token l, Token r)
   else /* result is <= type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(RELTYPE)+1),RELTYPE);
+    result.u.err=strcpy(malloc(strlen(_("type mismatch for relational operator"))+1),_("type mismatch for relational operator"));
   }
   /*}}}*/
   return result;
@@ -848,7 +848,7 @@ Token tge(Token l, Token r)
   else /* return >= type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(RELTYPE)+1),RELTYPE);
+    result.u.err=strcpy(malloc(strlen(_("type mismatch for relational operator"))+1),_("type mismatch for relational operator"));
   }
   /*}}}*/
   return result;
@@ -925,7 +925,7 @@ Token tgt(Token l, Token r)
   else /* result is relation op type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=mystrmalloc(RELTYPE);
+    result.u.err=mystrmalloc(_("type mismatch for relational operator"));
   }
   /*}}}*/
   return result;
@@ -1005,7 +1005,7 @@ Token teq(Token l, Token r)
   else
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(RELTYPE)+1),RELTYPE);
+    result.u.err=strcpy(malloc(strlen(_("type mismatch for relational operator"))+1),_("type mismatch for relational operator"));
   }
   return result;
 }
@@ -1049,7 +1049,7 @@ Token tabouteq(Token l, Token r)
   else
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(RELTYPE)+1),RELTYPE);
+    result.u.err=strcpy(malloc(strlen(_("type mismatch for relational operator"))+1),_("type mismatch for relational operator"));
   }
   return result;
 }
@@ -1128,7 +1128,7 @@ Token tne(Token l, Token r)
   else
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(RELTYPE)+1),RELTYPE);
+    result.u.err=strcpy(malloc(strlen(_("type mismatch for relational operator"))+1),_("type mismatch for relational operator"));
   }
   return result;
 }

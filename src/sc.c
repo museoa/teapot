@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "cat.h"
+
 #include "eval.h"
 #include "main.h"
 #include "sheet.h"
@@ -249,7 +249,7 @@ const char *loadsc(Sheet *sheet, const char *name)
         if (contents==(Token**)0)
         {
           tvecfree(contents);
-          sprintf(errbuf,SYNERR,line);
+          sprintf(errbuf,_("Expression syntax error in line %d"),line);
           err=errbuf;
           goto eek;
         }
@@ -278,7 +278,7 @@ const char *loadsc(Sheet *sheet, const char *name)
             *s2t_t='\0';
             if (err==(const char*)0)
             {
-              sprintf(errbuf,SCFEATURE,line);
+              sprintf(errbuf,_("Unimplemented SC feature in line %d"),line);
               err=errbuf;
             }
           }
@@ -288,7 +288,7 @@ const char *loadsc(Sheet *sheet, const char *name)
           if (contents==(Token**)0)
           {
             tvecfree(contents);
-            sprintf(errbuf,SYNERR,line);
+            sprintf(errbuf,_("Expression syntax error in line %d"),line);
             err=errbuf;
             goto eek;
           }

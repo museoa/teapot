@@ -28,6 +28,7 @@ void show_text(const char *text);
 
 Key show_menu(Sheet *cursheet);
 int line_menu(const char *prompt, const MenuChoice *choice, int curx);
+void find_helpfile(char *buf, int size, const char *argv0);
 
 #ifdef __cplusplus
 }

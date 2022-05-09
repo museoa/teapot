@@ -5,13 +5,13 @@ code_name {.cxx}
 decl {\#include "display.h"} {public global
 } 
 
-decl {\#include "cat.h"} {private global
-} 
-
 decl {\#include "misc.h"} {private global
 } 
 
 decl {\#include <stdint.h>} {private global
+} 
+
+decl {\#include <limits.h>} {selected private global
 } 
 
 decl {\#include <FL/fl_message.H>} {private local
@@ -20,7 +20,13 @@ decl {\#include <FL/fl_message.H>} {private local
 decl {\#include <FL/fl_draw.H>} {private global
 } 
 
-decl {\#include <FL/Fl_File_Chooser.H>} {private global
+decl {\#include <FL/Fl_Native_File_Chooser.H>} {private global
+} 
+
+decl {\#include <FL/Fl_File_Icon.H>} {private global
+} 
+
+decl {\#include <FL/filename.H>} {private global
 } 
 
 decl {\#include <FL/Fl_Table.H>} {public global
@@ -29,7 +35,7 @@ decl {\#include <FL/Fl_Table.H>} {public global
 decl {\#include <FL/Fl_Select_Browser.H>} {public global
 } 
 
-decl {\#include <FL/Fl_Help_Dialog.H>} {private global
+decl {\#include <FL/Fl_Sys_Menu_Bar.H>} {public global
 } 
 
 decl {\#define SHEET(s,x,y,z) (*(s->sheet+(x)*s->dimz*s->dimy+(y)*s->dimz+(z)))} {private global
@@ -44,29 +50,37 @@ class TeapotTable {open : {public Fl_Table}
   }
   decl {bool cut, updating;} {protected local
   }
-  Function {TeapotTable(int x, int y, int w, int h, const char *l=0) : Fl_Table(x, y, w, h, l), cut(false), updating(false)} {} {
+  decl {static const TableContext ACTION = (TableContext)(1<<8);} {public local
+  }
+  decl {static const TableContext REFRESH = (TableContext)(1<<9);} {public local
+  }
+  Function {TeapotTable(int x, int y, int w, int h, const char *l=0) : Fl_Table(x, y, w, h, l), cut(false), updating(false)} {open
+  } {
     code {end();
 col_resize_min(10);
 col_resize(true);
 col_header(1);
 row_resize(false);
 row_header(1);
+set_visible_focus();
 table_box(FL_THIN_UP_FRAME);} {}
   }
   Function {~TeapotTable()} {} {
     code {} {}
   }
-  Function {sheet(Sheet *s)} {return_type void
+  Function {sheet(Sheet *s)} {open return_type void
   } {
     code {cursheet = s;
 s->display = (void *)this;
+clear();
+update_table();
 do_callback(CONTEXT_NONE, 0, 0);} {}
   }
   Function {sheet()} {return_type {Sheet *}
   } {
     code {return cursheet;} {}
   }
-  Function {draw_cell(TableContext context, int R, int C, int X, int Y, int W, int H)} {return_type void
+  Function {draw_cell(TableContext context, int R, int C, int X, int Y, int W, int H)} {open return_type void
   } {
     code {char s[1024];
 //printf("DRAW: %i @%i,%i - (%i,%i) %ix%i\\n", context, C,R, X,Y, W,H);
@@ -125,6 +139,7 @@ case CONTEXT_CELL: {
 		selected = cursheet->mark1x >= 0 && C >= x1 && C <= x2 && R >= y1 && R <= y2 && cursheet->curz >= z1 && cursheet->curz <= z2;
 	}
 	fl_draw_box(C == cursheet->curx && R == cursheet->cury?FL_BORDER_BOX:FL_THIN_UP_BOX, X, Y, W, H, selected?FL_SELECTION_COLOR:FL_BACKGROUND2_COLOR);
+	if (Fl::focus() == this && C == cursheet->curx && R == cursheet->cury) draw_focus(FL_BORDER_BOX, X, Y, W, H);
 	fl_pop_clip();
 
 	fl_push_clip(X+3, Y+3, W-6, H-6);
@@ -132,6 +147,9 @@ case CONTEXT_CELL: {
 	fl_font(FL_HELVETICA, 14);
 	
 	printvalue(s, sizeof(s), 1, 0, getscientific(cursheet, C, R, cursheet->curz), getprecision(cursheet, C, R, cursheet->curz), cursheet, C, R, cursheet->curz);
+	int ww = 0, hh = 0;
+	fl_measure(s, ww, hh, 0);
+	if (ww > W-6) for (int i = 0; s[i]; i++) s[i] = '\#';
 
 	int adj = getadjust(cursheet, C, R, cursheet->curz);	
 	fl_draw(s, X+3, Y+3, W-6, H-6, adj == RIGHT?FL_ALIGN_RIGHT:adj == LEFT?FL_ALIGN_LEFT:FL_ALIGN_CENTER);
@@ -197,7 +215,7 @@ if (is_interactive_resize()) {
 updating = false;
 //printf("update_sheet: %ix%i@%i,%i; %i[%i], %i[%i] (%i,%i)-(%i,%i)\\n", cols(), rows(), cursheet->curx, cursheet->cury, cursheet->offx, cursheet->maxx, cursheet->offy, cursheet->maxy, x1, y1, x2, y2);} {}
   }
-  Function {handle(int event)} {return_type int
+  Function {handle(int event)} {open return_type int
   } {
     code {if (event == FL_KEYDOWN) {
 	int ctrl = Fl::event_ctrl();
@@ -205,7 +223,7 @@ updating = false;
 	int shift = Fl::event_shift();
 	Key k = (Key)Fl::event_key();
 
-	switch ((int)k) {
+	switch ((unsigned int)k) {
 	case FL_Escape: k = K_INVALID; break;
 	case FL_BackSpace: k = K_BACKSPACE; break;
 	case FL_F+1: k = ctrl?K_ABOUT:K_HELP; break;
@@ -232,14 +250,18 @@ updating = false;
 	if (k > 0 && (ctrl || alt))  return 0;
 
 	do_sheetcmd(cursheet, k, cursheet->moveonly);
-	do_callback((TableContext)(1<<8), 0, 0);
+	do_callback(ACTION, 0, 0);
 	redraw();
 } else if (event == FL_FOCUS) {
-	do_callback((TableContext)(1<<8), 0, 0);
+	do_callback(REFRESH, 0, 0);
 	return 1;
 } else if (event == FL_PUSH) {
 	int ex = Fl::event_x() - x(), ey = Fl::event_y() - y();
-	if (ex >= row_header_width() || ey >= col_header_height()) return Fl_Table::handle(event);
+	if (ex >= row_header_width() || ey >= col_header_height()) {
+		int rc = Fl_Table::handle(event);
+		do_callback(ACTION, 0, 0);
+		return rc;
+	}
 	if (ex < row_header_width()/2) relmoveto(cursheet, 0, 0, -1);
 	else relmoveto(cursheet, 0, 0, 1);
 	return 1;
@@ -275,8 +297,7 @@ else if (y2+1 == rows()) {
 	int h = row_height(rows()-1);
 	y2 += (toh + vscrollbar->value() - ypos) / h + 2;
 	rows(y2+1);
-}} {selected
-    }
+}} {}
   }
 } 
 
@@ -286,18 +307,22 @@ class MainWindow {open
   }
   decl {int edit_rc;} {private local
   }
-  Function {MainWindow(Sheet *sheet)} {} {
+  Function {MainWindow(Sheet *sheet)} {open
+  } {
     Fl_Window window {
       label teapot
       callback {if (Fl::event_key(FL_Escape)) table->take_focus();
-else if (do_sheetcmd(table->sheet(), K_QUIT, 0) && doanyway(table->sheet(), LEAVE)) window->hide();} open
+else if (do_sheetcmd(table->sheet(), K_QUIT, 0) && doanyway(table->sheet(), _("Sheet modified, leave anyway?"))) {
+	line_label->deactivate();
+	window->hide();
+}} open
       protected xywh {864 319 800 600} type Double when 0 hide resizable
     } {
       Fl_Menu_Bar menu {
         callback {Sheet *sheet = table->sheet();
 Key action = (Key)(intptr_t)o->mvalue()->user_data();
 
-if (do_sheetcmd(sheet, action, sheet->moveonly) && doanyway(sheet, LEAVE)) {
+if (do_sheetcmd(sheet, action, sheet->moveonly) && doanyway(sheet, _("Sheet modified, leave anyway?"))) {
 	window->hide();
 	return;
 }
@@ -305,6 +330,7 @@ if (do_sheetcmd(sheet, action, sheet->moveonly) && doanyway(sheet, LEAVE)) {
 table->update_table();
 table->redraw();} open
         xywh {0 0 800 25}
+        class Fl_Sys_Menu_Bar
       } {
         Submenu {} {
           label {&File}
@@ -392,7 +418,7 @@ table->redraw();} open
           }
         }
         Submenu {} {
-          label {&Format} open
+          label {F&ormat}
           xywh {5 5 70 21}
         } {
           MenuItem {} {
@@ -477,13 +503,16 @@ table->redraw();} open
         }
       }
       Fl_Group line_label {
-        label { Input:}
+        label { Input:} open
         protected xywh {0 25 800 25} box ROUND_UP_BOX align 20 deactivate
       } {
         Fl_Input line_input {
-          callback {if (Fl::event_key(FL_Enter) || Fl::event_key(FL_KP_Enter)) edit_rc = 0;
-Fl::focus(table);}
-          protected xywh {75 27 723 21} box ROUND_DOWN_BOX labeltype NO_LABEL align 20 when 6
+          callback {bool enterkey = Fl::event_key(FL_Enter) || Fl::event_key(FL_KP_Enter);
+if (Fl::focus() && (Fl::focus() != table || enterkey || Fl::event_key(FL_Escape))) {
+	if (enterkey) edit_rc = 0;
+	line_label->deactivate();
+}}
+          protected xywh {75 27 723 21} box ROUND_DOWN_BOX labeltype NO_LABEL align 20 when 6 deactivate
         }
       }
       Fl_Box table {
@@ -491,11 +520,23 @@ Fl::focus(table);}
 table->update_sheet();
 
 const char *label = getlabel(sheet,sheet->curx,sheet->cury,sheet->curz);
-char moveonly=sheet->moveonly ? *MOVEONLY : *MOVEEDIT;
+char moveonly=sheet->moveonly ? *_("V") : *_("E");
 
 char buf[1024];
 if (*label == 0) snprintf(buf, sizeof(buf), "%c @@(%d,%d,%d)=", moveonly, sheet->curx, sheet->cury, sheet->curz);
 else snprintf(buf, sizeof(buf), "%c @@(%s)=", moveonly, label);
+
+if (moveonly && table->callback_context() == TeapotTable::ACTION) {
+	char valbuf[1024] = "";
+	if (Fl::event_key() == 'p' || Fl::event_button1()) sprintf(valbuf, "(%i,%i,%i)", sheet->curx, sheet->cury, sheet->curz);
+	else if (Fl::event_key() == 'v') printvalue(valbuf,sizeof(valbuf),0,1,getscientific(sheet,sheet->curx,sheet->cury,sheet->curz),-1,sheet,sheet->curx,sheet->cury,sheet->curz);
+	else if (Fl::event_key(FL_Tab)) line_input->take_focus();
+	if (valbuf[0]) {
+		line_input->insert(valbuf);
+		line_input->take_focus();
+	}
+}
+
 
 char *err;
 char val[1024];
@@ -538,31 +579,36 @@ else ignore->clear();}
     }
     code {current = this;} {}
   }
-  Function {line_edit(Sheet *sheet, char *buf, size_t size, const char *prompt, size_t *x, size_t *offx)} {return_type int
+  Function {line_edit(Sheet *sheet, char *buf, size_t size, const char *prompt, size_t *x, size_t *offx)} {open return_type int
   } {
-    code {if (line_input->active_r()) {
-	line_msg(NULL, "Action not possible at this time.");
+    code {if (line_label->active()) {
+	if (x) line_msg(NULL, "Action not possible at this time.");
 	return -1;
 }
 
 line_label->copy_label(prompt);
 
-int ww, hh;
+int ww = 0, hh = 0;
 line_label->measure_label(ww, hh);
 line_input->resize(line_label->x()+ww+5, line_input->y(), line_label->w()-ww-7, line_input->h());
 line_input->value(buf);
+
 if (!x) return 0;
 
 line_input->maximum_size(size);
 line_input->position(*x, *x);
 line_label->activate();
+line_input->activate();
+table->sheet()->moveonly = 1;
 line_input->take_focus();
 
 edit_rc = -1;
-while (Fl::focus() == line_input) Fl::wait();
+while (line_label->active()) Fl::wait();
 
-line_label->deactivate();
 memcpy(buf, line_input->value(), size);
+line_input->deactivate();
+table->sheet()->moveonly = 0;
+table->take_focus();
 return edit_rc;} {}
   }
   Function {line_msg(const char *prompt, const char *msg)} {return_type void
@@ -575,17 +621,27 @@ status->copy_label(label);} {}
   }
 } 
 
-Function {line_file(const char *file, const char *pattern, const char *title, int create)} {C return_type {const char *}
+Function {line_file(const char *file, const char *pattern, const char *title, int create)} {open C return_type {const char *}
 } {
-  code {Fl_File_Chooser *chooser = new Fl_File_Chooser(file, pattern, (create?Fl_File_Chooser::CREATE:Fl_File_Chooser::SINGLE), title);
-chooser->previewButton->hide();
-chooser->ok_label(create?"Save":"Load");
-chooser->preview(0);
+  code {static char buf[PATH_MAX];
+Fl_Native_File_Chooser chooser;
 
-chooser->show();
-while (chooser->shown()) Fl::wait();
+chooser.title(title);
+chooser.type(create?Fl_Native_File_Chooser::BROWSE_SAVE_FILE:Fl_Native_File_Chooser::BROWSE_FILE);
+chooser.filter(pattern);
+chooser.options((create?Fl_Native_File_Chooser::NEW_FOLDER:0)|Fl_Native_File_Chooser::SAVEAS_CONFIRM);
 
-return chooser->value();} {}
+if (file) {
+	fl_filename_absolute(buf, sizeof(buf), file);
+	char *p = (char *)fl_filename_name(buf);
+	*p = 0;
+	chooser.directory(buf);
+}
+if (chooser.show()) return NULL;
+
+strncpy(buf, chooser.filename(), sizeof(buf));
+buf[sizeof(buf)-1] = 0;
+return buf;} {}
 } 
 
 Function {line_edit(Sheet *sheet, char *buf, size_t size, const char *prompt, size_t *x, size_t *offx)} {C return_type int
@@ -603,7 +659,9 @@ return !val;} {}
 
 Function {line_ok(const char *prompt, int curx)} {C return_type int
 } {
-  code {return fl_choice("%s", "No", "Yes", NULL, prompt);} {}
+  code {int rc = fl_choice("%s", "&No", NULL, "&Yes", prompt);
+if (Fl::event_key(FL_Escape)) return -1;
+return rc;} {}
 } 
 
 Function {line_msg(const char *prompt, const char *msg)} {C return_type void
@@ -613,10 +671,11 @@ Function {line_msg(const char *prompt, const char *msg)} {C return_type void
 
 Function {keypressed()} {C return_type int
 } {
-  code {return 0;} {}
+  code {while (Fl::wait(.01)) if (Fl::event_key(FL_Escape)) return 1;
+return 0;} {}
 } 
 
-Function {line_menu(const char *prompt, const MenuChoice *choice, int curx)} {open C return_type int
+Function {line_menu(const char *prompt, const MenuChoice *choice, int curx)} {C return_type int
 } {
   Fl_Window line_menu_menu {
     label {Please Choose} open
@@ -662,10 +721,16 @@ Function {redraw_cell(Sheet *sheet, int x, int y, int z)} {C return_type void
   code {redraw_sheet(sheet);} {}
 } 
 
-Function {display_init(Sheet *sheet, int always_redraw)} {C return_type void
+Function {display_init(Sheet *sheet, int always_redraw)} {open C return_type void
 } {
   code {Fl::get_system_colors();
+\#ifdef ENABLE_HELP
+Fl_File_Icon::load_system_icons();
+\#endif
 Fl::scheme("gtk+");
+int ch = sheet->changed;
+resize(sheet, 1, 1, 1);
+sheet->changed = ch;
 new MainWindow(sheet);} {}
 } 
 
@@ -685,16 +750,39 @@ Function {show_menu(Sheet *sheet)} {C return_type Key
   code {return K_NONE;} {}
 } 
 
-Function {show_text(const char *text)} {C return_type void
+decl {MainWindow *MainWindow::current;} {private global
+} 
+
+declblock {\#ifdef ENABLE_HELP} {after {\#endif}
 } {
-  code {Fl_Help_Dialog *d = new Fl_Help_Dialog();
+  decl {\#include <FL/Fl_Help_Dialog.H>} {private global
+  }
+  Function {show_text(const char *text)} {open C return_type void
+  } {
+    code {Fl_Help_Dialog *d = new Fl_Help_Dialog();
 if (strchr(text, '<')) {
 	d->value(text);
 } else {
 	d->load(text);
 }
 d->show();} {}
+  }
 } 
 
-decl {MainWindow *MainWindow::current;} {private global
+declblock {\#ifndef ENABLE_HELP} {after {\#endif}
+} {
+  Function {show_text(const char *text)} {open C return_type void
+  } {
+    code {char *txt = striphtml(text);
+fl_message("%s", txt);
+free(txt);} {}
+  }
+} 
+
+Function {find_helpfile(char *buf, int size, const char *argv0)} {open C return_type void
+} {
+  code {fl_filename_absolute(buf, size, argv0);
+char *p = (char *)fl_filename_name(buf);
+strncpy(p, "../share/doc/teapot/html/index.html", buf+size-p);
+buf[size-1] = 0;} {}
 } 

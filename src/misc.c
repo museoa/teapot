@@ -23,7 +23,7 @@
 #define memmove(dst,src,len) bcopy(src,dst,len)
 #endif
 
-#include "cat.h"
+
 #include "default.h"
 #include "main.h"
 #include "misc.h"
@@ -103,33 +103,34 @@ static void catchfpe(int n)
 
 const char *dblfinite(double x)
 {
-  struct sigaction act;
+  /*struct sigaction act;
   
   caughtfpe=0;
   act.sa_handler=catchfpe;
   act.sa_flags=0;
   (void)sigemptyset(&act.sa_mask);
-  (void)sigaction(SIGFPE,&act,(struct sigaction*)0);
+  (void)sigaction(SIGFPE,&act,(struct sigaction*)0);*/
+  signal(SIGFPE, catchfpe);
   if (x==0.0)
   {
-    if (caughtfpe) return NOTFINITE; /* who knows */
+    if (caughtfpe) return _("Not a (finite) floating point number"); /* who knows */
     else return (const char*)0;
   }
   else
   {
-    if (caughtfpe) return NOTFINITE;
+    if (caughtfpe) return _("Not a (finite) floating point number");
     /* If one comparison was allowed, more won't hurt either. */
     if (x<0.0)
     {
-      if (x<-DBL_MAX) return NOTFINITE; /* -infinite */
+      if (x<-DBL_MAX) return _("Not a (finite) floating point number"); /* -infinite */
       else return (const char*)0;
     }
     else if (x>0.0)
     {
-      if (x>DBL_MAX) return NOTFINITE; /* +infinite */
+      if (x>DBL_MAX) return _("Not a (finite) floating point number"); /* +infinite */
       else return (const char*)0;
     }
-    else return NOTFINITE; /* NaN */
+    else return _("Not a (finite) floating point number"); /* NaN */
   }
 }
 /*}}}*/
@@ -230,3 +231,19 @@ void *myrealloc(void *p, size_t n)
 }
 #endif
 /*}}}*/
+
+char *striphtml(const char *in)
+{
+	char *end, *stripped = malloc(strlen(in)), *out = stripped;
+	in--;
+
+	while (in && (end = strchr(++in, '<'))) {
+		memcpy(out, in, end-in);
+		out += end-in;
+		in = strchr(end+1, '>');
+	}
+	if (in) strcpy(out, in);
+	else *out = 0;
+	return stripped;
+}
+

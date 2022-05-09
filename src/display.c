@@ -31,7 +31,7 @@
 #include "dmalloc.h"
 #endif
 
-#include "cat.h"
+
 #include "complete.h"
 #include "default.h"
 #include "display.h"
@@ -39,9 +39,9 @@
 #include "main.h"
 #include "misc.h"
 #include "sheet.h"
-#include "wgetc.h"
-#include "version.h"
 /*}}}*/
+
+static Key wgetc(void);
 
 /* redraw       -- redraw whole screen */ /*{{{*/
 static void redraw(void)
@@ -61,26 +61,26 @@ static int do_attribute(Sheet *cursheet)
   /*}}}*/
       
   /* create menus */ /*{{{*/
-  adjmenu[0].str=mystrmalloc(ADLEFT);     adjmenu[0].c='\0';
-  adjmenu[1].str=mystrmalloc(ADRIGHT);    adjmenu[1].c='\0';
-  adjmenu[2].str=mystrmalloc(ADCENTERED); adjmenu[2].c='\0';
-  adjmenu[3].str=mystrmalloc(DOSCI);      adjmenu[3].c='\0';
-  adjmenu[4].str=mystrmalloc(NOSCI);      adjmenu[4].c='\0';
-  adjmenu[5].str=mystrmalloc(PRECISION);  adjmenu[5].c='\0';
-  adjmenu[6].str=mystrmalloc(SHADOW);     adjmenu[6].c='\0';
-  adjmenu[7].str=mystrmalloc(TRANSPAR);   adjmenu[7].c='\0';
+  adjmenu[0].str=mystrmalloc(_("lL)eft"));     adjmenu[0].c='\0';
+  adjmenu[1].str=mystrmalloc(_("rR)ight"));    adjmenu[1].c='\0';
+  adjmenu[2].str=mystrmalloc(_("cC)entered")); adjmenu[2].c='\0';
+  adjmenu[3].str=mystrmalloc(_("00).123e1"));      adjmenu[3].c='\0';
+  adjmenu[4].str=mystrmalloc(_("11).23"));      adjmenu[4].c='\0';
+  adjmenu[5].str=mystrmalloc(_("pP)recision"));  adjmenu[5].c='\0';
+  adjmenu[6].str=mystrmalloc(_("sS)hadow"));     adjmenu[6].c='\0';
+  adjmenu[7].str=mystrmalloc(_("oO)utput special characters"));   adjmenu[7].c='\0';
   adjmenu[8].str=(char*)0;
 
-  mainmenu[0].str=mystrmalloc(ADJUST);    mainmenu[0].c='\0';
-  mainmenu[1].str=mystrmalloc(LABEL);     mainmenu[1].c='\0';
-  mainmenu[2].str=mystrmalloc(DOLOCK);    mainmenu[2].c='\0';
-  mainmenu[3].str=mystrmalloc(DOIGNORE);  mainmenu[3].c='\0';
+  mainmenu[0].str=mystrmalloc(_("rR)epresentation"));    mainmenu[0].c='\0';
+  mainmenu[1].str=mystrmalloc(_("lL)abel"));     mainmenu[1].c='\0';
+  mainmenu[2].str=mystrmalloc(_("oLo)ck"));    mainmenu[2].c='\0';
+  mainmenu[3].str=mystrmalloc(_("iI)gnore"));  mainmenu[3].c='\0';
   mainmenu[4].str=(char*)0;
   /*}}}*/
   do
   {
-    c = line_menu(cursheet->mark1x==-1 ? CELLATTR : BLOCKATTR,mainmenu,0);
-    if (cursheet->mark1x==-1 && c!=2 && locked(cursheet,cursheet->curx,cursheet->cury,cursheet->curz)) line_msg(CELLATTR,ISLOCKED);
+    c = line_menu(cursheet->mark1x==-1 ? _("Cell attribute:") : _("Block attribute:"),mainmenu,0);
+    if (cursheet->mark1x==-1 && c!=2 && locked(cursheet,cursheet->curx,cursheet->cury,cursheet->curz)) line_msg(_("Cell attribute:"),_("Cell is locked"));
     else
     {
       switch (c)
@@ -89,7 +89,7 @@ static int do_attribute(Sheet *cursheet)
         case -1: c = KEY_CANCEL; break;
         case 0:
         {
-          switch (c=line_menu(cursheet->mark1x==-1 ? CELLATTR : BLOCKATTR,adjmenu,0))
+          switch (c=line_menu(cursheet->mark1x==-1 ? _("Cell attribute:") : _("Block attribute:"),adjmenu,0))
           {
             case -2:
             case -1: c = K_INVALID; break;
@@ -137,14 +137,14 @@ static int do_file(Sheet *cursheet)
   int c;
   /*}}}*/
   
-  menu[0].str=mystrmalloc(LOAD); menu[0].c='\0';
-  menu[1].str=mystrmalloc(SAVE); menu[1].c='\0';
-  menu[2].str=mystrmalloc(NAME); menu[2].c='\0';
+  menu[0].str=mystrmalloc(_("lL)oad")); menu[0].c='\0';
+  menu[1].str=mystrmalloc(_("sS)ave")); menu[1].c='\0';
+  menu[2].str=mystrmalloc(_("nN)ame")); menu[2].c='\0';
   menu[3].str=(char*)0;
   c=0;
   do
   {
-    switch (c=line_menu(FILERMENU,menu,0))
+    switch (c=line_menu(_("File:"),menu,0))
     {
       case -2:
       case -1: c = KEY_CANCEL; break;
@@ -177,7 +177,7 @@ static int do_shell(void)
   switch (pid=fork())
   {
     /*      -1 */ /*{{{*/
-    case -1: line_msg(SHELL,strerror(errno)); break;
+    case -1: line_msg(_("Spawn sub shell"),strerror(errno)); break;
     /*}}}*/
     /*       0 */ /*{{{*/
     case 0:
@@ -197,7 +197,7 @@ static int do_shell(void)
           shell=pwd->pw_shell;
         }
       }
-      line_msg((const char*)0,SUBSHELL);
+      line_msg((const char*)0,_("Sub shell started"));
       move(LINES-1,0);
       curs_set(1);
       refresh();
@@ -239,19 +239,19 @@ static int do_block(Sheet *cursheet)
   MenuChoice block[9];
   int c;
 
-  block[0].str=mystrmalloc(CLEAR);  block[0].c='\0';
-  block[1].str=mystrmalloc(INSERT); block[1].c='\0';
-  block[2].str=mystrmalloc(DELETE); block[2].c='\0';
-  block[3].str=mystrmalloc(MOVE);   block[3].c='\0';
-  block[4].str=mystrmalloc(COPY);   block[4].c='\0';
-  block[5].str=mystrmalloc(FILL);   block[5].c='\0';
-  block[6].str=mystrmalloc(SORT);   block[6].c='\0';
-  block[7].str=mystrmalloc(MIRROR); block[7].c='\0';
+  block[0].str=mystrmalloc(_("ecle)ar"));  block[0].c='\0';
+  block[1].str=mystrmalloc(_("iI)nsert")); block[1].c='\0';
+  block[2].str=mystrmalloc(_("dD)elete")); block[2].c='\0';
+  block[3].str=mystrmalloc(_("mM)ove"));   block[3].c='\0';
+  block[4].str=mystrmalloc(_("cC)opy"));   block[4].c='\0';
+  block[5].str=mystrmalloc(_("fF)ill"));   block[5].c='\0';
+  block[6].str=mystrmalloc(_("sS)ort"));   block[6].c='\0';
+  block[7].str=mystrmalloc(_("rMir)ror")); block[7].c='\0';
   block[8].str=(char*)0;
   c=0;
   do
   {
-    switch (c=line_menu(BLOCKMENU,block,0))
+    switch (c=line_menu(_("Block menu:"),block,0))
     {
       case -2:
       case -1: c = KEY_CANCEL; break;
@@ -285,19 +285,19 @@ int show_menu(Sheet *cursheet)
   int c = K_INVALID;
   /*}}}*/
 
-  menu[0].str=mystrmalloc(ATTR);   menu[0].c='\0';
-  menu[1].str=mystrmalloc(CWIDTH); menu[1].c='\0';
-  menu[2].str=mystrmalloc(BLOCK);  menu[2].c='\0';
-  menu[3].str=mystrmalloc(FILER);  menu[3].c='\0';
-  menu[4].str=mystrmalloc(MGOTO);  menu[4].c='\0';
-  menu[5].str=mystrmalloc(MSHELL); menu[5].c='\0';
-  menu[6].str=mystrmalloc(ABOUT);  menu[6].c='\0';
-  menu[7].str=mystrmalloc(QUIT);   menu[7].c='\0';
+  menu[0].str=mystrmalloc(_("aA)ttributes"));   menu[0].c='\0';
+  menu[1].str=mystrmalloc(_("wW)idth")); menu[1].c='\0';
+  menu[2].str=mystrmalloc(_("bB)lock"));  menu[2].c='\0';
+  menu[3].str=mystrmalloc(_("fF)ile"));  menu[3].c='\0';
+  menu[4].str=mystrmalloc(_("gG)oto"));  menu[4].c='\0';
+  menu[5].str=mystrmalloc(_("sS)hell")); menu[5].c='\0';
+  menu[6].str=mystrmalloc(_("vV)ersion"));  menu[6].c='\0';
+  menu[7].str=mystrmalloc(_("qQ)uit"));   menu[7].c='\0';
   menu[8].str=(char*)0;
 
   do
   {
-    switch (c=line_menu(MAINMENU,menu,0))
+    switch (c=line_menu(_("Main menu:"),menu,0))
     {
       case -2:
       case -1: c = KEY_CANCEL; break;
@@ -333,7 +333,7 @@ static void do_bg(void)
 
   if (tcgetattr(0,&t)==0 && t.c_cc[VSUSP]!=_POSIX_VDISABLE)
   {
-    line_msg((const char*)0,BACKGROUND);
+    line_msg((const char*)0,_("Teapot stopped"));
     move(LINES-1,0);
     curs_set(1);
     refresh();
@@ -345,7 +345,7 @@ static void do_bg(void)
     reset_prog_mode();
     curs_set(0);
   }
-  else line_msg((const char*)0,NOTSUSPENDED);
+  else line_msg((const char*)0,_("The susp character is undefined"));
 }
 /*}}}*/
 
@@ -373,7 +373,7 @@ void display_main(Sheet *cursheet)
       case KEY_F(0):
       case KEY_F(10): k = show_menu(cursheet); break;
     }
-  } while (k == K_INVALID || !do_sheetcmd(cursheet,k,0) || doanyway(cursheet,LEAVE)!=1);
+  } while (k == K_INVALID || !do_sheetcmd(cursheet,k,0) || doanyway(cursheet,_("Sheet modified, leave anyway?"))!=1);
 }
 
 void display_init(Sheet *cursheet, int always_redraw)
@@ -520,7 +520,7 @@ void redraw_sheet(Sheet *sheet)
   if (bufsz<(unsigned int)(sheet->maxx+1)) buf=realloc(buf,bufsz=(sheet->maxx+1));
   label=getlabel(sheet,sheet->curx,sheet->cury,sheet->curz);
   assert(label!=(const char*)0);
-  moveonly=sheet->moveonly ? *MOVEONLY : *MOVEEDIT;
+  moveonly=sheet->moveonly ? *_("V") : *_("E");
   if (*label=='\0') sprintf(pbuf,"%c @(%d,%d,%d)=",moveonly,sheet->curx,sheet->cury,sheet->curz);
   else sprintf(pbuf,"%c @(%s)=",moveonly,label);
   (void)strncpy(buf,pbuf,sheet->maxx+1);
@@ -550,11 +550,11 @@ void redraw_sheet(Sheet *sheet)
 /* line_file    -- line editor function for file name entry */ /*{{{*/
 const char *line_file(const char *file, const char *pattern, const char *title, int create)
 {
-	static char buf[_POSIX_PATH_MAX];
+	static char buf[PATH_MAX] = "";
 	int rc;
 	size_t dummy = 0;
 
-	strncpy(buf, file, sizeof(buf));
+	if (file) strncpy(buf, file, sizeof(buf));
 	buf[sizeof(buf)-1] = 0;
 	rc = line_edit((Sheet*)0, buf, sizeof(buf), title, &dummy, &dummy);
 	if (rc < 0) return NULL;
@@ -828,8 +828,8 @@ int line_ok(const char *prompt, int curx)
   /* asserts */ /*{{{*/
   assert(curx==0 || curx==1);
   /*}}}*/
-  menu[0].str=mystrmalloc(NO); menu[0].c='\0';
-  menu[1].str=mystrmalloc(YES); menu[1].c='\0';
+  menu[0].str=mystrmalloc(_("nN)o")); menu[0].c='\0';
+  menu[1].str=mystrmalloc(_("yY)es")); menu[1].c='\0';
   menu[2].str=(char*)0;
   result=line_menu(prompt,menu,curx);
   free(menu[0].str);
@@ -935,6 +935,7 @@ void line_msg(const char *prompt, const char *msg)
 
   /* asserts */ /*{{{*/
   assert(msg!=(const char*)0);
+  if (!*msg) msg = _("Use F0, F10 or / for menu");
   /*}}}*/
   if (!batch)
   {
@@ -951,8 +952,8 @@ void line_msg(const char *prompt, const char *msg)
   }
   else
   {
-    if (prompt) fprintf(stderr,"line %u: %s %s\n",batchln,prompt,msg);
-    else fprintf(stderr,"line %u: %s\n",batchln,msg);
+    if (prompt) fprintf(stderr,_("line %u: %s %s\n"),batchln,prompt,msg);
+    else fprintf(stderr,_("line %u: %s\n"),batchln,msg);
     exit(1);
   }
 }
@@ -960,33 +961,28 @@ void line_msg(const char *prompt, const char *msg)
 
 void show_text(const char *text)
 {
-  int offset; /* TODO: actually display text. */
+  int i;
+  char *end, *stripped;
 
-  offset=(COLS-41)/2;
-  (void)clear();
-  (void)move(0,offset+13); (void)addstr("` ',`    '  '");
-  (void)move(1,offset+14); (void)addstr("`   '  ` ' '");
-  (void)move(2,offset+15); (void)addstr("`' '   '`'");
-  (void)move(3,offset+15); (void)addstr("' `   ' '`");
-  (void)move(4,offset+2); (void)addstr("'           '` ' ` '`` `");
-  (void)move(5,offset+2); (void)addstr("`.   Table Editor And Planner, or:");
-  (void)move(6,offset+4); (void)addstr(",         . ,   ,  . .");
-  (void)move(7,offset+14); (void)addstr("` '   `  ' '");
-  (void)move(8,offset+3); (void)addstr("`::\\    /:::::::::::::::::\\   ___");
-  (void)move(9,offset+4); (void)addstr("`::\\  /:::::::::::::::::::\\,'::::\\");
-  (void)move(10,offset+5); (void)addstr(":::\\/:::::::::::::::::::::\\/   \\:\\");
-  (void)move(11,offset+5); (void)addstr(":::::::::::::::::::::::::::\\    :::");
-  (void)move(12,offset+5); (void)addstr("::::::::::::::::::::::::::::;  /:;'");
-  (void)move(13,offset+5); (void)addstr("`::::::::::::::::::::::::::::_/:;'");
-  (void)move(14,offset+7); (void)addstr("`::::::::::::::::::::::::::::'");
-  (void)move(15,offset+8); (void)addstr("`////////////////////////'");
-  (void)move(16,offset+9); (void)addstr("`:::::::::::::::::::::'");
-  (void)move(17,offset+2); (void)addstr("");
-  (void)move(18,offset+17); (void)addstr("Teapot");
-  (void)move(20,offset+0); (void)addstr("Version " VERSION ", Copyright by M. Haardt, J. Walter");
-  (void)move(22,offset+8); (void)addstr("Press any key to continue");
-  (void)refresh();
-  (void)getch();
+  stripped = striphtml(text);
+  text = stripped-1;
+
+  while (text) {
+    (void)clear();
+    for (i = 0; i < LINES-2 && text; i++) {
+      end = strchr(++text, '\n');
+      if (*text == '\f') break;
+      if (end) *end = 0;
+      (void)move(i,(COLS-strlen(text))/2);
+      (void)addstr(text);
+      text = end;
+    }
+    (void)move(i+1, (COLS-29)/2); (void)addstr(_("[ Press any key to continue ]"));
+    (void)refresh();
+    (void)getch();
+  }
+
+  free(stripped);
 }
 
 /* keypressed   -- get keypress, if there is one */ /*{{{*/
@@ -1006,4 +1002,144 @@ int keypressed(void)
 }
 /*}}}*/
 
-#include "wgetc.c"
+/* wgetc */ /*{{{*/
+static Key wgetc(void)
+{
+  /* variables */ /*{{{*/
+  chtype c;
+  /*}}}*/
+
+  doupdate();
+  refresh();
+  switch (c=wgetch(stdscr))
+  {
+    /* LEFT */ /*{{{*/
+    case KEY_LEFT:
+    case '\02': return K_LEFT;
+    /*}}}*/
+    /* RIGHT */ /*{{{*/
+    case KEY_RIGHT:
+    case '\06': return K_RIGHT;
+    /*}}}*/
+    /* UP */ /*{{{*/
+    case KEY_UP:
+    case '\020': return K_UP;
+    /*}}}*/
+    /* DOWN */ /*{{{*/
+    case KEY_DOWN:
+    case '\016': return K_DOWN;
+    /*}}}*/
+    /* BACKSPACE */ /*{{{*/
+    case KEY_BACKSPACE:
+    case '\010': return K_BACKSPACE;
+    /*}}}*/
+    /* DC */ /*{{{*/
+    case KEY_DC:
+    case '\04':
+    case '\177': return K_DC;
+    /*}}}*/
+    /* CANCEL */ /*{{{*/
+    case '\03':
+    case '\07': return KEY_CANCEL;
+    /*}}}*/
+    /* ENTER */ /*{{{*/
+    case KEY_ENTER:
+    case '\r':
+    case '\n': return K_ENTER;
+    /*}}}*/
+    /* HOME */ /*{{{*/
+    case KEY_HOME:
+    case '\01': return K_HOME;
+    /*}}}*/
+    /* END */ /*{{{*/
+    case KEY_END:
+    case '\05': return K_END;
+    /*}}}*/
+    /* DL */ /*{{{*/
+    case '\013': return KEY_DL;
+    /*}}}*/
+    /* NPAGE */ /*{{{*/
+    case KEY_NPAGE:
+    case '\026': return K_NPAGE;
+    /*}}}*/
+    /* PPAGE */ /*{{{*/
+    case KEY_PPAGE: return K_PPAGE;
+    /*}}}*/
+    /* Control Y, copy */ /*{{{*/
+    case '\031': return K_COPY;
+    /*}}}*/
+    /* Control R, recalculate sheet */ /*{{{*/
+    case '\022': return K_RECALC;
+    /*}}}*/
+    /* Control S, clock sheet */ /*{{{*/
+    case '\023': return K_CLOCK;
+    /*}}}*/
+    /* Control X, get one more key */ /*{{{*/
+    case '\030':
+    {
+      switch (wgetch(stdscr))
+      {
+        /* C-x <   -- BPAGE */ /*{{{*/
+        case KEY_PPAGE:
+        case '<': return K_BPAGE;
+        /*}}}*/
+        /* C-x >   -- FPAGE */ /*{{{*/
+        case KEY_NPAGE:
+        case '>': return K_FPAGE;
+        /*}}}*/
+        /* C-x C-c -- QUIT */ /*{{{*/
+        case '\03': return K_QUIT;
+        /*}}}*/
+        /* C-x C-s -- SAVE */ /*{{{*/
+        case '\023': return K_SAVE;
+        /*}}}*/
+        /* C-x C-r -- LOAD */ /*{{{*/
+        case '\022': return K_LOAD;
+        /*}}}*/
+        /* default -- INVALID, general invalid value */ /*{{{*/
+        default: return K_INVALID;
+        /*}}}*/
+      }
+    }
+    /*}}}*/
+    /* ESC, get one more key */ /*{{{*/
+    case '\033':
+    {
+      switch (wgetch(stdscr))
+      {
+        /* M-v     -- PPAGE */ /*{{{*/
+        case 'v': return K_PPAGE;
+        /*}}}*/
+        /* M-Enter -- MENTER */ /*{{{*/
+        case KEY_ENTER:
+        case '\r':
+        case '\n': return K_MENTER;
+        /*}}}*/
+        /* M-z     -- SAVEQUIT */ /*{{{*/
+        case 'z': return K_SAVEQUIT;
+        /*}}}*/
+        /* default -- INVALID, general invalid value */ /*{{{*/
+        default: return K_INVALID;
+        /*}}}*/
+      }
+    }
+    /*}}}*/
+    /* _("Load sheet file format:") */ /*{{{*/
+    case KEY_F(2): return K_LOADMENU;
+    /*}}}*/
+    /* _("Save sheet file format:") */ /*{{{*/
+    case KEY_F(3): return K_SAVEMENU;
+    /*}}}*/
+    /* default */ /*{{{*/
+    default: return c;
+    /*}}}*/
+  }
+}
+/*}}}*/
+
+void find_helpfile(char *buf, int size, const char *argv0)
+{
+	strncpy(buf, HELPFILE, size);
+	buf[size-1] = 0;
+}
+

@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "cat.h"
+
 #include "csv.h"
 #include "default.h"
 #include "display.h"
@@ -21,7 +21,7 @@
 #include "scanner.h"
 #include "sheet.h"
 #include "xdr.h"
-#include "version.h"
+
 /*}}}*/
 /* #defines */ /*{{{*/
 #define SHEET(s,x,y,z) (*(s->sheet+(x)*s->dimz*s->dimy+(y)*s->dimz+(z)))
@@ -478,7 +478,7 @@ Token getvalue(Sheet *sheet, int x, int y, int z)
   /* return error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=mystrmalloc(NEGLOC);
+    result.u.err=mystrmalloc(_("Negative index"));
   }
   /*}}}*/
   else if (getcont(sheet,x,y,z,2)==(Token**)0)
@@ -557,7 +557,7 @@ void update(Sheet *sheet)
     sheet->clk=0;
     if (iterating==1) 
     {
-      line_msg((const char*)0,"Calculating running, press a key to abort it");
+      line_msg((const char*)0,_("Calculating running, press Escape to abort it"));
       ++iterating;
     }
     else if (iterating==0) ++iterating;
@@ -587,7 +587,7 @@ void update(Sheet *sheet)
     }
     upd_clock=0;
   } while (sheet->clk && !(kp=keypressed()));
-  if (iterating==2) line_msg((const char*)0,kp ? "Calculation aborted" : "Calculation finished");
+  if (iterating==2) line_msg((const char*)0,kp ? _("Calculation aborted") : _("Calculation finished"));
   sheet->clk=0;
   redraw_sheet(sheet);
 }
@@ -797,7 +797,7 @@ Token findlabel(Sheet *sheet, const char *label)
   else
   {
     result.type=EEK;
-    result.u.err=mystrmalloc(NOLABEL);
+    result.u.err=mystrmalloc(_("No such label"));
   }
   return result;
 }
@@ -906,7 +906,7 @@ const char *savetbl(Sheet *sheet, const char *name, int body, int x1, int y1, in
   int x,y,z;
   char buf[1024];
   char num[20];
-  char fullname[_POSIX_PATH_MAX];
+  char fullname[PATH_MAX];
   /*}}}*/
   
   /* asserts */ /*{{{*/
@@ -914,7 +914,7 @@ const char *savetbl(Sheet *sheet, const char *name, int body, int x1, int y1, in
   assert(name!=(const char*)0);
   /*}}}*/
   *count=0;
-  for (z=z1; z<=z2; ++z) for (y=y1; y<=y2; ++y) if (shadowed(sheet,x1,y,z)) return NOSHADOW;
+  for (z=z1; z<=z2; ++z) for (y=y1; y<=y2; ++y) if (shadowed(sheet,x1,y,z)) return _("Shadowed cells in first column");
   if (!body && (fp=fopen(name,"w"))==(FILE*)0) return strerror(errno);
   for (z=z1; z<=z2; ++z)
   {
@@ -922,8 +922,8 @@ const char *savetbl(Sheet *sheet, const char *name, int body, int x1, int y1, in
     /* open new file */ /*{{{*/
     {
       sprintf(num,".%d",z);
-      fullname[_POSIX_PATH_MAX-strlen(num)-1]='\0';
-      (void)strncpy(fullname,name,_POSIX_PATH_MAX-strlen(num)-1);
+      fullname[sizeof(fullname)-strlen(num)-1]='\0';
+      (void)strncpy(fullname,name,sizeof(fullname)-strlen(num)-1);
       fullname[sizeof(fullname)-1]='\0';
       (void)strncat(fullname,num,sizeof(fullname)-strlen(num)-1);
       fullname[sizeof(fullname)-1]='\0';  
@@ -1034,7 +1034,7 @@ const char *savetext(Sheet *sheet, const char *name, int x1, int y1, int z1, int
   assert(name!=(const char*)0);
   /*}}}*/
   *count=0;
-  for (z=z1; z<=z2; ++z) for (y=y1; y<=y2; ++y) if (shadowed(sheet,x1,y,z)) return NOSHADOW;
+  for (z=z1; z<=z2; ++z) for (y=y1; y<=y2; ++y) if (shadowed(sheet,x1,y,z)) return _("Shadowed cells in first column");
   if ((fp=fopen(name,"w"))==(FILE*)0) return strerror(errno);
   for (z=z1; z<=z2; ++z)
   {
@@ -1091,7 +1091,7 @@ const char *savecsv(Sheet *sheet, const char *name, char sep, int x1, int y1, in
   assert(name!=(const char*)0);
   /*}}}*/
   *count=0;
-  for (z=z1; z<=z2; ++z) for (y=y1; y<=y2; ++y) if (shadowed(sheet,x1,y,z)) return NOSHADOW;
+  for (z=z1; z<=z2; ++z) for (y=y1; y<=y2; ++y) if (shadowed(sheet,x1,y,z)) return _("Shadowed cells in first column");
   if ((fp=fopen(name,"w"))==(FILE*)0) return strerror(errno);
   for (z=z1; z<=z2; ++z)
   {
@@ -1246,7 +1246,7 @@ const char *loadport(Sheet *sheet, const char *name)
         x=posnumber(os,&ns);
         if (os==ns)
         {
-          sprintf(errbuf,XERR,line);
+          sprintf(errbuf,_("Parse error for x position in line %d"),line);
           err=errbuf;
           goto eek;
         }
@@ -1255,7 +1255,7 @@ const char *loadport(Sheet *sheet, const char *name)
         y=posnumber(os,&ns);
         if (os==ns)
         {
-          sprintf(errbuf,YERR,line);
+          sprintf(errbuf,_("Parse error for y position in line %d"),line);
           err=errbuf;  
           goto eek;
         }
@@ -1264,7 +1264,7 @@ const char *loadport(Sheet *sheet, const char *name)
         z=posnumber(os,&ns);
         if (os==ns)
         {
-          sprintf(errbuf,ZERR,line);
+          sprintf(errbuf,_("Parse error for z position in line %d"),line);
           err=errbuf;    
           goto eek;
         }
@@ -1284,7 +1284,7 @@ const char *loadport(Sheet *sheet, const char *name)
                 case 'l': adjust=LEFT; ++ns; break;
                 case 'r': adjust=RIGHT; ++ns; break;
                 case 'c': adjust=CENTER; ++ns; break;
-                default:  sprintf(errbuf,ADJERR,line); err=errbuf; goto eek;
+                default:  sprintf(errbuf,_("Parse error for adjustment in line %d"),line); err=errbuf; goto eek;
               }
               break;
             }
@@ -1309,7 +1309,7 @@ const char *loadport(Sheet *sheet, const char *name)
               precision=posnumber(os,&ns);
               if (os==ns)
               {
-                sprintf(errbuf,PRECERR,line);
+                sprintf(errbuf,_("Parse error for precision in line %d"),line);
                 err=errbuf;
                 goto eek;
               }
@@ -1321,7 +1321,7 @@ const char *loadport(Sheet *sheet, const char *name)
             {
               if (x==0)
               {
-                sprintf(errbuf,SHADOWBOO2,x,y,z,line);
+                sprintf(errbuf,_("Trying to shadow cell (%d,%d,%d) in line %d"),x,y,z,line);
                 err=errbuf;
                 goto eek;
               }
@@ -1367,7 +1367,7 @@ const char *loadport(Sheet *sheet, const char *name)
             case '\0': break;
             /*}}}*/
             /* default -- error */ /*{{{*/
-            default: sprintf(errbuf,OPTERR,*ns,line); err=errbuf; goto eek;
+            default: sprintf(errbuf,_("Invalid option %c in line %d"),*ns,line); err=errbuf; goto eek;
             /*}}}*/
           }
         } while (*ns!=':' && *ns!='\0');
@@ -1380,7 +1380,7 @@ const char *loadport(Sheet *sheet, const char *name)
           if (contents==(Token**)0)
           {
             tvecfree(contents);
-            sprintf(errbuf,SYNERR,line);
+            sprintf(errbuf,_("Expression syntax error in line %d"),line);
             err=errbuf;
             goto eek;
           }
@@ -1399,7 +1399,7 @@ const char *loadport(Sheet *sheet, const char *name)
           if (ccontents==(Token**)0)
           {
             tvecfree(ccontents);
-            sprintf(errbuf,SYNERR,line);
+            sprintf(errbuf,_("Expression syntax error in line %d"),line);
             err=errbuf;
             goto eek;
           }
@@ -1427,7 +1427,7 @@ const char *loadport(Sheet *sheet, const char *name)
         x=posnumber(os,&ns);
         if (os==ns)
         {
-          sprintf(errbuf,XERR,line);
+          sprintf(errbuf,_("Parse error for x position in line %d"),line);
           err=errbuf;
           goto eek;
         }
@@ -1436,7 +1436,7 @@ const char *loadport(Sheet *sheet, const char *name)
         z=posnumber(os,&ns);
         if (os==ns)
         {
-          sprintf(errbuf,ZERR,line);
+          sprintf(errbuf,_("Parse error for z position in line %d"),line);
           err=errbuf;
           goto eek;
         }
@@ -1447,7 +1447,7 @@ const char *loadport(Sheet *sheet, const char *name)
         width=posnumber(os,&ns);
         if (os==ns)
         {
-          sprintf(errbuf,WIDTHERR,line);
+          sprintf(errbuf,_("Parse error for width in line %d"),line);
           err=errbuf;
           goto eek;
         }  
@@ -1462,7 +1462,7 @@ const char *loadport(Sheet *sheet, const char *name)
       /* default -- error */ /*{{{*/
       default:
       {
-        sprintf(errbuf,NOTAG,buf[0],line);
+        sprintf(errbuf,_("Unknown tag %c in line %d"),buf[0],line);
         err=errbuf;
         goto eek;
       }
@@ -1497,7 +1497,7 @@ const char *loadxdr(Sheet *sheet, const char *name)
 #if 0
     xdr_destroy(&xdrs);
     fclose(fp);
-    return WRONGXDRMAGIC;
+    return _("This is not a teapot worksheet in XDR format");
 #else
     xdr_destroy(&xdrs);
     rewind(fp);
@@ -1551,7 +1551,7 @@ const char *loadxdr(Sheet *sheet, const char *name)
       sheet->changed=0;
       cachelabels(sheet);
       forceupdate(sheet);
-      return BROKENSHEET;
+      return _("Invalid record, loading aborted");
     }
     /*}}}*/
   }
@@ -1637,7 +1637,7 @@ const char *loadcsv(Sheet *sheet, const char *name)
 	    csv_separator(s,&cend);
 	    while (s==cend && *s && *s!='\n')
 	    {
-	      err="unknown values ignored";
+	      err=_("unknown values ignored");
 	      csv_separator(++s,&cend);
 	    }
 	    /* else it is nothing, which does not need to be stored :) */
@@ -1891,7 +1891,7 @@ const char *sortblock(Sheet *sheet, int x1, int y1, int z1, int x2, int y2, int 
   cachelabels(sheet);
   forceupdate(sheet);
   sheet->changed=1;
-  if (norel) return UNCOMPAR;
+  if (norel) return _("uncomparable elements");
   else return (const char*)0;
 }
 /*}}}*/

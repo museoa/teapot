@@ -1,9 +1,9 @@
-This is release 2.0 of teapot (Table Editor And Planner, Or: Teapot),
+This is release 2.1.0 of teapot (Table Editor And Planner, Or: Teapot),
 a spread sheet program for UNIX.
 
-	Copyright (C) 1995-2006 Michael Haardt
-	Copyright (C) 2009-2010 Joerg Walter
-	This program is free software: you can redistribute it and/or modify
+    Copyright (C) 1995-2006 Michael Haardt
+    Copyright (C) 2009-2010 Joerg Walter
+    This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -20,6 +20,7 @@ The current release has the following features:
 
 o  curses based user interface with easy to understand menues
 o  FLTK 1.3 based GUI following common user interface conventions
+o  Cross-platform compatibility
 o  portable sheet file format uses XDR or ASCII format
 o  tbl, LaTeX, HTML, CSV or formatted text files can be generated and
    simple SC and WK1 sheets can be imported
@@ -35,11 +36,32 @@ o  It is still a small and simple program!
 
 teapot should work on any system which supports the following:
 
-o  POSIX
 o  ANSI C
+o  An XDR library (included in the GNU C library, otherwise
+   use http://people.redhat.com/~rjones/portablexdr/ )
 o  For the text interface: SYSV curses or ncurses library
 o  For the FLTK interface: C++
 o  For the FLTK interface: FLTK 1.3, tested with SVN r7704
+
+The changes compared to 2.0.2 are:
+
+o switched to CMake as build system
+o Win32 compatibility
+o usage improvements in the GUI version
+o various bug fixes
+
+The changes compared to 2.0.1 are:
+
+o Low-resource builds (leaving out the help system)
+o various bug fixes
+
+The changes compared to 2.0 are:
+
+o Fix a possible crash and some minor bugs
+o improve FLTK navigation and cell editing (moving around and
+  selecting cells now works while editing a formula)
+o automatically start a string value when typing a letter
+o fix build system
 
 The changes compared to 1.09 are:
 

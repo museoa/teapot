@@ -1,0 +1,6417 @@
+#LyX 1.6.7 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass scrartcl
+\begin_preamble
+\usepackage{tikz}
+\usepackage{pgffor}
+\end_preamble
+\options DIV=11
+\use_default_options false
+\language english
+\inputencoding auto
+\font_roman newcent
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\spacing single
+\use_hyperref true
+\pdf_title "Teapot User Guide"
+\pdf_author "Michael Haardt, Jörg Walter"
+\pdf_bookmarks true
+\pdf_bookmarksnumbered true
+\pdf_bookmarksopen true
+\pdf_bookmarksopenlevel 2
+\pdf_breaklinks false
+\pdf_pdfborder true
+\pdf_colorlinks false
+\pdf_backref false
+\pdf_pdfusetitle true
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle fancy
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Teapot User Guide
+\end_layout
+
+\begin_layout Author
+Michael Haardt, Jörg Walter
+\end_layout
+
+\begin_layout Date
+\begin_inset CommandInset href
+LatexCommand href
+name " http://www.syntax-k.de/projekte/teapot"
+target "http://www.syntax-k.de/projekte/teapot"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Abstract
+For ages, spread sheet programs have been closely associated with financial
+ calculations done by typical end-users.
+ But it has shown that there is also hacker's work which can be done with
+ them, like calculate monitor timings for various resolutions, produce convincin
+g time statistics which justify the lack of documentation or the need for
+ a budget increase to your employer.
+ This first part of this user guide explains how the various functions of
+ teapot are used, whereas the second part gives an introduction to spread
+ sheets and explains the expression evaluator and its functions.
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Copyright, Contributors and License
+\end_layout
+
+\begin_layout Standard
+
+\noun on
+teapot
+\noun default
+ (Table Editor And Planner, Or: Teapot), is copyrighted 1995--2006 by Michael
+ Haardt, and 2009--2010 by Jörg Walter.
+\end_layout
+
+\begin_layout Standard
+The implementation of clocked expressions is modelled after the description
+ of clocked evaluation in the PhD work of Jörg Wittenberger at the University
+ of Technology in Dresden, Germany.
+ The trigonometric functions were inspired by Koniorczyk Mátyás.
+ The context output format was contributed by Marko Schuetz.
+\end_layout
+
+\begin_layout Standard
+The (currently unused) message catalogs were contributed by Guido Müsch,
+ Wim van Dorst, and Volodymyr M.
+ Lisivka.
+\end_layout
+
+\begin_layout Standard
+This program is free software: you can redistribute it and/or modify it
+ under the terms of the GNU General Public License as published by the Free
+ Software Foundation, either version 3 of the License, or (at your option)
+ any later version.
+ 
+\end_layout
+
+\begin_layout Standard
+This program is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.
+ See the GNU General Public License for more details.
+ 
+\end_layout
+
+\begin_layout Standard
+You should have received a copy of the GNU General Public License along
+ with this program.
+ If not, see <
+\begin_inset CommandInset href
+LatexCommand href
+target "http://www.gnu.org/licenses/"
+
+\end_inset
+
+>.
+\end_layout
+
+\begin_layout Section
+Introduction to Spread Sheets
+\end_layout
+
+\begin_layout Subsection
+General Introduction
+\end_layout
+
+\begin_layout Standard
+A spread sheet consists of cells formed by rows and columns.
+ Additionally, in many spread sheets you have a third dimension, which you
+ can imagine as various sheets laying on top of each other.
+ The third dimension allows you to hide intermediate results, show you additiona
+l results you do not want to appear in the 
+\begin_inset Quotes eld
+\end_inset
+
+official
+\begin_inset Quotes erd
+\end_inset
+
+ tables, keep sheets per time period (like 12 sheets for each month in a
+ year) while allowing you to make calculations over the entire time interval
+ and much more.
+ Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Three-Dimensional-Spread-Sheet"
+
+\end_inset
+
+ shows the three dimensions:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+{
+\backslash
+color{white}
+\backslash
+hrule}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{tikzpicture}[scale=.1,anchor=west]
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+foreach 
+\backslash
+z in {0,2,4,6} 
+\backslash
+filldraw[fill=white,ystep=1,xstep=3,shift={(0,0,
+\backslash
+z)}] (0,0) rectangle (60,10) (0,0) grid (60,10);
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+draw[->] (70,10,10) -- +(30,0,0) node{x};
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+draw[->] (70,10,10) -- +(0,-10,0) node{y};
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+draw[->] (70,10,10) -- +(0,0,-10) node{z};
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{tikzpicture}
+\end_layout
+
+\begin_layout Plain Layout
+
+{
+\backslash
+color{white}
+\backslash
+hrule}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Three-Dimensional-Spread-Sheet"
+
+\end_inset
+
+Three-Dimensional Spread Sheet Layout
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+You can think of cells as variables, which value is the value of an associated
+ expression.
+ The expression may be constant, like 1.23, or it may be a function of other
+ cell values.
+ The advantage compared to a programmable calculator is that if you change
+ a number, you directly see all changes in other cells caused by that.
+ Often this allows you to get a feeling how much you may change basic sizes
+ with still getting satisfying results without having to solve the problem
+ analytically.
+ 
+\end_layout
+
+\begin_layout Standard
+Spread sheets offer many editing functions in order to modify, clear, copy
+ and move cells or blocks of cells.
+ Besides the usual mathematical functions, there are functions which work
+ on blocks of cells, like calculating the sum of a block or counting all
+ non-empty elements.
+ Further there are functions working on character strings, because most
+ likely you also want text besides numbers.
+ The next section will introduce you to some of these by examples.
+ 
+\end_layout
+
+\begin_layout Standard
+teapot is a traditional spread sheet and a typical UNIX program, because
+ it does just one thing: Calculations.
+ It does not include any graphics functions and never will, but it allows
+ to export data in many formats, so you can use your favourite graphics
+ software.
+ 
+\end_layout
+
+\begin_layout Subsection
+The First Steps
+\end_layout
+
+\begin_layout Standard
+Now that you should have an idea, it is probably a good time to make your
+ first steps.
+ This section will show you how to create and save a sheet which contains
+ two numbers and their sum.
+ Start the program without any arguments
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+If you are using the graphical version of teapot, please see section 
+\begin_inset CommandInset ref
+LatexCommand vref
+reference "sub:Differences-Between-User"
+
+\end_inset
+
+.
+\end_layout
+
+\end_inset
+
+: 
+\end_layout
+
+\begin_layout Quote
+
+\family typewriter
+teapot
+\end_layout
+
+\begin_layout Standard
+You see an empty sheet with the cell cursor being at the upper left corner.
+ Further, the status line tells you that this cell is really empty:
+\end_layout
+
+\begin_layout Quote
+
+\family typewriter
+E @(0,0,0)=
+\family default
+ 
+\end_layout
+
+\begin_layout Standard
+The 
+\family typewriter
+E
+\family default
+ means that you can edit the sheet.
+ A 
+\family typewriter
+V
+\family default
+ would mean that you could only view its contents.
+ The meaning of 
+\family typewriter
+@()
+\family default
+ will be explained soon.
+ You are now in the command mode of teapot.
+ Press the 
+\series bold
+Enter
+\series default
+ key to edit this cell.
+ A complete list of command mode functions will be given later.
+ A prompt will appear below the status line: 
+\end_layout
+
+\begin_layout Quote
+
+\family typewriter
+Cell contents:
+\family default
+ 
+\series bold
+1
+\series default
+ 
+\end_layout
+
+\begin_layout Standard
+Now the cell at position 0,0,0 has the integer constant 1.
+ The status line shows you the cell contents, whereas in the sheet you see
+ its value.
+ Since constants are identical with their values, both are 1.
+ Now move the cell cursor down one row and edit that cell, giving it the
+ integer constant 
+\family typewriter
+41
+\family default
+.
+ 
+\end_layout
+
+\begin_layout Standard
+Now that you have two numbers, move the cell cursor to cell 0,2,0 and give
+ that cell the following contents:
+\end_layout
+
+\begin_layout Quote
+
+\family typewriter
+Cell contents:
+\family default
+ 
+\series bold
+@(0,0,0)+@(0,1,0)
+\series default
+ 
+\end_layout
+
+\begin_layout Standard
+If you were confused about the difference between contents and value of
+ a cell, it should become more clear now: The status line shows the contents,
+ which is the arithmetic expression to calculate the sum of two cells, whereas
+ in the sheet you see the value of that expression: 42, which was to be
+ expected.
+ 
+\family typewriter
+@(
+\family default
+\shape italic
+x
+\family typewriter
+\shape default
+,
+\family default
+\shape italic
+y
+\family typewriter
+\shape default
+,
+\family default
+\shape italic
+z
+\family typewriter
+\shape default
+)
+\family default
+ is a function which takes three coordinates and returns the value of the
+ cell at the given position.
+ 
+\end_layout
+
+\begin_layout Standard
+As you can see, the arithmetic expression is not too readable.
+ If you would move cells around, it would not even work any more.
+ For these reasons, you can use symbolic names instead of coordinates, called
+ labels.
+ When used in an expression, a label is like a pointer to a cell, its data
+ type is 
+\emph on
+location
+\emph default
+.
+ Move to cell 0,0,0 and use 
+\series bold
+/
+\series default
+ (slash) in command mode to get into the main menu.
+ Depending on your screen size, you may not see all of it.
+ In this case, move the highlighted block right (or left) to scroll through
+ it and to see all items.
+ Now change its label attribute: A)ttributes, L)abel:
+\end_layout
+
+\begin_layout Quote
+
+\family typewriter
+Cell label:
+\family default
+ 
+\series bold
+Paper
+\end_layout
+
+\begin_layout Standard
+Then go one cell down and change its label to 
+\series bold
+Tapes
+\series default
+.
+ After, move again one cell down and change the expression to: 
+\end_layout
+
+\begin_layout Quote
+
+\family typewriter
+Cell contents:
+\family default
+ 
+\series bold
+@(Paper)+@(Tapes)
+\end_layout
+
+\begin_layout Standard
+As you see, you can call the function 
+\family typewriter
+@
+\family default
+ with three integer values or with one location value.
+ Now the expression is more understandable, at least to you.
+ To someone else, the sheet only contained three numbers, so a little text
+ should be added.
+ To accomplish that, a new column needs to be inserted: B)lock, I)insert,
+ C)olumn, W)hole column.
+ The last menu item means that you want to insert a whole new column, not
+ only a partial column.
+ If you move the cursor around, you will see that everything is still fine,
+ because you used labels.
+ Go to cell 0,0,0 and edit it:
+\end_layout
+
+\begin_layout Quote
+
+\family typewriter
+Cell contents:
+\family default
+ 
+\series bold
+"Paper:"
+\end_layout
+
+\begin_layout Standard
+This is how you enter strings.
+ A string is a data type on its own, don't confuse this with labels.
+ If you feel like it, leave the quotes and the colon away, and you will
+ see the difference, because the result will not be a string, but the value
+ of the label 
+\family typewriter
+Paper
+\family default
+, which is 
+\family typewriter
+&(1,0,0)
+\family default
+.
+ Now change the cells below to 
+\series bold
+"Tapes:"
+\series default
+ and 
+\series bold
+"Result:"
+\series default
+.
+ This is something that is understandable to others, too.
+ 
+\end_layout
+
+\begin_layout Standard
+As the last step, save your work sheet to a file: F)ile, S)ave.
+ The native file format is XDR, so choose that.
+ Up to now, your sheet does not have a name, so you will be prompted for
+ one:
+\end_layout
+
+\begin_layout Quote
+
+\family typewriter
+New file name:
+\family default
+ 
+\series bold
+firststep
+\end_layout
+
+\begin_layout Standard
+Unless you see an error message after, your sheet is written to a file.
+ 
+\end_layout
+
+\begin_layout Standard
+If you have come this far, quit (from the main menu) and you have successfully
+ completed your first steps on using teapot.
+ Now you know cells, the difference between contents and values, you learned
+ that labels are a good thing and you can do simple cell modifications as
+ well as saving your work.
+ This is enough for most applications.
+ If the capabilities described in the next section confuse you, then it
+ is unlikely that you need them really.
+ Just skip that section and don't worry about it.
+ 
+\end_layout
+
+\begin_layout Standard
+You may wonder what happens if you have circular dependencies, i.e.
+ you have a cell which evaluates to its own value plus one.
+ Well, the answer is that it depends on the order in which you create this
+ cell.
+ If you first give it the value 1 and after edit it to contain the expression
+ which refers to itself plus 1, then you will find that each recalculation,
+ like after editing other cells, will increase the value.
+ While this may be funny, it is certainly not useful as you can not reset
+ the cell and you have little control of its development.
+ 
+\end_layout
+
+\begin_layout Standard
+What you really want is a base value and an iterative expression along with
+ a way to control the recalculations.
+ teapot supports this by allowing two expressions per cell.
+ The expressions you have used so far are the ones which evaluate to the
+ base values.
+ Each time you edit a cell, the whole sheet will be reset, which means that
+ all results are recalculated using the base values.
+ After, you can clock the sheet, which is why the iterative part is also
+ called clocked expression.
+ A clock is an atomic operation, which means that all cell results will
+ be recalculated in a way that the new result will only show after the entire
+ recalculation.
+ 
+\end_layout
+
+\begin_layout Standard
+An examples will demonstrate how to make use of this feature.
+ The notation 
+\shape italic
+x
+\shape default
+ -> 
+\shape italic
+y
+\shape default
+ means that 
+\shape italic
+x
+\shape default
+ is the base expression and 
+\shape italic
+y
+\shape default
+ is the clocked expression.
+ Don't let this confuse you, as both are entered separately: teapot does
+ not have an -> operator, but it displays the cell contents this way for
+ increased overview.
+ So, give the cell a base expression of 
+\family typewriter
+1
+\family default
+ and a clocked expression of 
+\family typewriter
+@(0,0,0)+1
+\family default
+ (using 
+\series bold
+ESC-Enter
+\series default
+ or 
+\series bold
+Meta-Enter
+\series default
+) and you will see:
+\end_layout
+
+\begin_layout Quote
+
+\family typewriter
+@(0,0,0)=1 -> @(0,0,0)+1
+\end_layout
+
+\begin_layout Standard
+The sheet is currently in reset condition and the result is 1.
+ Now clock it and you will see how the value increases.
+ 
+\end_layout
+
+\begin_layout Standard
+After this introductional chapter, you should be familiar with the basic
+ concepts in spread sheets.
+ The next chapters explain all functions available in detail.
+ You should read them to get an overview of the possibilities offered by
+ teapot.
+ Finally, we will come back to using teapot by showing some common problems
+ and their solutions.
+ 
+\end_layout
+
+\begin_layout Subsection
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Differences-Between-User"
+
+\end_inset
+
+Differences Between User Interfaces
+\end_layout
+
+\begin_layout Standard
+
+\noun on
+teapot
+\noun default
+ comes in two flavours: A mouse-and-keyboard operated graphical application
+ and a traditional console-based program.
+ Large parts of this manual were written when the GUI version didn't exist,
+ so there may be occasional inconsistencies.
+\end_layout
+
+\begin_layout Standard
+Most notably, a few key bindings don't exist.
+ If something doesn't work as described in here, refer to the pull-down
+ menus, where all functionality can be found.
+ In addition to the common keys, the GUI variant has extended mouse and
+ keyboard bindings that work similarly to other GUI applications.
+ There are not yet documented, but should 
+\begin_inset Quotes eld
+\end_inset
+
+just work
+\begin_inset Quotes erd
+\end_inset
+
+ as expected.
+\end_layout
+
+\begin_layout Section
+Command Mode
+\end_layout
+
+\begin_layout Standard
+Right after starting teapot, you are in the command mode.
+ Many functions from the command mode are also available from menus, but
+ using keys is faster and some things, like moving the cell cursor, are
+ only available through keys.
+ Table 
+\begin_inset CommandInset ref
+LatexCommand vref
+reference "tab:Key-Bindings-in"
+
+\end_inset
+
+ lists all available key bindings
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+If you are using the graphical version of teapot, please see section 
+\begin_inset CommandInset ref
+LatexCommand vref
+reference "sub:Differences-Between-User"
+
+\end_inset
+
+.
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="31" columns="3">
+<features>
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Function Key
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ASCII Key
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Function
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Next Line
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-N
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Cursor down
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Previous Line
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-P
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Cursor up
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Begin
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-A
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Cursor to column 0
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+End
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-E
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Cursor to last column
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
++
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Cursor to next layer
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+- (Dash)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Cursor to previous layer
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+<
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Cursor to line 0
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+>
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Cursor to last line
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+_ (Underscore)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Cursor to layer 0
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+*
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Cursor to last layer
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-X <
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+One page left
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-X >
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+One page right
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+F10
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+/
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Main menu
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+F2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Save menu
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+F3
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Load menu
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-X Ctrl-R
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Load file
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Enter
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-J, Ctrl-M
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Edit cell contents
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Quotes eld
+\end_inset
+
+, @, 
+\emph on
+digit
+\emph default
+, 
+\emph on
+letter
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Overwrite cell contents
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Meta-Enter
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Esc Ctrl-J, Esc Ctrl-M
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Edit clocked cell contents
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Backspace
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-H
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Edit cell contents
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+.
+ (Period)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Mark block
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-L
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Redraw screen
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-Y
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Paste block
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-R
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Reset sheet
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+F9
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-S
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Clock sheet
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Esc z
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Save and quit
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-X Ctrl-C
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Quit
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Next Page
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-V
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+One page down
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Previous Page
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Meta-V
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+One page up
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Cancel
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-G, Ctrl-C
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Abort current action
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:Key-Bindings-in"
+
+\end_inset
+
+Key Bindings in Command Mode
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+.
+ (Period) marks blocks: The first time it marks the beginning of a block,
+ which is then extended by moving the cell cursor.
+ The next time, it marks the end of the block which lets you move the cell
+ cursor after without changing the block.
+ The third time, it removes the block marks again.
+ 
+\end_layout
+
+\begin_layout Section
+The Line Editor
+\end_layout
+
+\begin_layout Standard
+Many functions in teapot require editing a line of text, e.g.
+ editing cell contents, typing file names and the line.
+ Similar to the command mode, all things can be reached by control codes
+ and most by function keys.
+ Table 
+\begin_inset CommandInset ref
+LatexCommand vref
+reference "tab:Key-Bindings-forLineEditor"
+
+\end_inset
+
+ lists all available key bindings
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+These only apply to the console version.
+ The GUI version has input fields that work like all other input fields.
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="13" columns="3">
+<features>
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Function Key
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ASCII Key
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Function
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Previous Character
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-B
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Move cursor left
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Next Character
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-F
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Move cursor right
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Begin
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-A
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Move cursor to column 0
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+End
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-E
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Move cursor to last column
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Enter
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-J, Ctrl-M
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Finish editing
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-L
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Redraw screen
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-T
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Transpose characters
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-
+\backslash
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Go to matching paren
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Cancel
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-G, Ctrl-C
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Abort editing
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Backspace
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-H
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Delete previous character
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Delete
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl-?, Ctrl-D
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Delete current character
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Insert
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Toggle insert mode
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:Key-Bindings-forLineEditor"
+
+\end_inset
+
+Key Bindings for the line editor
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Besides the regular line editor functions, you may use Ctrl-O (Tab in the
+ GUI version) to temporarily leave the editor in order to move around in
+ the sheet if you are editing cell contents.
+ Another Ctrl-O (resp.
+ Tab) brings you back to the line editor.
+ While moving around in the sheet, you can insert the value (v) or position
+ (p) at the cursor position in the edited cell.
+ Clicking on a cell while editing has the same effect as moving to that
+ cell and pressing (p).
+\end_layout
+
+\begin_layout Standard
+Aborting line editing means that you will get right back to command mode,
+ whatever you started doing will have no effect.
+ 
+\end_layout
+
+\begin_layout Section
+Interactive Functions
+\end_layout
+
+\begin_layout Standard
+Most actions are available through the menu.
+ Most of these will be applied to all cells within a block if a block of
+ cells is marked.
+\end_layout
+
+\begin_layout Subsection
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Cell-Attributes"
+
+\end_inset
+
+Cell Attributes
+\end_layout
+
+\begin_layout Standard
+Cells can have several attributes: 
+\end_layout
+
+\begin_layout Itemize
+A cell label, which is useful because it avoids to directly address cells
+ by their position.
+ A cell label must be different from function names.
+ 
+\end_layout
+
+\begin_layout Itemize
+The cell adjustment, which determines if the cell value is printed left
+ adjusted, right adjusted or centered.
+ 
+\end_layout
+
+\begin_layout Itemize
+The precision for the output of floating point values.
+ The default is 2 digits after the dot.
+ 
+\end_layout
+
+\begin_layout Itemize
+If floating point numbers should be printed in scientific notation (0.123e1)
+ or as decimal number (1.23).
+ It only affects the output, if the cell value is a floating point number.
+ 
+\end_layout
+
+\begin_layout Itemize
+If the cell is shadowed by its left neighbour.
+ This means that the left neighbour cell additionally uses the room of the
+ shadowed cell.
+ 
+\end_layout
+
+\begin_layout Itemize
+If the cell is locked which prevents to accidentally edit or clear it.
+ Note that block operations override this attribute, because when you deal
+ with blocks, you usually know what you are doing.
+ 
+\end_layout
+
+\begin_layout Itemize
+If special characters for e.g.
+ roff and LaTeX should be quoted (default) or not.
+ Not quoting them allows special effects (if you know roff or LaTeX), but
+ is of course not portable.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Precision
+\end_layout
+
+\begin_layout Standard
+The precision only changes what is printed, teapot always uses the maximum
+ precision for calculations.
+ It also only affects the output if the cell value is a floating point number.
+ Entering an empty precision means to set it to the default value.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Exponential / Decimal
+\end_layout
+
+\begin_layout Standard
+Forces exponential notation for numbers in a cell.
+ Decimal mode will prefer plain decimal numbers unless the result is very
+ big or very small.
+\end_layout
+
+\begin_layout Subsubsection
+Adjustment
+\end_layout
+
+\begin_layout Standard
+Cells contents can be aligned to the left, right or centered.
+ By default, text is left adjusted and numbers are right adjusted.
+\end_layout
+
+\begin_layout Subsubsection
+Label
+\end_layout
+
+\begin_layout Standard
+This function lets you edit the cell label of the current cell.
+ Further it changes all occurences of it in the cell contents to the new
+ value, unless you erased the cell label.
+ If a block has been marked by the time you edit the cell label, all occurences
+ of the label in contents of cells in that block will be changed.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Lock
+\end_layout
+
+\begin_layout Standard
+You can lock cells to protect them from accidental editing.
+ Note that this protects you from modifying single cells.
+ If you modify a block of cells which contains locked cells, those will
+ be modified as well.
+ This has been done because when using block commands, you usually know
+ what you are doing.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Ignore
+\end_layout
+
+\begin_layout Standard
+Ignored cells will be completely ignored.
+ They appear as empty cells on screen and during calculations.
+ This is useful for temporarily disabling parts of your calculation, as
+ the former content reappears when the ignore is removed again.
+\end_layout
+
+\begin_layout Subsubsection
+Transparent
+\end_layout
+
+\begin_layout Standard
+Usually, values are quoted as needed so that you get the exact same output
+ as on screen.
+ Transparent cells will be exported as-is into display-oriented file formats
+ (LaTeX, etc.) so that you can embed commands for subsequent processing in
+ cell values.
+\end_layout
+
+\begin_layout Subsubsection
+Shadow
+\end_layout
+
+\begin_layout Standard
+Shadowed cells are effectively nonexistant.
+ Instead, their left neighbour cell extends into the shadowed cell, so that
+ longer text can be displayed.
+ You may think of shadowing as a way to get multi-column cells.
+\end_layout
+
+\begin_layout Subsubsection
+Column Width
+\end_layout
+
+\begin_layout Standard
+The column width only affects the screen display, not the formatting of
+ the final output (except formatted text files).
+ It is intended to let you make better usage of the screen for more overview.
+ If the width is too small to display the cell value, a placeholder will
+ be displayed.
+ 
+\end_layout
+
+\begin_layout Subsection
+Block Functions
+\end_layout
+
+\begin_layout Subsubsection
+Copy/Move
+\end_layout
+
+\begin_layout Standard
+To copy a block of cells, mark it, then move the cell cursor to where the
+ upper left corner of the copy should be and issue the copy command.
+ Moving works similar, just use the move command.
+ Of course you can mark three-dimensional blocks and copy them anywhere
+ in the three-dimensional sheet, but doing so requires a good three-dimensional
+ imagination to get what you want.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Fill
+\end_layout
+
+\begin_layout Standard
+To fill a block of cells, first mark a the block it should be filled with.
+ This may be just one cell! Then move the cell cursor to where the upper
+ left corner of the block to be filled should be and issue the fill command.
+ You will be prompted for how often the marked block should be repeated
+ in each dimension.
+ For example, you may to repeat a cell 9 times below.
+ Mark it, then move down one row.
+ Issue the fill command and answer 1 to the number of column repetitions,
+ 9 to rows and 1 to layers.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Clear
+\end_layout
+
+\begin_layout Standard
+Clearing means to delete the cell contents and set all attributes to the
+ default value.
+ If you want to preserve the attributes, just edit the contents of a cell
+ and delete them.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Insert
+\end_layout
+
+\begin_layout Standard
+Since work sheets can be three-dimensional, you can insert cells in all
+ three dimensions, too.
+ The inserted cells will be empty and their attributes have the default
+ values.
+ Cells will always be moved away from the front upper left corner to make
+ room for the inserted cells.
+ If no block is marked, you will be asked if you really only want to insert
+ a cell of if you want to insert a whole row, line or sheet.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Delete
+\end_layout
+
+\begin_layout Standard
+Deleting works contrary to inserting.
+ The deleted cells will be filled by moving neighbour cells to their positions.
+ You will be prompted for the direction from where those cells will be taken.
+ Deleting an entire column column-wise is done by marking the column, use
+ the delete command and chose X direction.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Sort"
+
+\end_inset
+
+Sort
+\end_layout
+
+\begin_layout Standard
+Marked blocks of cells can be sorted after one or multiple keys, either
+ column-wise, row-wise or depth-wise.
+ Sorting a two dimensional block row-wise will sort lines, but if a three
+ dimensional block is sorted row-wise, then horizontal layers will be sorted.
+ The sort key is specified as vector which is orthogonal to the sorted elements,
+ either in ascending or descending order.
+ The following example illustrates the sort function.
+ The upper left part of the screen should look like this:
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="5" columns="3">
+<features>
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+one
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+two
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+three
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+four
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The box shows you which block to mark.
+ Now this block should be sorted row-wise, with the sort key being the numbers
+ in descending order, i.e.
+ we want the lines being numbered 4,3,2,1.
+ Go to the block menu, then select sort.
+ Use 
+\family typewriter
+R)ow
+\family default
+, because that is how we want to sort this block.
+ The X position of the sort key vector is 0, because the column 0 contains
+ the numbers.
+ The Z position is 0, too, because those numbers are on sheet 0.
+ Now chose 
+\family typewriter
+D)escending
+\family default
+ as direction.
+ At this point, you could add a secondary key or decide to sort the block
+ by the keys entered so far.
+ Use 
+\family typewriter
+S)ort region
+\family default
+ to sort it.
+ That's it, the screen should look like this now:
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="5" columns="3">
+<features>
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+four
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+three
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+two
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+one
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Mirror
+\end_layout
+
+\begin_layout Standard
+Mirroring a marked block of cells can be done in three directions: Left/right,
+ upside/down and front/back.
+ 
+\end_layout
+
+\begin_layout Subsection
+Saving and Loading
+\end_layout
+
+\begin_layout Subsubsection
+File names
+\end_layout
+
+\begin_layout Standard
+Usually, you want to overwrite the loaded file.
+ For this reason, the loaded file name is remembered.
+ If the sheet doesn't have a file name, like after starting an empty sheet,
+ you will be asked for a name when saving.
+\end_layout
+
+\begin_layout Standard
+Occasionally, you may want to rename a sheet, like before making critical
+ changes or when you load an existing sheet to have a start for making a
+ new one.
+ The Save As function allows you to save the file under a new name.
+\end_layout
+
+\begin_layout Subsubsection
+File Formats
+\end_layout
+
+\begin_layout Paragraph
+XDR (.tp)
+\end_layout
+
+\begin_layout Standard
+XDR (eXternal Data Representation) is a standard invented by Sun Microsystems
+ which defines a canonical way of storing/transporting data on external
+ media.
+ Its advantage is that it is widely available and that it defines a portable
+ floating point number format.
+ The native teapot file format uses XDR so it is portable across different
+ machine architectures and operating systems.
+ The advantage of this over the portable ASCII format is that due to the
+ (usually) missing conversion calculations any floating point constants
+ will be saved/loaded exactly without conversion errors.
+\end_layout
+
+\begin_layout Paragraph
+ASCII (.tpa)
+\end_layout
+
+\begin_layout Standard
+The ASCII file format allows easy generation/modification of saved sheets
+ by shell scripts.
+ Due to binary/ASCII conversion, there may be conversion errors in floating
+ point constants.
+ The default extension is 
+\family typewriter
+.
+\family default
+tpa.
+ 
+\end_layout
+
+\begin_layout Paragraph
+CSV (.csv)
+\end_layout
+
+\begin_layout Standard
+CSV (comma seperated value) files only contain the data, not the expressions
+ calculating it.
+ Many spread sheets can generate this file format and many graphics programs
+ like gnuplot(1) can read it.
+ The field separator usually is a tab or comma, strings may be enclosed
+ in double quotes and decimal numbers have a dot to mark the fractional
+ part.
+ One popular variation uses semicolons for separating fields and a decimal
+ comma instead of a decimal point, which teapot tries to autodetect.
+\end_layout
+
+\begin_layout Standard
+On load, strings without quotes and with a 
+\emph on
+0x
+\emph default
+ prefix followed by hexadecimal digits will be converted to integers.
+ When loading CSV files, the sheet will not be cleared and the data will
+ be load relative to the current cursor position.
+\end_layout
+
+\begin_layout Paragraph
+SC SpreadsheetCalculator (.sc)
+\end_layout
+
+\begin_layout Standard
+teapot can load simple SC sheets to convert them to teapot's native format.
+ While loading, teapot converts all references to absolute cell positions
+ to labels.
+ This allows to insert and delete in such sheets without screwing the whole
+ sheet up.
+ teapot can not save sheets in SC format, because SC lacks many features.
+ For now, only the most basic SC features are supported.
+\end_layout
+
+\begin_layout Paragraph
+Lotus 1-2-3 (.wk1)
+\end_layout
+
+\begin_layout Standard
+teapot can load simple WK1 sheets to convert them to teapot's native format.
+ By default, 1-2-3 cell references are relative, so don't be surprised by
+ a big amount of relative references in the resulting teapot sheet.
+ For now, only the most basic 1-2-3 features are supported.
+\end_layout
+
+\begin_layout Paragraph
+Formatted ASCII (.txt)
+\end_layout
+
+\begin_layout Standard
+The generated formatted ASCII files contain about what you see on the screen.
+ If your sheet has more than one layer, then the various layers will be
+ saved separated by form feeds.
+\end_layout
+
+\begin_layout Paragraph
+Troff tbl (.tbl)
+\end_layout
+
+\begin_layout Standard
+teapot can generate tbl(1) table bodies in single files which are supposed
+ to be used like this:
+\end_layout
+
+\begin_layout Quote
+
+\family typewriter
+.TS
+\begin_inset Newline newline
+\end_inset
+
+
+\family default
+\shape italic
+options
+\family typewriter
+\shape default
+;
+\begin_inset Newline newline
+\end_inset
+
+.so
+\family default
+ 
+\shape italic
+filename
+\begin_inset Newline newline
+\end_inset
+
+
+\family typewriter
+\shape default
+.TE
+\end_layout
+
+\begin_layout Standard
+You will have to use soelim(1) to eliminate the 
+\family typewriter
+.so
+\family default
+ requests before the tbl run.
+ The 
+\shape italic
+options
+\family typewriter
+\shape default
+;
+\family default
+ are optional.
+ If you use GNU roff, you will need to eliminate 
+\family typewriter
+.lf
+\family default
+ requests, because this GNU roff extension confuses GNU tbl:
+\end_layout
+
+\begin_layout Quote
+
+\family typewriter
+soelim
+\family default
+ 
+\shape italic
+file
+\shape default
+ 
+\family typewriter
+| grep -v '^
+\backslash
+.lf'
+\end_layout
+
+\begin_layout Standard
+Alternatively, you can generate a stand-alone document, which needs no further
+ operations to format and print.
+ Note: If no block is marked, the whole sheet will be saved.
+\end_layout
+
+\begin_layout Paragraph
+LaTeX (.latex)
+\end_layout
+
+\begin_layout Standard
+If you generate LaTeX2e tables in single files, you include them in documents
+ using the 
+\family typewriter
+
+\backslash
+include
+\family default
+ command.
+ Alternatively, you can generate a stand-alone document, which needs no
+ further operations to format and print.
+ Note: If no block is marked, the whole sheet will be saved.
+\end_layout
+
+\begin_layout Paragraph
+ConTeXt (.tex)
+\end_layout
+
+\begin_layout Standard
+Analogous to LaTeX output, this generates input suitable to the ConTeXt
+ macro package.
+\end_layout
+
+\begin_layout Paragraph
+HTML (.html)
+\end_layout
+
+\begin_layout Standard
+You can generate html table bodies in single files which could be used in
+ combination with server-side includes.
+ This feature differs between the various servers, so refer to the manual
+ for your web server for details, please.
+ 
+\end_layout
+
+\begin_layout Standard
+Alternatively, you can generate a stand-alone document.
+ Note: If no block is marked, the whole sheet will be saved.
+\end_layout
+
+\begin_layout Subsection
+Other Functions
+\end_layout
+
+\begin_layout Subsubsection
+Goto Location
+\end_layout
+
+\begin_layout Standard
+Sometimes, you directly want to go to a specific position, either to change
+ its contents to see which cell a location expression refers to.
+ This function lets you enter an expression, which must evaluate to a value
+ of the type location.
+ If so, the cursor is positioned to that location.
+ For example, you could enter 
+\family typewriter
+&(10,2)
+\family default
+ to go to cell 10,2 of the current layer or you could enter the name of
+ a label you want to go to.
+ Relative movements are no problem, either.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Shell
+\end_layout
+
+\begin_layout Standard
+Start a sub shell.
+ Exiting from that sub shell will bring you back into teapot.
+ This function does not exist in the GUI version.
+\end_layout
+
+\begin_layout Subsubsection
+Version
+\end_layout
+
+\begin_layout Standard
+teapot will display its version number and copyright statement.
+\end_layout
+
+\begin_layout Subsubsection
+Help
+\end_layout
+
+\begin_layout Standard
+If teapot was built with the integrated help viewer, you can access this
+ manual from within teapot itself.
+\end_layout
+
+\begin_layout Section
+Batch functions
+\end_layout
+
+\begin_layout Standard
+Besides interactive facilities, teapot has a batch mode.
+ Using this batch mode, shell scripts can generate output from teapot sheets.
+ This is handy if you use make(1) to generate a bigger document containing
+ tables, because you don't have to generate a tbl or LaTeX file each time
+ you modified a sheet: make will do so.
+ In batch mode, teapot reads batch commands from standard input.
+ The following commands are available: 
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+\series bold
+goto
+\family default
+\shape italic
+
+\begin_inset space ~
+\end_inset
+
+location
+\series default
+\shape default
+ Go to the specified 
+\shape italic
+location
+\shape default
+.
+ 
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+\series bold
+from
+\family default
+\shape italic
+
+\begin_inset space ~
+\end_inset
+
+location
+\series default
+\shape default
+ Start marking a block.
+ 
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+\series bold
+to
+\family default
+\shape italic
+
+\begin_inset space ~
+\end_inset
+
+location
+\series default
+\shape default
+ End marking a block.
+ 
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+\series bold
+sort-x
+\family default
+
+\begin_inset space ~
+\end_inset
+
+d|a
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+y
+\begin_inset space ~
+\end_inset
+
+z
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+[
+\begin_inset space ~
+\end_inset
+
+d|a
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+y
+\begin_inset space ~
+\end_inset
+
+z
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+...
+\begin_inset space ~
+\end_inset
+
+]
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+\series bold
+sort-
+\family default
+y
+\begin_inset space ~
+\end_inset
+
+d|a
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\begin_inset space ~
+\end_inset
+
+z
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+[
+\begin_inset space ~
+\end_inset
+
+d|a
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\begin_inset space ~
+\end_inset
+
+z
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+...
+\begin_inset space ~
+\end_inset
+
+]
+\series default
+ 
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+\series bold
+sort-
+\family default
+z
+\begin_inset space ~
+\end_inset
+
+d|a
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\begin_inset space ~
+\end_inset
+
+
+\emph default
+y
+\begin_inset space ~
+\end_inset
+
+[
+\begin_inset space ~
+\end_inset
+
+d|a
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\begin_inset space ~
+\end_inset
+
+
+\emph default
+y
+\begin_inset space ~
+\end_inset
+
+...
+\begin_inset space ~
+\end_inset
+
+]
+\series default
+ Sorts the marked block as described in section 
+\begin_inset CommandInset ref
+LatexCommand vref
+reference "sub:Sort"
+
+\end_inset
+
+, column-wise, row-wise or depth-wise, respectivly.
+ "d" or "a" specify the sort order to be descending or ascending.
+ 
+\emph on
+x
+\emph default
+, 
+\emph on
+y
+\emph default
+ and 
+\emph on
+z
+\emph default
+ specify the position of the sort key 
+\family typewriter
+relative
+\family default
+ to the first cell of the marked block.
+ Up to eight sort keys can be specified.
+ This example reproduces the result from section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Sort"
+
+\end_inset
+
+: 
+\end_layout
+
+\begin_deeper
+\begin_layout Quote
+
+\family typewriter
+echo "
+\begin_inset Newline newline
+\end_inset
+
+from &(1,1,0)
+\begin_inset Newline newline
+\end_inset
+
+to &(2,4,0)
+\begin_inset Newline newline
+\end_inset
+
+sort-y d 0 0
+\begin_inset Newline newline
+\end_inset
+
+save-csv result_num.txt
+\begin_inset Newline newline
+\end_inset
+
+" | teapot -b doc/unsorted 
+\end_layout
+
+\end_deeper
+\begin_layout Description
+
+\family typewriter
+\series bold
+save-tbl
+\family default
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+file
+\series default
+\emph default
+  
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+\series bold
+save-csv
+\family default
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+file
+\series default
+\emph default
+  
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+\series bold
+save-latex
+\family default
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+file
+\series default
+\emph default
+  
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+\series bold
+save-context
+\family default
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+file
+\series default
+\emph default
+  
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+\series bold
+save-html
+\begin_inset space ~
+\end_inset
+
+
+\family default
+\emph on
+file
+\series default
+\emph default
+  Save the marked block in the specified format as 
+\emph on
+file
+\emph default
+.
+ 
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+\series bold
+load-csv
+\begin_inset space ~
+\end_inset
+
+
+\family default
+\emph on
+file
+\series default
+\emph default
+ Load 
+\emph on
+file
+\emph default
+ in the specified format to the last 
+\family typewriter
+goto
+\family default
+ location.
+ This is the same functionality as the interactive load described in subsection
+ 
+\emph on
+5.12.4
+\emph default
+.
+ 
+\end_layout
+
+\begin_layout Section
+Expressions
+\end_layout
+
+\begin_layout Standard
+Cells consist of a base (reset) expression, a clocked expression, and a
+ current value.
+ If the sheet is currently in the reset state (the default), all cells display
+ their base value as current value.
+\end_layout
+
+\begin_layout Standard
+When the sheet is clocked (see Table 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:Key-Bindings-in"
+
+\end_inset
+
+), the clocked expression is evaluated, using the current value of referenced
+ cells.
+ The new current value is the result of that evaluation.
+\end_layout
+
+\begin_layout Subsection
+Data Types
+\end_layout
+
+\begin_layout Standard
+In teapot, each value has an associated data type.
+ The following data types exist: 
+\end_layout
+
+\begin_layout Description
+Empty Empty cells have 0, 0.0 or 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+ as value, depending on context.
+ 
+\end_layout
+
+\begin_layout Description
+String A string is a sequence of characters enclosed by double quotes: 
+\family typewriter
+"This is a string"
+\family default
+.
+ A double quote can be part of the string, if it is quoted using a backslash:
+ 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\backslash
+
+\family default
+
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+.
+ If you want the backslash to appear in the output instead of quoting the
+ next character, use it to quote itself: 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+
+\backslash
+
+\backslash
+
+\family default
+
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Description
+Floating
+\begin_inset space ~
+\end_inset
+
+Point Floating point values are inexact, their precision and range depends
+ on the implementation of the C type double on your system.
+ An example is: 
+\family typewriter
+42.0
+\family default
+ 
+\end_layout
+
+\begin_layout Description
+Integer Integer values are exact, their range depends on the C type long
+ on your system.
+ An example is: 
+\family typewriter
+42
+\family default
+ 
+\end_layout
+
+\begin_layout Description
+Location Cell labels and the 
+\family typewriter
+&()
+\family default
+ function have this type, but there are no location constant literals.
+\end_layout
+
+\begin_layout Description
+Error Syntactical or semantical (type mismatch) errors cause this value,
+ as well as division by 0 and the function 
+\family typewriter
+error()
+\family default
+.
+ An error always has an assigned error message.
+ Functions and operators, when applied to a value of the type error, evaluate
+ to just that value.
+ That way, the first error which was found deep inside a complicated expression
+ will be shown.
+ 
+\end_layout
+
+\begin_layout Subsection
+Operators
+\end_layout
+
+\begin_layout Standard
+Unlike other spread sheets, the operators in teapot check the type of the
+ values they are applied to, which means the try to add a string to a floating
+ point number will result in an type error.
+ The following operators are available, listed in ascending precendence:
+ 
+\end_layout
+
+\begin_layout Description
+
+\series bold
+\emph on
+x
+\family typewriter
+\emph default
+<
+\family default
+\emph on
+y
+\series default
+\emph default
+ evaluates to 1 if 
+\emph on
+x
+\emph default
+ is less than 
+\emph on
+y
+\emph default
+.
+ If 
+\emph on
+x
+\emph default
+ or 
+\emph on
+y
+\emph default
+ are empty, they are considered to be 0 if the other is an integer number,
+ 0.0 if it is a floating point number and the empty string if it is a string.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series bold
+\emph on
+x
+\family typewriter
+\emph default
+<=
+\family default
+\emph on
+y
+\series default
+\emph default
+  evaluates to 1 if 
+\emph on
+x
+\emph default
+ is less than or equal to 
+\emph on
+y
+\emph default
+.
+\end_layout
+
+\begin_layout Description
+
+\series bold
+\emph on
+x
+\family typewriter
+\emph default
+>=
+\family default
+\emph on
+y
+\series default
+\emph default
+  evaluates to 1 if 
+\emph on
+x
+\emph default
+ is greater than or equal to 
+\emph on
+y
+\emph default
+.
+\end_layout
+
+\begin_layout Description
+
+\series bold
+\emph on
+x
+\family typewriter
+\emph default
+>
+\family default
+\emph on
+y
+\series default
+\emph default
+  evaluates to 1 if 
+\emph on
+x
+\emph default
+ is greater than 
+\emph on
+y
+\emph default
+.
+\end_layout
+
+\begin_layout Description
+
+\series bold
+\emph on
+x
+\family typewriter
+\emph default
+==
+\family default
+\emph on
+y
+\series default
+\emph default
+  evaluates to 1 if 
+\emph on
+x
+\emph default
+ is equal to 
+\emph on
+y
+\emph default
+.
+\end_layout
+
+\begin_layout Description
+
+\series bold
+\emph on
+x
+\family typewriter
+\emph default
+=
+\family default
+\emph on
+y
+\series default
+\emph default
+  evaluates to 1 if the floating point value 
+\emph on
+x
+\emph default
+ is almost equal to the floating point value 
+\emph on
+y
+\emph default
+.
+ Almost equal means, the numbers are at most neighbours.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series bold
+\emph on
+x
+\family typewriter
+\emph default
+!=
+\family default
+\emph on
+y
+\series default
+\emph default
+  evaluates to 1 if 
+\emph on
+x
+\emph default
+ is not equal to 
+\emph on
+y
+\emph default
+.
+\end_layout
+
+\begin_layout Description
+
+\series bold
+\emph on
+x
+\family typewriter
+\emph default
++
+\family default
+\emph on
+y
+\series default
+\emph default
+  evaluates to the sum if 
+\emph on
+x
+\emph default
+ and 
+\emph on
+y
+\emph default
+ are numbers.
+ If 
+\emph on
+x
+\emph default
+ and 
+\emph on
+y
+\emph default
+ are strings, the result is the concatenated string.
+ There is no dedicated logical 
+\noun on
+or
+\noun default
+ operation, so use 
+\family typewriter
++
+\family default
+ for that.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series bold
+\emph on
+x
+\family typewriter
+\emph default
+-
+\family default
+\emph on
+y
+\series default
+\emph default
+  evaluates to the difference if 
+\emph on
+x
+\emph default
+ and 
+\emph on
+y
+\emph default
+ are numbers.
+\end_layout
+
+\begin_layout Description
+
+\series bold
+\emph on
+x
+\family typewriter
+\emph default
+*
+\family default
+\emph on
+y
+\series default
+\emph default
+  evaluates to the product if 
+\emph on
+x
+\emph default
+ and 
+\emph on
+y
+\emph default
+ are numbers.
+ There is no dedicated logical 
+\noun on
+and
+\noun default
+ operation, so use 
+\family typewriter
+*
+\family default
+ for that.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series bold
+\emph on
+x
+\family typewriter
+\emph default
+/
+\family default
+\emph on
+y
+\series default
+\emph default
+  evaluates to the quotient if 
+\emph on
+x
+\emph default
+ and 
+\emph on
+y
+\emph default
+ are numbers.
+\end_layout
+
+\begin_layout Description
+
+\series bold
+\emph on
+x
+\family typewriter
+\emph default
+%
+\family default
+\emph on
+y
+\series default
+\emph default
+  evaluates to the remainder of the division if 
+\emph on
+x
+\emph default
+ and 
+\emph on
+y
+\emph default
+ are numbers.
+\end_layout
+
+\begin_layout Description
+
+\series bold
+\emph on
+x^y
+\series default
+\emph default
+ evaluates to 
+\emph on
+x
+\emph default
+ to the power of 
+\emph on
+y
+\emph default
+.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+\series bold
+-
+\family default
+\emph on
+x
+\series default
+\emph default
+ evaluates to 
+\family typewriter
+-
+\family default
+\emph on
+x
+\emph default
+ if 
+\emph on
+x
+\emph default
+ is a number.
+ If 
+\emph on
+x
+\emph default
+ is empty, the result will be empty, too.
+ 
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+\series bold
+(
+\family default
+\emph on
+expression
+\family typewriter
+\emph default
+)
+\family default
+\series default
+  evaluates to the expression.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series bold
+\emph on
+function
+\family typewriter
+\emph default
+(
+\family default
+\emph on
+argument
+\family typewriter
+\emph default
+,
+\family default
+...
+\family typewriter
+)
+\family default
+\series default
+  evaluates to the value of the function applied to the values resulting
+ from evaluating the argument expressions.
+ 
+\end_layout
+
+\begin_layout Subsection
+Functions
+\end_layout
+
+\begin_layout Standard
+This section documents all available functions in alphabetical order.
+ The functions are given in a C-like notation, so use 
+\family typewriter
+@(0,0,0)
+\family default
+ instead of 
+\family typewriter
+@(integer 0, integer 0, integer 0)
+\family default
+.
+ If no type is given for the result of a function, it means the result type
+ depends on the arguments.
+ Brackets mark optional arguments.
+ 
+\end_layout
+
+\begin_layout Description
+@
+\series medium
+([int
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+x
+\emph default
+][,[int
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+y
+\emph default
+][,[int
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+z
+\emph default
+]]]) 
+\end_layout
+
+\begin_layout Description
+@
+\series medium
+(location
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+l
+\emph default
+) 
+\series default
+returns the value of the cell at position 
+\emph on
+x
+\emph default
+, 
+\emph on
+y
+\emph default
+, 
+\emph on
+z
+\emph default
+.
+ If any of 
+\emph on
+x
+\emph default
+, 
+\emph on
+y
+\emph default
+ or 
+\emph on
+z
+\emph default
+ is omitted, the coordinate of the cell is used.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+location
+\begin_inset space ~
+\end_inset
+
+
+\series default
+&
+\series medium
+([int
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+][,
+\begin_inset space ~
+\end_inset
+
+[int
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+y
+\emph default
+][,
+\begin_inset space ~
+\end_inset
+
+[int
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+z
+\emph default
+]]]) 
+\series default
+returns a pointer to the cell at location 
+\emph on
+x
+\emph default
+, 
+\emph on
+y
+\emph default
+, 
+\emph on
+z
+\emph default
+.
+ If 
+\emph on
+z
+\emph default
+ is omitted, the 
+\emph on
+z
+\emph default
+ position of the current cell is used.
+ If 
+\emph on
+y
+\emph default
+ is missing as well, the 
+\emph on
+y
+\emph default
+ position (row) of the cell is used.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+string
+\begin_inset space ~
+\end_inset
+
+
+\series default
+$
+\series medium
+(string
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+env
+\emph default
+) 
+\series default
+evaluates to the contents of the specified environment variable.
+ If the variable does not exist, then an empty string will be returned.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+float
+\begin_inset space ~
+\end_inset
+
+
+\series default
+abs
+\series medium
+(float
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+) 
+\series default
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+int
+\begin_inset space ~
+\end_inset
+
+
+\series default
+abs
+\series medium
+(int
+\begin_inset space ~
+\end_inset
+
+
+\emph on
+x
+\emph default
+) 
+\series default
+evaluates to the absolute value of 
+\emph on
+x
+\emph default
+.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+float
+\begin_inset space ~
+\end_inset
+
+
+\series default
+acos
+\series medium
+(float|int
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+) 
+\series default
+evaluates to the arc cosine of 
+\emph on
+x
+\emph default
+, where 
+\emph on
+x
+\emph default
+ is given in radians.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+float
+\begin_inset space ~
+\end_inset
+
+
+\series default
+arcosh
+\series medium
+(float|int
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+) 
+\series default
+ evaluates to the arc hyperbolic cosine of 
+\emph on
+x
+\emph default
+, where 
+\emph on
+x
+\emph default
+ is given in radians.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+float
+\begin_inset space ~
+\end_inset
+
+
+\series default
+arsinh
+\series medium
+(float|int
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+) 
+\series default
+ evaluates to the arc hyperbolic sine of 
+\emph on
+x
+\emph default
+, where 
+\emph on
+x
+\emph default
+ is given in radians.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+float
+\begin_inset space ~
+\end_inset
+
+
+\series default
+artanh
+\series medium
+(float|int
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+) 
+\series default
+ evaluates to the arc hyperbolic tangent of 
+\emph on
+x
+\emph default
+, where 
+\emph on
+x
+\emph default
+ is given in radians.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+float
+\begin_inset space ~
+\end_inset
+
+
+\series default
+asin
+\series medium
+(float|int
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+) 
+\series default
+ evaluates to the arc sine of 
+\emph on
+x
+\emph default
+, where 
+\emph on
+x
+\emph default
+ is given in radians.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+float
+\begin_inset space ~
+\end_inset
+
+
+\series default
+atan
+\series medium
+(float|int
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+) 
+\series default
+ evaluates to the arc tangent of 
+\emph on
+x
+\emph default
+, where 
+\emph on
+x
+\emph default
+ is given in radians.
+ 
+\end_layout
+
+\begin_layout Description
+clock
+\series medium
+(integer
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+condition
+\emph default
+,[location[,location]) 
+\series default
+ conditionally clocks the specified cell if the condition is not 0.
+ If two locations are given, all cells in that range will be clocked.
+ The return value of clock is empty.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+float
+\begin_inset space ~
+\end_inset
+
+
+\series default
+cos
+\series medium
+(float|int
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+) 
+\series default
+evaluates to the cosine of 
+\emph on
+x
+\emph default
+, where 
+\emph on
+x
+\emph default
+ is given in radians.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+float
+\begin_inset space ~
+\end_inset
+
+
+\series default
+cosh
+\series medium
+(float|int
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+) 
+\series default
+ evaluates to the hyperbolic cosine of 
+\emph on
+x
+\emph default
+, where 
+\emph on
+x
+\emph default
+ is given in radians.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+float
+\begin_inset space ~
+\end_inset
+
+
+\series default
+deg2rad
+\series medium
+(float|int
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+) 
+\series default
+ evaluates to the degrees that are equivalent to 
+\emph on
+x
+\emph default
+ radians.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+float
+\begin_inset space ~
+\end_inset
+
+
+\series default
+e
+\series medium
+() 
+\series default
+evaluates to the Euler constant 
+\emph on
+e
+\emph default
+.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+error
+\begin_inset space ~
+\end_inset
+
+
+\series default
+error
+\series medium
+(string
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+message
+\emph default
+) 
+\series default
+ evaluates to an error with the specified message.
+ 
+\end_layout
+
+\begin_layout Description
+eval
+\series medium
+(location) 
+\series default
+ evaluates to the value of the expression in the cell at the given 
+\emph on
+location
+\emph default
+, but evaluated in the context of the cell using eval().
+ This function may not be used nested any deeper than 32 times.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+float
+\begin_inset space ~
+\end_inset
+
+
+\series default
+float
+\series medium
+(string
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+s
+\emph default
+) 
+\series default
+ converts the given string into a floating point number.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+float
+\begin_inset space ~
+\end_inset
+
+
+\series default
+frac
+\series medium
+(float
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+) 
+\series default
+ evaluates to the fractional part of 
+\emph on
+x
+\emph default
+.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+int
+\begin_inset space ~
+\end_inset
+
+
+\series default
+int
+\series medium
+(float
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+[,integer
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+neg
+\emph default
+,
+\begin_inset space ~
+\end_inset
+
+integer
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+pos
+\emph default
+]) 
+\series default
+converts 
+\emph on
+x
+\emph default
+ to an integer value by cutting off the fractional part.
+ If given, the value of 
+\emph on
+neg
+\emph default
+ and 
+\emph on
+pos
+\emph default
+ determines how negative and non-negative numbers will be converted:
+\end_layout
+
+\begin_layout Quote
+\begin_inset Tabular
+<lyxtabular version="3" rows="6" columns="2">
+<features>
+<column alignment="center" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\emph on
+neg
+\emph default
+/
+\emph on
+pos
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Result
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+< -1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+next smaller integer value
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+round downward
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+cut fractional part off (default)
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+round upward
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+> 1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+next larger integer value
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Description
+
+\series medium
+int
+\begin_inset space ~
+\end_inset
+
+
+\series default
+int
+\series medium
+(string
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+s
+\emph default
+) 
+\series default
+ converts 
+\emph on
+s
+\emph default
+ to an integer number.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+string
+\begin_inset space ~
+\end_inset
+
+
+\series default
+len
+\series medium
+(string
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+s
+\emph default
+) 
+\series default
+ evaluates to the length of 
+\emph on
+s
+\emph default
+.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+float
+\begin_inset space ~
+\end_inset
+
+
+\series default
+log
+\series medium
+(float|int
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+[,float|int
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+y
+\emph default
+) 
+\series default
+ evaluates to the logarithm of 
+\emph on
+x
+\emph default
+.
+ If 
+\emph on
+y
+\emph default
+ is specified, the result will be the natural logarithm, otherwise it will
+ be the logarithm to the base of 
+\emph on
+y
+\emph default
+.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+location
+\begin_inset space ~
+\end_inset
+
+
+\series default
+max
+\series medium
+(location
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+l1
+\emph default
+,
+\begin_inset space ~
+\end_inset
+
+location
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+l2
+\emph default
+) 
+\series default
+ evaluates to the maximum in the same way min does for the minimum.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+location
+\begin_inset space ~
+\end_inset
+
+
+\series default
+min
+\series medium
+(location
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+l1
+\emph default
+,
+\begin_inset space ~
+\end_inset
+
+location
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+l2
+\emph default
+)
+\series default
+  evaluates to the location of the minimum of all values in the block marked
+ by the corners pointed to by 
+\emph on
+l1
+\emph default
+ and 
+\emph on
+l2
+\emph default
+.
+ Note that the empty cell is equal to 0, 0.0 and "", so if the first minimum
+ is an empty cell, the result will be a pointer to this cell, too.
+ If you are not interested in the location of the minimum but the value
+ itself, use @(min(
+\emph on
+l1
+\emph default
+, 
+\emph on
+l2
+\emph default
+)).
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+int
+\begin_inset space ~
+\end_inset
+
+
+\series default
+n
+\series medium
+(location
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+l1
+\emph default
+,
+\begin_inset space ~
+\end_inset
+
+location
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+l2
+\emph default
+) 
+\series default
+ evaluates to the number of non-empty cells in the block marked by the corners
+ pointed to by 
+\emph on
+l1
+\emph default
+ and 
+\emph on
+l2
+\emph default
+.
+ 
+\end_layout
+
+\begin_layout Description
+poly
+\series medium
+(float|integer
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+,
+\begin_inset space ~
+\end_inset
+
+float|integer
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+cn
+\emph default
+[,
+\begin_inset space ~
+\end_inset
+
+...]) 
+\series default
+ evaluates the polynome 
+\emph on
+
+\begin_inset Formula $c_{n}\cdot x^{n}+\ldots+c_{0}\cdot x^{0}$
+\end_inset
+
+
+\emph default
+.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+float
+\begin_inset space ~
+\end_inset
+
+
+\series default
+rad2deg
+\series medium
+(float|int
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+) 
+\series default
+evaluates to the radians that are equivalent to 
+\emph on
+x
+\emph default
+ degrees.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+float
+\begin_inset space ~
+\end_inset
+
+
+\series default
+rnd
+\series medium
+()
+\series default
+ evaluates to a pseudo-random number between 0.0 and 1.0.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+float
+\begin_inset space ~
+\end_inset
+
+
+\series default
+sin
+\series medium
+(float|int
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+) 
+\series default
+ evaluates to the sine of 
+\emph on
+x
+\emph default
+, where 
+\emph on
+x
+\emph default
+ is given in radians.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+float
+\begin_inset space ~
+\end_inset
+
+
+\series default
+sinh
+\series medium
+(float|int
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+) 
+\series default
+ evaluates to the hyperbolic sine of 
+\emph on
+x
+\emph default
+, where 
+\emph on
+x
+\emph default
+ is given in radians.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+string
+\begin_inset space ~
+\end_inset
+
+
+\series default
+strftime
+\series medium
+(string
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+f
+\emph default
+
+\begin_inset space ~
+\end_inset
+
+[,
+\begin_inset space ~
+\end_inset
+
+integer
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+t
+\emph default
+]) 
+\series default
+evaluates to the time 
+\emph on
+t
+\emph default
+ formatted according to the format specified in 
+\emph on
+f
+\emph default
+.
+ Times in 
+\emph on
+t
+\emph default
+ are counted in seconds since epoch (1970-1-1 0:00).
+ If 
+\emph on
+t
+\emph default
+ is empty or 0, the actual time is used.
+ For the format specifications consult the man page of your c library, strftime
+ (3).
+ Example: 
+\emph on
+@(now)=int(strftime("%s"))
+\emph default
+ sets the field with label now to the actual time.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+string
+\begin_inset space ~
+\end_inset
+
+
+\series default
+string
+\series medium
+(location
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+l
+\emph default
+) 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+string
+\begin_inset space ~
+\end_inset
+
+
+\series default
+string
+\series medium
+(integer
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+) 
+\series default
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+string
+\begin_inset space ~
+\end_inset
+
+
+\series default
+string
+\series medium
+(float
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+[,
+\begin_inset space ~
+\end_inset
+
+[integer
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+precision
+\emph default
+][,
+\begin_inset space ~
+\end_inset
+
+integer
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+scientific
+\emph default
+]]) 
+\series default
+ evaluates to a string containing the current value of the given cell at
+ location 
+\emph on
+l
+\emph default
+, or to the numeric value 
+\emph on
+x
+\emph default
+ with the given 
+\emph on
+precision
+\emph default
+.
+ The 
+\emph on
+scientific
+\emph default
+ flag determines if decimal (0) or scientific (unequal 0) representation
+ is used.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+int
+\begin_inset space ~
+\end_inset
+
+
+\series default
+strptime
+\series medium
+(string
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+f
+\emph default
+,
+\begin_inset space ~
+\end_inset
+
+string
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+datetime
+\emph default
+) 
+\series default
+ evaluates to the seconds since epoch (1970-1-1 0:00) of the 
+\emph on
+datetime
+\emph default
+ string, parsed according to the format specified in 
+\emph on
+f
+\emph default
+.
+ For the format specifications consult the man page of your c library, strptime
+ (3).
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+string
+\begin_inset space ~
+\end_inset
+
+
+\series default
+substr
+\series medium
+(string
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+s,
+\emph default
+integer
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x,
+\emph default
+integer
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+y
+\emph default
+) 
+\series default
+evaluates to the substring of 
+\emph on
+s
+\emph default
+ between 
+\emph on
+x
+\emph default
+ and 
+\emph on
+y
+\emph default
+, which start at 0.
+ 
+\end_layout
+
+\begin_layout Description
+sum
+\series medium
+(location
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+l1
+\emph default
+,
+\begin_inset space ~
+\end_inset
+
+location
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+l2
+\emph default
+) 
+\series default
+evaluates to the sum of all values in the block marked by the corners pointed
+ to by 
+\emph on
+l1
+\emph default
+ and 
+\emph on
+l2
+\emph default
+.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+float
+\begin_inset space ~
+\end_inset
+
+
+\series default
+tan
+\series medium
+(float|int
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+) 
+\series default
+evaluates to the tangent of 
+\emph on
+x
+\emph default
+, where 
+\emph on
+x
+\emph default
+ is given in radians.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+float
+\begin_inset space ~
+\end_inset
+
+
+\series default
+tanh
+\series medium
+(float|int
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+x
+\emph default
+) 
+\series default
+ evaluates to the hyperbolic tangent of 
+\emph on
+x
+\emph default
+, where 
+\emph on
+x
+\emph default
+ is given in radians.
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+int
+\begin_inset space ~
+\end_inset
+
+
+\series default
+x
+\series medium
+([location
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+l
+\emph default
+]) 
+\series default
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+int
+\begin_inset space ~
+\end_inset
+
+
+\series default
+y
+\series medium
+([location
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+l
+\emph default
+]) 
+\series default
+ 
+\end_layout
+
+\begin_layout Description
+
+\series medium
+int
+\begin_inset space ~
+\end_inset
+
+
+\series default
+z
+\series medium
+([location
+\emph on
+
+\begin_inset space ~
+\end_inset
+
+l
+\emph default
+]) 
+\series default
+ evaluate to the 
+\emph on
+x
+\emph default
+, 
+\emph on
+y
+\emph default
+ and 
+\emph on
+z
+\emph default
+ position of the given location, of the currently updated cell if none is
+ given.
+ These functions are usually used in combination with the @ function for
+ relative relations to other cells.
+ 
+\end_layout
+
+\begin_layout Subsection
+Expression Grammar
+\end_layout
+
+\begin_layout Description
+digit::= 
+\family typewriter
+0
+\family default
+ | ..
+ | 
+\family typewriter
+9
+\end_layout
+
+\begin_layout Description
+hex_digit::= 
+\family typewriter
+0
+\family default
+ | ..
+ | 
+\family typewriter
+9
+\family default
+ | 
+\family typewriter
+a
+\family default
+ | ..
+ | 
+\family typewriter
+f
+\end_layout
+
+\begin_layout Description
+octal_digit::= 
+\family typewriter
+0
+\family default
+ | ..
+ | 
+\family typewriter
+7
+\end_layout
+
+\begin_layout Description
+decimal_integer::= 
+\emph on
+digit
+\emph default
+ { 
+\emph on
+digit
+\emph default
+ }
+\end_layout
+
+\begin_layout Description
+hex_integer::= 
+\family typewriter
+0x
+\family default
+ 
+\emph on
+hex_digit
+\emph default
+ { 
+\emph on
+hexdigit
+\emph default
+ }
+\end_layout
+
+\begin_layout Description
+octal_integer::= 
+\family typewriter
+0
+\family default
+ 
+\emph on
+octal_digit
+\emph default
+ { 
+\emph on
+octdigit
+\emph default
+ }
+\end_layout
+
+\begin_layout Description
+integer::= 
+\emph on
+decimal_integer
+\emph default
+ | 
+\emph on
+hex_integer
+\emph default
+ | 
+\emph on
+octal_integer
+\end_layout
+
+\begin_layout Description
+float::= 
+\emph on
+digit
+\emph default
+ { 
+\emph on
+digit
+\emph default
+ } [ 
+\family typewriter
+.
+
+\family default
+ ] { 
+\emph on
+digit
+\emph default
+ } [ 
+\family typewriter
+e
+\family default
+ | 
+\family typewriter
+E
+\family default
+ [ 
+\family typewriter
++
+\family default
+ | 
+\family typewriter
+-
+\family default
+ ] 
+\emph on
+digit
+\emph default
+ { 
+\emph on
+digit
+\emph default
+ } ]
+\end_layout
+
+\begin_layout Description
+quoted_character::= 
+\emph on
+
+\backslash
+ any_character
+\end_layout
+
+\begin_layout Description
+character::= 
+\emph on
+any_character
+\emph default
+ | 
+\emph on
+quoted_character
+\end_layout
+
+\begin_layout Description
+string::= 
+\family typewriter
+"
+\family default
+ { 
+\emph on
+character
+\emph default
+ } 
+\family typewriter
+"
+\end_layout
+
+\begin_layout Description
+identifier_character::= 
+\family typewriter
+_
+\family default
+ | 
+\family typewriter
+@
+\family default
+ | 
+\family typewriter
+&
+\family default
+ | 
+\family typewriter
+.
+
+\family default
+ | 
+\family typewriter
+$
+\family default
+ | 
+\emph on
+alpha_character
+\end_layout
+
+\begin_layout Description
+identifier::= 
+\emph on
+identifier_character
+\emph default
+ { 
+\emph on
+identifier_character
+\emph default
+ | 
+\emph on
+digit
+\emph default
+ }
+\end_layout
+
+\begin_layout Description
+function::= 
+\emph on
+identifier
+\emph default
+ 
+\family typewriter
+(
+\family default
+ [ 
+\emph on
+term
+\emph default
+ ] { 
+\family typewriter
+,
+\family default
+ [ 
+\emph on
+term
+\emph default
+ ] } 
+\family typewriter
+)
+\end_layout
+
+\begin_layout Description
+label::= 
+\emph on
+identifier
+\end_layout
+
+\begin_layout Description
+parenterm::= 
+\family typewriter
+(
+\family default
+ 
+\emph on
+term
+\emph default
+ 
+\family typewriter
+)
+\end_layout
+
+\begin_layout Description
+negterm::= 
+\family typewriter
+-
+\family default
+ 
+\emph on
+primary
+\end_layout
+
+\begin_layout Description
+primary::= 
+\emph on
+function
+\emph default
+ | 
+\emph on
+label
+\emph default
+ | 
+\emph on
+parenterm
+\emph default
+ | 
+\emph on
+negterm
+\end_layout
+
+\begin_layout Description
+powterm::= 
+\emph on
+primary
+\emph default
+ { 
+\family typewriter
+‸
+\family default
+ 
+\emph on
+primary
+\emph default
+ }
+\end_layout
+
+\begin_layout Description
+mathterm::= 
+\emph on
+powterm
+\emph default
+ { 
+\family typewriter
+/
+\family default
+ | 
+\family typewriter
+*
+\family default
+ | 
+\family typewriter
+%
+\family default
+ 
+\emph on
+powterm
+\emph default
+ }
+\end_layout
+
+\begin_layout Description
+factor::= 
+\emph on
+mathterm
+\emph default
+ { 
+\family typewriter
++
+\family default
+ | 
+\family typewriter
+-
+\family default
+ 
+\emph on
+mathterm
+\emph default
+ }
+\end_layout
+
+\begin_layout Description
+term::= 
+\emph on
+factor
+\emph default
+ {
+\family typewriter
+<
+\family default
+ | 
+\family typewriter
+<=
+\family default
+ | 
+\family typewriter
+>=
+\family default
+ | 
+\family typewriter
+>
+\family default
+ | 
+\family typewriter
+==
+\family default
+ | 
+\family typewriter
+!=
+\family default
+ 
+\emph on
+factor
+\emph default
+ }
+\end_layout
+
+\begin_layout Section
+Frequently Asked Questions
+\end_layout
+
+\begin_layout Subsection
+Why is 1.0 unequal 1.0?
+\end_layout
+
+\begin_layout Standard
+If your machine uses binary floating point arithmetic, and chances are that
+ it does, you may eventually find yourself in the following situation:
+\end_layout
+
+\begin_layout Quote
+0.1+0.1+0.1+0.1+0.1+0.1+0.1+0.1+0.1+0.1
+\end_layout
+
+\begin_layout Standard
+You expect to see 1.0 as result, and indeed that is what you get.
+ Now you compare this result to the constant 1.0, but surprisingly for many
+ users, the result is 0.
+ Appearantly, 1.0 is unequal 1.0 for teapot.
+ 
+\end_layout
+
+\begin_layout Standard
+This is not a bug in teapot, in fact it is not a bug at all.
+ The problem is, that 0.1 (1.0/10.0) does not have an exact representation
+ in binary floating point arithmetic, similar to how 1.0/3.0 does not have
+ an exact representation in decimal arithmetic (or binary, for that matter).
+ As such, a value very close to 0.1 is used, but when displaying it, it will
+ be rounded to 0.1.
+ The result is obvious, adding this number which is a little different from
+ 0.1 ten times leads to a result very close to but not quite 1.0.
+ Since it is so close, displaying it rounded to only a few digits precision
+ shows 1.0.
+ 
+\end_layout
+
+\begin_layout Standard
+To solve the comparison problem, teapot has the operator 
+\family typewriter
+=
+\family default
+ (in contrast to the operator ==), which compares two floating point values
+ apart from the last significant bit.
+ Use this operator to compare the two values from above and the result will
+ be 1, meaning they are about equal.
+ Don't assume that a number which can be expressed with a finite number
+ of decimal digits will be represented exactly in binary floating point
+ arithmetic.
+ 
+\end_layout
+
+\begin_layout Subsection
+How do I hide intermediate results?
+\end_layout
+
+\begin_layout Standard
+If you used flat, two-dimensional spread sheets before, you are probably
+ used to hidden cells which contain intermediate results, global constants,
+ scratch areas and the like.
+ teapot has no way to hide cells, but you have three dimensions.
+ Just use one or more layers for such cells and give each cell a label in
+ order to reference and find it easily.
+ 
+\end_layout
+
+\begin_layout Subsection
+Why is there no conditional evaluation?
+\end_layout
+
+\begin_layout Standard
+There is no special operator or function for conditional evaluation.
+ I could add one easily, but then next someone would ask for loops and someone
+ else for user-defined functions, variables and so on.
+ If you need a programming language, you know where to find it.
+ 
+\end_layout
+
+\begin_layout Standard
+But don't worry.
+ The answer is, that conditional evaluation comes for free with teapot's
+ orthogonal cell addressing.
+ As an example, depending on the cell labelled 
+\family typewriter
+X
+\family default
+ being negative or not, you want the result to be the string 
+\family typewriter
+"BAD
+\family default
+ or 
+\family typewriter
+"GOOD"
+\family default
+.
+ This is the solution:
+\end_layout
+
+\begin_layout Quote
+eval(&((@(X)>=0)+x(BAD),y(BAD),z(BAD)))
+\end_layout
+
+\begin_layout Standard
+The cell labelled 
+\family typewriter
+BAD
+\family default
+ contains the string 
+\family typewriter
+"BAD"
+\family default
+, its right neighbour contains the string 
+\family typewriter
+"GOOD"
+\family default
+.
+ If you have nested conditions, you could weight them with 1, 2, 4 and so
+ on to address a bigger range of cells.
+ Alternatively, you could make use of all three dimensions for nested conditions.
+ 
+\end_layout
+
+\end_body
+\end_document

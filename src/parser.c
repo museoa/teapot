@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "cat.h"
+
 #include "eval.h"
 #include "main.h"
 #include "misc.h"
@@ -44,7 +44,7 @@ static Token primary(Token *n[], int *i)
   /* error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(MISSOPR)+1),MISSOPR);
+    result.u.err=strcpy(malloc(strlen(_("missing operator"))+1),_("missing operator"));
     return result;
   }
   /*}}}*/
@@ -74,7 +74,7 @@ static Token primary(Token *n[], int *i)
         }
         tfree(&result);
         result.type=EEK;
-        result.u.err=strcpy(malloc(strlen(CPEXPCT)+1),CPEXPCT);
+        result.u.err=strcpy(malloc(strlen(_(") expected"))+1),_(") expected"));
         return result;
       }
       /*}}}*/
@@ -89,7 +89,7 @@ static Token primary(Token *n[], int *i)
       /* return error, value expected */ /*{{{*/
       {
         result.type=EEK;
-        result.u.err=mystrmalloc(VLEXPCT);
+        result.u.err=mystrmalloc(_("value expected"));
         return result;
       }
       /*}}}*/
@@ -140,7 +140,7 @@ static Token primary(Token *n[], int *i)
             else
             {
               result.type=EEK;
-              result.u.err=strcpy(malloc(strlen(TOOMANY)+1),TOOMANY);
+              result.u.err=strcpy(malloc(strlen(_("too many arguments"))+1),_("too many arguments"));
               for (j=0; j<=argc; ++j) tfree(&argv[j]);
               return result;
             }
@@ -162,7 +162,7 @@ static Token primary(Token *n[], int *i)
         {
           for (j=0; j<argc; ++j) tfree(&argv[j]);
           result.type=EEK;
-          result.u.err=strcpy(malloc(strlen(CPEXPCT)+1),CPEXPCT);
+          result.u.err=strcpy(malloc(strlen(_(") expected"))+1),_(") expected"));
         }
         /*}}}*/
         return result;  
@@ -171,7 +171,7 @@ static Token primary(Token *n[], int *i)
       else
       { 
         result.type=EEK;
-        result.u.err=mystrmalloc(OPEXPECT);
+        result.u.err=mystrmalloc(_("( expected"));
         return result;
       }
     }
@@ -179,7 +179,7 @@ static Token primary(Token *n[], int *i)
     default: ; /* fall through */
   }
   result.type=EEK;
-  result.u.err=mystrmalloc(VLEXPCT);
+  result.u.err=mystrmalloc(_("value expected"));
   return result;
 }
 /*}}}*/
@@ -308,7 +308,7 @@ Token eval(Token **n)
   {
     tfree(&result);
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(PARSERR)+1),PARSERR);
+    result.u.err=strcpy(malloc(strlen(_("parse error after term"))+1),_("parse error after term"));
     return result;
   }
   return result;

@@ -22,7 +22,7 @@ extern double strtod(const char *nptr, char **endptr); /* SunOS 4 hack */
 #include <string.h>
 #include <time.h>
 
-#include "cat.h"
+
 #include "default.h"
 #include "eval.h"
 #include "func.h"
@@ -45,6 +45,188 @@ extern double strtod(const char *nptr, char **endptr); /* SunOS 4 hack */
 #define CONST_PI ((double)3.14159265358979323846)
 #endif
 /*}}}*/
+
+#ifdef WIN32
+// This strptime implementation Copyright 2009 Google Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// Implement strptime under windows
+static const char* kWeekFull[] = {
+	"Sunday", "Monday", "Tuesday", "Wednesday",
+	"Thursday", "Friday", "Saturday"
+};
+
+static const char* kWeekAbbr[] = {
+	"Sun", "Mon", "Tue", "Wed",
+	"Thu", "Fri", "Sat"
+};
+
+static const char* kMonthFull[] = {
+	"January", "February", "March", "April", "May", "June",
+	"July", "August", "September", "October", "November", "December"
+};
+
+static const char* kMonthAbbr[] = {
+	"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+	"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+};
+
+static const char* _parse_num(const char* s, int low, int high, int* value) {
+	const char* p = s;
+	for (*value = 0; *p && isdigit(*p); ++p) {
+		*value = (*value) * 10 + *p - '0';
+	}
+
+	if (p == s || *value < low || *value > high) return NULL;
+	return p;
+}
+
+static char* _strptime(const char *s, const char *format, struct tm *tm) {
+	int i, len;
+	while (*format && *s) {
+		if (*format != '%') {
+			if (*s != *format) return NULL;
+
+			++format;
+			++s;
+			continue;
+		}
+
+		++format;
+		len = 0;
+		switch (*format) {
+		// weekday name.
+		case 'a':
+		case 'A':
+			tm->tm_wday = -1;
+			for (i = 0; i < 7; ++i) {
+				len = strlen(kWeekAbbr[i]);
+				if (strnicmp(kWeekAbbr[i], s, len) == 0) {
+					tm->tm_wday = i;
+					break;
+				}
+
+				len = strlen(kWeekFull[i]);
+				if (strnicmp(kWeekFull[i], s, len) == 0) {
+					tm->tm_wday = i;
+					break;
+				}
+			}
+			if (tm->tm_wday == -1) return NULL;
+			s += len;
+			break;
+
+		// month name.
+		case 'b':
+		case 'B':
+		case 'h':
+			tm->tm_mon = -1;
+			for (i = 0; i < 12; ++i) {
+				len = strlen(kMonthAbbr[i]);
+				if (strnicmp(kMonthAbbr[i], s, len) == 0) {
+					tm->tm_mon = i;
+					break;
+				}
+
+				len = strlen(kMonthFull[i]);
+				if (strnicmp(kMonthFull[i], s, len) == 0) {
+					tm->tm_mon = i;
+					break;
+				}
+			}
+			if (tm->tm_mon == -1) return NULL;
+			s += len;
+			break;
+
+		// month [1, 12].
+		case 'm':
+			s = _parse_num(s, 1, 12, &tm->tm_mon);
+			if (s == NULL) return NULL;
+			--tm->tm_mon;
+			break;
+
+		// day [1, 31].
+		case 'd':
+		case 'e':
+			s = _parse_num(s, 1, 31, &tm->tm_mday);
+			if (s == NULL) return NULL;
+			break;
+
+		// hour [0, 23].
+		case 'H':
+			s = _parse_num(s, 0, 23, &tm->tm_hour);
+			if (s == NULL) return NULL;
+			break;
+
+		// minute [0, 59]
+		case 'M':
+			s = _parse_num(s, 0, 59, &tm->tm_min);
+			if (s == NULL) return NULL;
+			break;
+
+		// seconds [0, 60]. 60 is for leap year.
+		case 'S':
+			s = _parse_num(s, 0, 60, &tm->tm_sec);
+			if (s == NULL) return NULL;
+			break;
+
+		// year [1900, 9999].
+		case 'Y':
+			s = _parse_num(s, 1900, 9999, &tm->tm_year);
+			if (s == NULL) return NULL;
+			tm->tm_year -= 1900;
+			break;
+
+		// year [0, 99].
+		case 'y':
+			s = _parse_num(s, 0, 99, &tm->tm_year);
+			if (s == NULL) return NULL;
+			if (tm->tm_year <= 68) {
+				tm->tm_year += 100;
+			}
+			break;
+
+		// arbitray whitespace.
+		case 't':
+		case 'n':
+			while (isspace(*s)) ++s;
+			break;
+
+		// '%'.
+		case '%':
+			if (*s != '%') return NULL;
+			++s;
+			break;
+
+		// All the other format are not supported.
+		default:
+			return NULL;
+		}
+		++format;
+	}
+
+	if (*format) {
+		return NULL;
+	} else {
+		return (char *)s;
+	}
+}
+
+char* strptime(const char *buf, const char *fmt, struct tm *tm) {
+	return _strptime(buf, fmt, tm);
+}
+#endif
 
 /* sci_func -- map a double to a double */ /*{{{*/
 static Token sci_func(int argc, const Token argv[], double (*func)(double), const char *func_name)
@@ -81,8 +263,8 @@ static Token sci_func(int argc, const Token argv[], double (*func)(double), cons
     {
       result.type=EEK;
       /* This is actually too much, but always enough for %s formats. */
-      result.u.err=malloc(strlen(WRONGTYPE)+strlen(func_name)+1);
-      sprintf(result.u.err,WRONGTYPE,func_name);
+      result.u.err=malloc(strlen(_("Usage: %s(float)"))+strlen(func_name)+1);
+      sprintf(result.u.err,_("Usage: %s(float)"),func_name);
     }
   }
   return result;
@@ -155,7 +337,7 @@ static Token at_func(int argc, const Token argv[])
   /* return error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(USAGE_AT)+1),USAGE_AT);
+    result.u.err=strcpy(malloc(strlen(_("Usage: @([integer x][,[integer y][,[integer z]]]) or @(location)"))+1),_("Usage: @([integer x][,[integer y][,[integer z]]]) or @(location)"));
     return result;
   }
   /*}}}*/
@@ -211,7 +393,7 @@ static Token adr_func(int argc, const Token argv[])
   /* result is type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(USAGE_ADR)+1),USAGE_ADR);
+    result.u.err=strcpy(malloc(strlen(_("Usage: &([integer x][,[integer y][,[integer z]]])"))+1),_("Usage: &([integer x][,[integer y][,[integer z]]])"));
   }
   /*}}}*/
   return result;
@@ -242,7 +424,7 @@ static Token x_func(int argc, const Token argv[])
   /* x type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(XTYPE)+1),XTYPE);
+    result.u.err=strcpy(malloc(strlen(_("Usage: x([location])"))+1),_("Usage: x([location])"));
   }
   /*}}}*/
   return result;
@@ -273,7 +455,7 @@ static Token y_func(int argc, const Token argv[])
   /* y type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(YTYPE)+1),YTYPE);
+    result.u.err=strcpy(malloc(strlen(_("Usage: y([location])"))+1),_("Usage: y([location])"));
   }
   /*}}}*/
   return result;
@@ -304,7 +486,7 @@ static Token z_func(int argc, const Token argv[])
   /* result is z type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=mystrmalloc(ZTYPE);
+    result.u.err=mystrmalloc(_("Usage: z([location])"));
   }
   /*}}}*/
   return result;
@@ -326,7 +508,7 @@ static Token e_func(int argc, const Token argv[])
   else /* result is e type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=mystrmalloc(ETYPE);
+    result.u.err=mystrmalloc(_("Usage: e()"));
   }
   /*}}}*/
   return result;
@@ -344,7 +526,7 @@ static Token eval_func(int argc, const Token argv[])
   /* nesting error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=mystrmalloc(NESTEVAL);
+    result.u.err=mystrmalloc(_("nested eval()"));
   }
   /*}}}*/
   else if (argc==1 && argv[0].type==LOCATION)
@@ -361,7 +543,7 @@ static Token eval_func(int argc, const Token argv[])
   /* eval type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(USAGE_EVAL)+1),USAGE_EVAL);
+    result.u.err=strcpy(malloc(strlen(_("Usage: eval(location)"))+1),_("Usage: eval(location)"));
   }
   /*}}}*/
   ++max_eval;
@@ -381,7 +563,7 @@ static Token error_func(int argc, const Token argv[])
   result.type=EEK;
   if (argc!=1 || argv[0].type!=STRING)
   /* result is type error */ /*{{{*/
-  result.u.err=strcpy(malloc(strlen(USAGE_ERROR)+1),USAGE_ERROR);
+  result.u.err=strcpy(malloc(strlen(_("Usage: error(string message)"))+1),_("Usage: error(string message)"));
   /*}}}*/
   else
   /* result is user defined error */ /*{{{*/
@@ -449,7 +631,7 @@ static Token string_func(int argc, const Token argv[])
   else /* return string type error  */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(STRINGTYPE)+1),STRINGTYPE);
+    result.u.err=strcpy(malloc(strlen(_("Usage: string(location) or string(float[,[integer][,integer]])"))+1),_("Usage: string(location) or string(float[,[integer][,integer]])"));
     return result;
   }
   /*}}}*/
@@ -493,7 +675,7 @@ static Token sum_func(int argc, const Token argv[])
   else /* result is sum type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(SUMTYPE)+1),SUMTYPE);
+    result.u.err=strcpy(malloc(strlen(_("Usage: sum(location,location)"))+1),_("Usage: sum(location,location)"));
   }
   /*}}}*/
   return result;
@@ -537,7 +719,7 @@ static Token n_func(int argc, const Token argv[])
   /* result is n type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(NTYPE)+1),NTYPE);
+    result.u.err=strcpy(malloc(strlen(_("Usage: n(location,location)"))+1),_("Usage: n(location,location)"));
   }
   /*}}}*/
   return result;
@@ -589,12 +771,12 @@ static Token int_func(int argc, const Token argv[])
     if (s==(char*)0 || *s)
     {
       result.type=EEK;
-      result.u.err=mystrmalloc(NOINT);
+      result.u.err=mystrmalloc(_("int(string): invalid string"));
     }
     else if (errno==ERANGE && (result.u.integer==LONG_MAX || result.u.integer==LONG_MIN))
     {
       result.type=EEK;
-      result.u.err=mystrmalloc(INFINT);
+      result.u.err=mystrmalloc(_("int(string): domain error"));
     }
     else result.type=INT;
   }
@@ -603,7 +785,7 @@ static Token int_func(int argc, const Token argv[])
   /* result is int type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(INTTYPE)+1),INTTYPE);
+    result.u.err=strcpy(malloc(strlen(_("Usage: int(float[,integer,integer])"))+1),_("Usage: int(float[,integer,integer])"));
   }
   /*}}}*/
   return result;
@@ -628,7 +810,7 @@ static Token frac_func(int argc, const Token argv[])
   /* result is frac type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(FRACTYPE)+1),FRACTYPE);
+    result.u.err=strcpy(malloc(strlen(_("Usage: frac(float)"))+1),_("Usage: frac(float)"));
   }
   /*}}}*/
   return result;
@@ -652,7 +834,7 @@ static Token len_func(int argc, const Token argv[])
   /* result is frac type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=mystrmalloc(LENTYPE);
+    result.u.err=mystrmalloc(_("Usage: len(string)"));
   }
   /*}}}*/
   return result;
@@ -695,7 +877,7 @@ static Token log_func(int argc, const Token argv[])
   else /* result is log type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=mystrmalloc(LOGTYPE);
+    result.u.err=mystrmalloc(_("Usage: log(float[,float])"));
   }
   /*}}}*/
   return result;
@@ -769,7 +951,7 @@ static Token minmax_func(int argc, const Token argv[], int min)
   /* result is min/max type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=mystrmalloc(min ? MINTYPE : MAXTYPE);
+    result.u.err=mystrmalloc(min ? _("Usage: min(location,location)") : _("Usage: max(location,location)"));
     return result;
   }
   /*}}}*/
@@ -812,7 +994,7 @@ static Token abs_func(int argc, const Token argv[])
   /* result is abs type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=mystrmalloc(ABSTYPE);
+    result.u.err=mystrmalloc(_("Usage: abs(float|integer)"));
   }
   /*}}}*/
   return result;
@@ -836,7 +1018,7 @@ static Token env_func(int argc, const Token argv[])
   else
   {
     result.type=EEK;
-    result.u.err=mystrmalloc(USAGE_ENV);
+    result.u.err=mystrmalloc(_("Usage: $(string)"));
   }
   return result;
 }
@@ -859,7 +1041,7 @@ static Token float_func(int argc, const Token argv[])
     else
     {
       result.type=EEK;
-      result.u.err=mystrmalloc(NOTFINITE);
+      result.u.err=mystrmalloc(_("Not a (finite) floating point number"));
     }
   }
   /*}}}*/
@@ -867,7 +1049,7 @@ static Token float_func(int argc, const Token argv[])
   /* float type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=mystrmalloc(FLOATTYPE);
+    result.u.err=mystrmalloc(_("Usage: float(string)"));
   }
   /*}}}*/
   return result;
@@ -911,7 +1093,7 @@ static Token strftime_func(int argc, const Token argv[])
   else /* strftime type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=mystrmalloc(STRFTIMETYPE);
+    result.u.err=mystrmalloc(_("Usage: strftime(string[,integer])"));
   }
   /*}}}*/
   return result;
@@ -953,7 +1135,7 @@ static Token clock_func(int argc, const Token argv[])
   else /* wrong usage */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=mystrmalloc(CLOCK);
+    result.u.err=mystrmalloc(_("Usage: clock(condition,location[,location])"));
   }
   /*}}}*/
   return result;
@@ -970,7 +1152,7 @@ static Token poly_func(int argc, const Token argv[])
   for (i=0; i<argc; ++i) if (argc<2 || (argv[i].type!=INT && argv[i].type!=FLOAT)) /* type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=strcpy(malloc(strlen(POLYTYPE)+1),POLYTYPE);
+    result.u.err=strcpy(malloc(strlen(_("Usage: poly(float|integer,float|integer,...)"))+1),_("Usage: poly(float|integer,float|integer,...)"));
   }
   /*}}}*/
   else
@@ -1091,7 +1273,7 @@ static Token rnd_func(int argc, const Token argv[])
   else
   {
     result.type=EEK;
-    result.u.err=mystrmalloc(USAGE_RND);
+    result.u.err=mystrmalloc(_("Usage: rnd()"));
   }
   return result;
 }
@@ -1129,7 +1311,7 @@ static Token substr_func(int argc, const Token argv[])
   else
   {
     result.type=EEK;
-    result.u.err=mystrmalloc(USAGE_SUBSTR);
+    result.u.err=mystrmalloc(_("Usage: substr(string,integer,integer)"));
   }
   return result;
 }
@@ -1156,7 +1338,7 @@ static Token strptime_func(int argc, const Token argv[])
   else /* strftime type error */ /*{{{*/
   {
     result.type=EEK;
-    result.u.err=mystrmalloc(STRPTIMETYPE);
+    result.u.err=mystrmalloc(_("Usage: strptime(string,string)"));
   }
   /*}}}*/
   return result;
@@ -1175,7 +1357,7 @@ static Token time_func(int argc, const Token argv[])
   else	
   {
     result.type=EEK;
-    result.u.err=mystrmalloc(USAGE_TIME);
+    result.u.err=mystrmalloc(_("Usage: time()"));
   }
   return result;
 }

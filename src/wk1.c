@@ -21,7 +21,7 @@
 #include "dmalloc.h"
 #endif
 
-#include "cat.h"
+
 #include "eval.h"
 #include "main.h"
 #include "misc.h"
@@ -704,19 +704,19 @@ const char *loadwk1(Sheet *sheet, const char *name)
   {
     /* read header */ /*{{{*/
     if ((head[0]=getc(fp))==EOF) break;
-    if ((head[1]=getc(fp))==EOF) { err=TRUNCHEADER; goto ouch; }
-    if ((head[2]=getc(fp))==EOF) { err=TRUNCHEADER; goto ouch; }
-    if ((head[3]=getc(fp))==EOF) { err=TRUNCHEADER; goto ouch; }
+    if ((head[1]=getc(fp))==EOF) { err=_("The record header appears to be truncated"); goto ouch; }
+    if ((head[2]=getc(fp))==EOF) { err=_("The record header appears to be truncated"); goto ouch; }
+    if ((head[3]=getc(fp))==EOF) { err=_("The record header appears to be truncated"); goto ouch; }
     bodylen=head[2]|(head[3]<<8);
     /*}}}*/
     /* read body */ /*{{{*/
     if (bodylen>bodymaxlen)
     {
       newbody=realloc(body,bodymaxlen=bodylen);
-      if (newbody==(char*)0) { err=NOMEM; goto ouch; }
+      if (newbody==(char*)0) { err=_("Out of memory"); goto ouch; }
       else body=newbody;
     }
-    if (bodylen) if (fread(body,bodylen,1,fp)!=1) { err=TRUNCBODY; goto ouch; }
+    if (bodylen) if (fread(body,bodylen,1,fp)!=1) { err=_("The record body appears to be truncated"); goto ouch; }
     /*}}}*/
     /* process record */ /*{{{*/
 #if WK1DEBUG
@@ -727,7 +727,7 @@ const char *loadwk1(Sheet *sheet, const char *name)
       /* BOF           -- Beginning of file                */ /*{{{*/
       case 0x0:
       {
-        if (bodylen!=2) { err=INVALIDBODYLEN; goto ouch; }
+        if (bodylen!=2) { err=_("Invalid record body length"); goto ouch; }
         if (!found_bof)
         {
           freesheet(sheet,0);
@@ -739,7 +739,7 @@ const char *loadwk1(Sheet *sheet, const char *name)
       /* EOF           -- End of file                      */ /*{{{*/
       case 0x1:
       {
-        if (bodylen!=0) { err=INVALIDBODYLEN; goto ouch; }
+        if (bodylen!=0) { err=_("Invalid record body length"); goto ouch; }
         found_eof=1;
         break;
       }
@@ -747,7 +747,7 @@ const char *loadwk1(Sheet *sheet, const char *name)
       /* CALCMODE      -- Calculation mode                 */ /*{{{*/
       case 0x2:
       {
-        if (bodylen!=1) { err=INVALIDBODYLEN; goto ouch; }
+        if (bodylen!=1) { err=_("Invalid record body length"); goto ouch; }
         /* (unsigned char)body[0] means: */
         /* 0 -- manual                   */
         /* 0xff -- automatic             */
@@ -757,7 +757,7 @@ const char *loadwk1(Sheet *sheet, const char *name)
       /* CALCORDER     -- Calculation order                */ /*{{{*/
       case 0x3:
       {
-        if (bodylen!=1) { err=INVALIDBODYLEN; goto ouch; }
+        if (bodylen!=1) { err=_("Invalid record body length"); goto ouch; }
         /* (unsigned char)body[0] means: */
         /*    0 -- natural               */
         /*    1 -- by column             */
@@ -768,7 +768,7 @@ const char *loadwk1(Sheet *sheet, const char *name)
       /* SPLIT         -- Split window type                */ /*{{{*/
       case 0x4:
       {
-        if (bodylen!=1) { err=INVALIDBODYLEN; goto ouch; }
+        if (bodylen!=1) { err=_("Invalid record body length"); goto ouch; }
         /* (unsigned)body[0] means: */
         /*    0: not split          */
         /*    1: vertical split     */
@@ -779,7 +779,7 @@ const char *loadwk1(Sheet *sheet, const char *name)
       /* SYNC          -- Split window sync                */ /*{{{*/
       case 0x5:
       {
-        if (bodylen!=1) { err=INVALIDBODYLEN; goto ouch; }
+        if (bodylen!=1) { err=_("Invalid record body length"); goto ouch; }
         /* (unsigned)body[0] means: */
         /*    0: not synchronized   */
         /* 0xff: synchronized       */
@@ -789,7 +789,7 @@ const char *loadwk1(Sheet *sheet, const char *name)
       /* RANGE         -- Active worksheet range           */ /*{{{*/
       case 0x6:
       {
-        if (bodylen!=8) { err=INVALIDBODYLEN; goto ouch; }
+        if (bodylen!=8) { err=_("Invalid record body length"); goto ouch; }
         resize(sheet,it(body+4),it(body+6),0);
         /* range is from &(it(body),it(body+2)) to &(it(body+4),it(body+6)) */
         break;
@@ -799,42 +799,42 @@ const char *loadwk1(Sheet *sheet, const char *name)
       case 0x7:
       {
         /* 31 is the specification, but Applix generates 32 while claiming to be Excel */
-        if (bodylen!=31 && (found_bof!=EXCEL && bodylen!=32)) { err=INVALIDBODYLEN; goto ouch; }
+        if (bodylen!=31 && (found_bof!=EXCEL && bodylen!=32)) { err=_("Invalid record body length"); goto ouch; }
         break;
       }
       /*}}}*/
       /* COLW1         -- Column width, window 1           */ /*{{{*/
       case 0x8:
       {
-        if (bodylen!=3) { err=INVALIDBODYLEN; goto ouch; }
+        if (bodylen!=3) { err=_("Invalid record body length"); goto ouch; }
         break;
       }
       /*}}}*/
       /* WINTWO        -- Window 2 record                  */ /*{{{*/
       case 0x9:
       {
-        if (bodylen!=31) { err=INVALIDBODYLEN; goto ouch; }
+        if (bodylen!=31) { err=_("Invalid record body length"); goto ouch; }
         break;
       }
       /*}}}*/
       /* COLW2         -- Column width, window 2           */ /*{{{*/
       case 0xA:
       {
-        if (bodylen!=3) { err=INVALIDBODYLEN; goto ouch; }
+        if (bodylen!=3) { err=_("Invalid record body length"); goto ouch; }
         break;
       }
       /*}}}*/
-      /* NAME          -- Named range                      */ /*{{{*/
+      /* _("nN)ame")          -- Named range                      */ /*{{{*/
       case 0xB:
       {
-        if (bodylen!=24) { err=INVALIDBODYLEN; goto ouch; }
+        if (bodylen!=24) { err=_("Invalid record body length"); goto ouch; }
         break;
       }
       /*}}}*/
       /* BLANK         -- Blank cell                       */ /*{{{*/
       case 0xC:
       {
-        if (bodylen!=5) { err=INVALIDBODYLEN; goto ouch; }
+        if (bodylen!=5) { err=_("Invalid record body length"); goto ouch; }
         initcell(sheet,it(body+1),it(body+3),0);
         format((unsigned char)body[0],SHEET(sheet,it(body+1),it(body+3),0));
         break;
@@ -874,7 +874,7 @@ const char *loadwk1(Sheet *sheet, const char *name)
         break;
       }
       /*}}}*/
-      /* LABEL         -- Label cell                       */ /*{{{*/
+      /* _("lL)abel")         -- Label cell                       */ /*{{{*/
       case 0xF:
       {
         Token **t;
@@ -900,7 +900,7 @@ const char *loadwk1(Sheet *sheet, const char *name)
         Token **t;
 
         assert(bodylen>15);
-        if ((offset=malloc(it(body+13)*sizeof(int)))==0) { err=NOMEM; goto ouch; }
+        if ((offset=malloc(it(body+13)*sizeof(int)))==0) { err=_("Out of memory"); goto ouch; }
 #if WK1DEBUG
         fprintf(se,"FORMULA: &(%d,%d)=",it(body+1),it(body+3));
 #endif
@@ -952,13 +952,13 @@ const char *loadwk1(Sheet *sheet, const char *name)
         if ((t=malloc(tokens*sizeof(Token*)))==(Token**)0)
         {
           free(offset);
-          err=NOMEM;
+          err=_("Out of memory");
           goto ouch;
         }
         for (; tokens; --tokens) t[tokens-1]=(Token*)0;
         if (unrpn(body,offset,j-1,t,&tokens)==-1)
         {
-          err=NOMEM;
+          err=_("Out of memory");
           tvecfree(t);
           goto ouch;
         }
@@ -1003,7 +1003,7 @@ const char *loadwk1(Sheet *sheet, const char *name)
       /* PROTEC        -- Global protection                */ /*{{{*/
       case 0x24:
       {
-        if (bodylen!=1) { err=INVALIDBODYLEN; goto ouch; }
+        if (bodylen!=1) { err=_("Invalid record body length"); goto ouch; }
         /* (unsigned)body[0] means: */
         /*    0: off                */
         /* 0xff: on                 */
@@ -1013,14 +1013,14 @@ const char *loadwk1(Sheet *sheet, const char *name)
       /* FOOTER        -- Print footer                     */ /*{{{*/
       case 0x25:
       {
-        if (body[bodylen-1]!='\0' || bodylen<1 || bodylen>243) { err=INVALIDBODYLEN; goto ouch; }
+        if (body[bodylen-1]!='\0' || bodylen<1 || bodylen>243) { err=_("Invalid record body length"); goto ouch; }
         break;
       }
       /*}}}*/
       /* HEADER        -- Print header                     */ /*{{{*/
       case 0x26:
       {
-        if (body[bodylen-1]!='\0' || bodylen<1 || bodylen>243) { err=INVALIDBODYLEN; goto ouch; }
+        if (body[bodylen-1]!='\0' || bodylen<1 || bodylen>243) { err=_("Invalid record body length"); goto ouch; }
         break;
       }
       /*}}}*/
@@ -1033,7 +1033,7 @@ const char *loadwk1(Sheet *sheet, const char *name)
       /* LABELFMT      -- Label alignment                  */ /*{{{*/
       case 0x29:
       {
-        if (bodylen!=1) { err=INVALIDBODYLEN; goto ouch; }
+        if (bodylen!=1) { err=_("Invalid record body length"); goto ouch; }
         /* (unsigned char)body[0] means: */
         /* 0x22: right aligned labels    */
         /* 0x27: left aligned labels     */
@@ -1058,7 +1058,7 @@ const char *loadwk1(Sheet *sheet, const char *name)
       /* CALCCOUNT     -- Iteration count                  */ /*{{{*/
       case 0x2F:
       {
-        if (bodylen!=1) { err=INVALIDBODYLEN; goto ouch; }
+        if (bodylen!=1) { err=_("Invalid record body length"); goto ouch; }
         /* Do up to %d Iterations */
         break;
       }
@@ -1069,7 +1069,7 @@ const char *loadwk1(Sheet *sheet, const char *name)
       /* CURSORW12     -- Cursor location                  */ /*{{{*/
       case 0x31:
       {
-        if (bodylen!=1) { err=INVALIDBODYLEN; goto ouch; }
+        if (bodylen!=1) { err=_("Invalid record body length"); goto ouch; }
         /* (unsigned)body[0] means cursor in window: */
         /* 1: 1                                      */
         /* 2: 2                                      */
@@ -1149,9 +1149,9 @@ const char *loadwk1(Sheet *sheet, const char *name)
       /*}}}*/
     }
     /*}}}*/
-    if (!found_bof) { err=NOBOF; goto ouch; }
+    if (!found_bof) { err=_("This is not a WK1 file"); goto ouch; }
   }
-  if (!found_eof) err=NOEOF;
+  if (!found_eof) err=_("File truncated");
   ouch:
   if (body) free(body);
   if (fclose(fp)==EOF && err==(const char*)0) err=strerror(errno);

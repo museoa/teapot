@@ -1,7 +1,9 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include <nl_types.h>
+#include "config.h"
+
+#define _(x) (x)
 
 #include "sheet.h"
 
@@ -9,7 +11,6 @@
 extern "C" {
 #endif
 
-extern nl_catd catd;
 extern int batch;
 extern int def_precision;
 extern int quote;
