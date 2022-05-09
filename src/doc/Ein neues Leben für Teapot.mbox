@@ -1,0 +1,43 @@
+From michael@moria.de Mon Jan 26 11:41:49 2009
+Return-path: <michael@moria.de>
+Envelope-to: info@syntax-k.de
+Delivery-date: Mon, 26 Jan 2009 11:42:30 +0100
+Received: from [194.97.106.210] (helo=fangorn.moria.de)
+	by mercenary.garni.ch with esmtps (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.67)
+	(envelope-from <michael@moria.de>)
+	id 1LROv8-0007ub-Oi
+	for info@syntax-k.de; Mon, 26 Jan 2009 11:42:30 +0100
+Received: from michael by fangorn.moria.de with local (ID michael) (Exim 4.69 #20)
+	id 1LROub-0002Gz-Ge
+	for info@syntax-k.de; Mon, 26 Jan 2009 11:41:49 +0100
+Date: Mon, 26 Jan 2009 11:41:49 +0100
+To: info@syntax-k.de
+Subject: Re: Ein neues Leben =?iso-8859-1?Q?f=FCr?= Teapot
+References: <200901260214.44366.info@syntax-k.de>
+In-Reply-To: <200901260214.44366.info@syntax-k.de>
+User-Agent: Heirloom mailx 12.1 6/15/06
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Message-Id: <E1LROub-0002Gz-Ge@fangorn.moria.de>
+From: Michael Haardt <michael@moria.de>
+X-Spam-Level: --
+X-Spam-Status: NO, score=-2.5, required=7.0
+X-Antivirus-Scanner: Clean mail. You should still use a local antivirus program.
+X-Length: 1754
+X-UID: 1
+
+> Ich war auf der Suche nach einer einfachen Tabellenkalkulation, die 
+> universell (also auch embedded, per SSH usw.) eingesetzt werden kann. 
+> Entdeckt habe ich Teapot, das dank Curses-UI wahrlich universell ist. Um 
+> es aber auf grafischen Systemen bequemer benutzen zu können, habe ich 
+> einfach mal ein GTK+-Frontend dafür geschrieben.
+
+Klingt ganz nett, aber ich mache nichts mehr an Teapot und GTK ist mir
+ein zu veraenderliches Ding, um mich auf fremde Patches zu verlassen.
+Magst Du teapot als Projekt uebernehmen? Ich wuerde es unter GPL gerne
+an jemand abgeben, der am Code arbeitet.
+
+Michael

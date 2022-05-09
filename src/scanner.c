@@ -94,12 +94,14 @@ static Token *flt(const char **s)
 {
   /* variables */ /*{{{*/
   const char *t;
+  char *end;
   Token *n;
   double x;
   /*}}}*/
 
   t=*s;
-  x=strtod(t,(char**)s);
+  x=strtod(t,&end);
+  *s = end;
   if (t!=*s && dblfinite(x)==(const char*)0)
   {
     n=malloc(sizeof(Token));
@@ -114,8 +116,8 @@ static Token *flt(const char **s)
   }
 }
 /*}}}*/
-/* operator   -- match an operator and return token */ /*{{{*/
-static Token *operator(const char **s)
+/* op   -- match an op and return token */ /*{{{*/
+static Token *op(const char **s)
 {
   Token *n;
   Operator op;
@@ -140,7 +142,7 @@ static Token *operator(const char **s)
   }
   n=malloc(sizeof(Token));
   n->type=OPERATOR;
-  n->u.operator=op;
+  n->u.op=op;
   ++(*s);
   return n;
 }
@@ -195,7 +197,7 @@ Token **scan(const char **s)
     or=r;
     while (*r==' ') ++r;  
     n=charstring(&r);
-    if (n==(Token*)0) n=operator(&r);
+    if (n==(Token*)0) n=op(&r);
     if (n==(Token*)0) n=integer(&r);
     if (n==(Token*)0) n=flt(&r);
     if (n==(Token*)0) n=ident(&r);
@@ -212,7 +214,7 @@ Token **scan(const char **s)
   {
     while (*r==' ') ++r;    
     n=charstring(&r);
-    if (n==(Token*)0) n=operator(&r);  
+    if (n==(Token*)0) n=op(&r);  
     if (n==(Token*)0) n=integer(&r);
     if (n==(Token*)0) n=flt(&r);
     if (n==(Token*)0) n=ident(&r);
@@ -298,8 +300,8 @@ void print(char *s, size_t size, int star, int quote, int scientific, int precis
     {
       static const char *ops[]={ "+", "-", "*", "/", "(", ")", ",", "<", "<=", ">=", ">", "==", "~=", "!=", "^", "%" };
       
-      if ((size-cur)>1) *(s+cur++)=*ops[(*n)->u.operator];
-      if (*(ops[(*n)->u.operator]+1) && (size-cur)>1) *(s+cur++)=*(ops[(*n)->u.operator]+1);
+      if ((size-cur)>1) *(s+cur++)=*ops[(*n)->u.op];
+      if (*(ops[(*n)->u.op]+1) && (size-cur)>1) *(s+cur++)=*(ops[(*n)->u.op]+1);
       break;
     }
     /*}}}*/

@@ -61,13 +61,13 @@ static Token primary(Token *n[], int *i)
     /* OPERATOR */ /*{{{*/
     case OPERATOR:
     {
-      if (n[*i]->u.operator==OP)
+      if (n[*i]->u.op==OP)
       /* return paren term */ /*{{{*/
       {
         ++(*i);
         result=term(n,i);
         if (result.type==EEK) return result;
-        if (n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && n[*i]->u.operator==CP) 
+        if (n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && n[*i]->u.op==CP) 
         {
           ++(*i);
           return result;
@@ -78,7 +78,7 @@ static Token primary(Token *n[], int *i)
         return result;
       }
       /*}}}*/
-      else if (n[*i]->u.operator==MINUS)
+      else if (n[*i]->u.op==MINUS)
       /* return negated term */ /*{{{*/
       {
         ++(*i);
@@ -108,15 +108,15 @@ static Token primary(Token *n[], int *i)
     {
       ident=n[*i];
       ++(*i);
-      if (n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && n[*i]->u.operator==OP)
+      if (n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && n[*i]->u.op==OP)
       /* parse arguments and closing paren of function call, return its value */ /*{{{*/
       {
         ++(*i);
         argc=0;
-        if (!(n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && n[*i]->u.operator==CP))
+        if (!(n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && n[*i]->u.op==CP))
         /* parse at least one argument */ /*{{{*/
         {
-          if (n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && n[*i]->u.operator==COMMA)
+          if (n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && n[*i]->u.op==COMMA)
           /* empty argument */ /*{{{*/
           {
             argv[argc].type=EMPTY;
@@ -125,13 +125,13 @@ static Token primary(Token *n[], int *i)
           else argv[argc]=term(n,i);
           if (argv[argc].type==EEK) return argv[argc];
           ++argc;
-          while (n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && n[*i]->u.operator==COMMA)
+          while (n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && n[*i]->u.op==COMMA)
           /* parse the following argument */ /*{{{*/
           {
             ++(*i);
             if (argc<=MAXARGC)
             {
-              if (n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && (n[*i]->u.operator==COMMA || n[*i]->u.operator==CP))
+              if (n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && (n[*i]->u.op==COMMA || n[*i]->u.op==CP))
               {
                 argv[argc].type=EMPTY;
               }    
@@ -149,7 +149,7 @@ static Token primary(Token *n[], int *i)
           /*}}}*/
         }
         /*}}}*/
-        if (n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && n[*i]->u.operator==CP) 
+        if (n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && n[*i]->u.op==CP) 
         /* eval function */ /*{{{*/
         {
           ++(*i);
@@ -190,7 +190,7 @@ static Token powterm(Token *n[], int *i)
 
   l=primary(n,i);
   if (l.type==EEK) return l;
-  while (n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && n[*i]->u.operator==POW)
+  while (n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && n[*i]->u.op==POW)
   {
     Token result,r;
 
@@ -212,12 +212,12 @@ static Token piterm(Token *n[], int *i)
 
   l=powterm(n,i);
   if (l.type==EEK) return l;
-  while (n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && (n[*i]->u.operator==DIV || n[*i]->u.operator==MUL || n[*i]->u.operator==MOD))
+  while (n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && (n[*i]->u.op==DIV || n[*i]->u.op==MUL || n[*i]->u.op==MOD))
   {
     Operator op;
     Token result,r;
 
-    op=n[*i]->u.operator;    
+    op=n[*i]->u.op;    
     ++(*i);
     r=powterm(n,i);
     switch (op)
@@ -242,12 +242,12 @@ static Token factor(Token *n[], int *i)
 
   l=piterm(n,i);
   if (l.type==EEK) return l;
-  while (n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && (n[*i]->u.operator==PLUS || n[*i]->u.operator==MINUS))
+  while (n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && (n[*i]->u.op==PLUS || n[*i]->u.op==MINUS))
   {
     Operator op;
     Token result,r;
 
-    op=n[*i]->u.operator;    
+    op=n[*i]->u.op;    
     ++(*i);
     r=piterm(n,i);
     result=(op==PLUS ? tadd(l,r) : tsub(l,r));
@@ -266,12 +266,12 @@ static Token term(Token *n[], int *i)
 
   l=factor(n,i);
   if (l.type==EEK) return l;
-  while (n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && n[*i]->u.operator>=LT && n[*i]->u.operator<=NE)
+  while (n[*i]!=(Token*)0 && n[*i]->type==OPERATOR && n[*i]->u.op>=LT && n[*i]->u.op<=NE)
   {
     Operator op;
     Token result,r;
 
-    op=n[*i]->u.operator;    
+    op=n[*i]->u.op;    
     ++(*i);
     r=factor(n,i);
     switch (op)

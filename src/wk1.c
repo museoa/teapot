@@ -158,7 +158,7 @@ static int pair(const char *s, Token **t, int *tokens)
   {
     if ((t[*tokens]=malloc(sizeof(Token)))==(Token*)0) return -1;
     t[*tokens]->type=OPERATOR;
-    t[*tokens]->u.operator=OP;
+    t[*tokens]->u.op=OP;
 #if WK1DEBUG
     fprintf(se,"[(");
 #endif
@@ -194,9 +194,9 @@ static int pair(const char *s, Token **t, int *tokens)
           t[*tokens]->type=FIDENT;
           t[*tokens]->u.fident=identcode("x",1);
           t[*tokens+1]->type=OPERATOR;
-          t[*tokens+1]->u.operator=OP;
+          t[*tokens+1]->u.op=OP;
           t[*tokens+2]->type=OPERATOR;
-          t[*tokens+2]->u.operator=CP;
+          t[*tokens+2]->u.op=CP;
 #if WK1DEBUG
           fprintf(se,"x()");
 #endif
@@ -209,7 +209,7 @@ static int pair(const char *s, Token **t, int *tokens)
           t[*tokens+1]->type=INT;
           if (x<0)
           {
-            t[*tokens]->u.operator=MINUS;
+            t[*tokens]->u.op=MINUS;
             t[*tokens+1]->u.integer=-x;
 #if WK1DEBUG
             fprintf(se,"-%d",-x);
@@ -217,7 +217,7 @@ static int pair(const char *s, Token **t, int *tokens)
           }
           else
           {
-            t[*tokens]->u.operator=PLUS;
+            t[*tokens]->u.op=PLUS;
             t[*tokens+1]->u.integer=x;
 #if WK1DEBUG
             fprintf(se,"+%d",x);
@@ -235,7 +235,7 @@ static int pair(const char *s, Token **t, int *tokens)
   {
     if ((t[*tokens]=malloc(sizeof(Token)))==(Token*)0) return -1;
     t[*tokens]->type=OPERATOR;
-    t[*tokens]->u.operator=COMMA;
+    t[*tokens]->u.op=COMMA;
 #if WK1DEBUG
     fprintf(se,",");
 #endif
@@ -271,9 +271,9 @@ static int pair(const char *s, Token **t, int *tokens)
           t[*tokens]->type=FIDENT;
           t[*tokens]->u.fident=identcode("y",1);
           t[*tokens+1]->type=OPERATOR;
-          t[*tokens+1]->u.operator=OP;
+          t[*tokens+1]->u.op=OP;
           t[*tokens+2]->type=OPERATOR;
-          t[*tokens+2]->u.operator=CP;
+          t[*tokens+2]->u.op=CP;
 #if WK1DEBUG
           fprintf(se,"y()");
 #endif
@@ -288,7 +288,7 @@ static int pair(const char *s, Token **t, int *tokens)
           {
             if (t)
             {
-              t[*tokens]->u.operator=MINUS;
+              t[*tokens]->u.op=MINUS;
               t[*tokens+1]->u.integer=-y;
 #if WK1DEBUG
               fprintf(se,"-%d",-y);
@@ -299,7 +299,7 @@ static int pair(const char *s, Token **t, int *tokens)
           {
             if (t)
             {
-              t[*tokens]->u.operator=PLUS;
+              t[*tokens]->u.op=PLUS;
               t[*tokens+1]->u.integer=y;
 #if WK1DEBUG
               fprintf(se,"+%d",y);
@@ -318,7 +318,7 @@ static int pair(const char *s, Token **t, int *tokens)
   {
     if ((t[*tokens]=malloc(sizeof(Token)))==(Token*)0) return -1;
     t[*tokens]->type=OPERATOR;
-    t[*tokens]->u.operator=CP;
+    t[*tokens]->u.op=CP;
 #if WK1DEBUG
     fprintf(se,")]");
 #endif
@@ -342,7 +342,7 @@ static int sumup(const char *s, const int *offset, int top, Token **t, int *toke
     {
       if ((t[*tokens]=malloc(sizeof(Token)))==(Token*)0) return -1;
       t[*tokens]->type=OPERATOR;
-      t[*tokens]->u.operator=PLUS;
+      t[*tokens]->u.op=PLUS;
 #if WK1DEBUG
       fprintf(se,"[+]");
 #endif
@@ -357,7 +357,7 @@ static int sumup(const char *s, const int *offset, int top, Token **t, int *toke
       t[*tokens]->type=FIDENT;
       t[*tokens]->u.fident=identcode("sum",3);
       t[*tokens+1]->type=OPERATOR;
-      t[*tokens+1]->u.operator=OP;
+      t[*tokens+1]->u.op=OP;
 #if WK1DEBUG
       fprintf(se,"[sum(]");
 #endif
@@ -371,7 +371,7 @@ static int sumup(const char *s, const int *offset, int top, Token **t, int *toke
     {
       if ((t[*tokens]=malloc(sizeof(Token)))==(Token*)0) return -1;
       t[*tokens]->type=OPERATOR;
-      t[*tokens]->u.operator=CP;
+      t[*tokens]->u.op=CP;
 #if WK1DEBUG
       fprintf(se,"[)]");
 #endif
@@ -437,7 +437,7 @@ static int unrpn(const char *s, const int *offset, int top, Token **t, int *toke
         t[*tokens]->type=OPERATOR;
         t[*tokens]->u.fident=COMMA;
         t[*tokens+1]->type=FIDENT;
-        t[*tokens+1]->u.operator=identcode("&",1);
+        t[*tokens+1]->u.op=identcode("&",1);
 #if WK1DEBUG
         fprintf(se,"[,&]");
 #endif
@@ -468,7 +468,7 @@ static int unrpn(const char *s, const int *offset, int top, Token **t, int *toke
       {
         if ((t[*tokens]=malloc(sizeof(Token)))==(Token*)0) return -1;
         t[*tokens]->type=OPERATOR;
-        t[*tokens]->u.operator=OP;
+        t[*tokens]->u.op=OP;
 #if WK1DEBUG
         fprintf(se,"[(]");
 #endif
@@ -479,7 +479,7 @@ static int unrpn(const char *s, const int *offset, int top, Token **t, int *toke
       {
         if ((t[*tokens]=malloc(sizeof(Token)))==(Token*)0) return -1;
         t[*tokens]->type=OPERATOR;
-        t[*tokens]->u.operator=CP;
+        t[*tokens]->u.op=CP;
 #if WK1DEBUG
         fprintf(se,"[)]");
 #endif
@@ -527,7 +527,7 @@ static int unrpn(const char *s, const int *offset, int top, Token **t, int *toke
         {
           case  9: /* +  */ /*{{{*/
           {
-            t[*tokens]->u.operator=PLUS;
+            t[*tokens]->u.op=PLUS;
 #if WK1DEBUG
             fprintf(se,"[+]");
 #endif
@@ -536,7 +536,7 @@ static int unrpn(const char *s, const int *offset, int top, Token **t, int *toke
           /*}}}*/
           case 10: /* -  */ /*{{{*/
           {
-            t[*tokens]->u.operator=MINUS;
+            t[*tokens]->u.op=MINUS;
 #if WK1DEBUG
             fprintf(se,"[-]");
 #endif
@@ -545,7 +545,7 @@ static int unrpn(const char *s, const int *offset, int top, Token **t, int *toke
           /*}}}*/
           case 11: /* *  */ /*{{{*/
           {
-            t[*tokens]->u.operator=MUL;
+            t[*tokens]->u.op=MUL;
 #if WK1DEBUG
             fprintf(se,"[*]");
 #endif
@@ -554,7 +554,7 @@ static int unrpn(const char *s, const int *offset, int top, Token **t, int *toke
           /*}}}*/
           case 12: /* /  */ /*{{{*/
           {
-            t[*tokens]->u.operator=DIV;
+            t[*tokens]->u.op=DIV;
 #if WK1DEBUG
             fprintf(se,"[/]");
 #endif
@@ -563,7 +563,7 @@ static int unrpn(const char *s, const int *offset, int top, Token **t, int *toke
           /*}}}*/
           case 13: /* ^  */ /*{{{*/
           {
-            t[*tokens]->u.operator=POW;
+            t[*tokens]->u.op=POW;
 #if WK1DEBUG
             fprintf(se,"[^]");
 #endif
@@ -572,7 +572,7 @@ static int unrpn(const char *s, const int *offset, int top, Token **t, int *toke
           /*}}}*/
           case 14: /* == */ /*{{{*/
           {
-            t[*tokens]->u.operator=ISEQUAL;
+            t[*tokens]->u.op=ISEQUAL;
 #if WK1DEBUG
             fprintf(se,"[==]");
 #endif
@@ -581,7 +581,7 @@ static int unrpn(const char *s, const int *offset, int top, Token **t, int *toke
           /*}}}*/
           case 15: /* != */ /*{{{*/
           {
-            t[*tokens]->u.operator=NE;
+            t[*tokens]->u.op=NE;
 #if WK1DEBUG
             fprintf(se,"[!=]");
 #endif
@@ -590,7 +590,7 @@ static int unrpn(const char *s, const int *offset, int top, Token **t, int *toke
           /*}}}*/
           case 16: /* <= */ /*{{{*/
           {
-            t[*tokens]->u.operator=LE;
+            t[*tokens]->u.op=LE;
 #if WK1DEBUG
             fprintf(se,"[<=]");
 #endif
@@ -599,7 +599,7 @@ static int unrpn(const char *s, const int *offset, int top, Token **t, int *toke
           /*}}}*/
           case 17: /* >= */ /*{{{*/
           {
-            t[*tokens]->u.operator=GE;
+            t[*tokens]->u.op=GE;
 #if WK1DEBUG
             fprintf(se,"[>=]");
 #endif
@@ -608,7 +608,7 @@ static int unrpn(const char *s, const int *offset, int top, Token **t, int *toke
           /*}}}*/
           case 18: /* <  */ /*{{{*/
           {
-            t[*tokens]->u.operator=LT;
+            t[*tokens]->u.op=LT;
 #if WK1DEBUG
             fprintf(se,"[<]");
 #endif
@@ -617,7 +617,7 @@ static int unrpn(const char *s, const int *offset, int top, Token **t, int *toke
           /*}}}*/
           case 19: /* >  */ /*{{{*/
           {
-            t[*tokens]->u.operator=GT;
+            t[*tokens]->u.op=GT;
 #if WK1DEBUG
             fprintf(se,"[>]");
 #endif
@@ -656,7 +656,7 @@ static int unrpn(const char *s, const int *offset, int top, Token **t, int *toke
       {
         if ((t[*tokens]=malloc(sizeof(Token)))==(Token*)0) return -1;
         t[*tokens]->type=OPERATOR;
-        t[*tokens]->u.operator=OP;
+        t[*tokens]->u.op=OP;
 #if WK1DEBUG
         fprintf(se,"[(]");
 #endif
@@ -667,7 +667,7 @@ static int unrpn(const char *s, const int *offset, int top, Token **t, int *toke
       {
         if ((t[*tokens]=malloc(sizeof(Token)))==(Token*)0) return -1;
         t[*tokens]->type=OPERATOR;
-        t[*tokens]->u.operator=CP;
+        t[*tokens]->u.op=CP;
 #if WK1DEBUG
         fprintf(se,"[)]");
 #endif

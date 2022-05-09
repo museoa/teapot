@@ -4,6 +4,8 @@
 #define _POSIX_SOURCE   1
 #undef  _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 2
+#undef  _XOPEN_SOURCE
+#define _XOPEN_SOURCE 500
 #endif
 
 #ifdef DMALLOC
@@ -39,6 +41,7 @@ int getopt(int argc, char * const *argv, const char *optstring);
 #include "parser.h"
 #include "sheet.h"
 #include "wk1.h"
+#include "version.h"
 /*}}}*/
 
 /* variables */ /*{{{*/
@@ -49,6 +52,67 @@ int def_precision=DEF_PRECISION;
 int quote=1;
 static int usexdr=1;
 /*}}}*/
+
+static void get_mark(Sheet *sheet, int *x1, int *x2, int *y1, int *y2, int *z1, int *z2, int everything)
+{
+	if (sheet->marking) {
+		posorder(&sheet->mark1x, &sheet->mark2x);
+		posorder(&sheet->mark1y, &sheet->mark2y);
+		posorder(&sheet->mark1z, &sheet->mark2z);
+		sheet->marking = 0;
+	}
+	if (x1) {
+		if (sheet->mark1x >= 0) {
+			*x1 = sheet->mark1x;
+			*x2 = sheet->mark2x;
+			*y1 = sheet->mark1y;
+			*y2 = sheet->mark2y;
+			*z1 = sheet->mark1z;
+			*z2 = sheet->mark2z;
+		} else if (everything) {
+			*x1 = 0;
+			*x2 = sheet->dimx;
+			*y1 = 0;
+			*y2 = sheet->dimy;
+			*z1 = 0;
+			*z2 = sheet->dimz;
+		} else {
+			*x1 = *x2 = sheet->curx;
+			*y1 = *y2 = sheet->cury;
+			*z1 = *z2 = sheet->curz;
+		}
+	}
+}
+
+void moveto(Sheet *sheet, int x, int y, int z)
+{
+	int need_redraw = 0;
+	int xdir = x > sheet->curx?1:-1;
+
+	if (x >= 0) sheet->curx = x;
+	if (y >= 0) sheet->cury = y;
+	if (z >= 0) need_redraw++, sheet->curz = z;
+	while (sheet->curx > 0 && shadowed(sheet, sheet->curx, sheet->cury, sheet->curz)) sheet->curx += xdir;
+
+	if (sheet->marking) {
+		sheet->mark2x = sheet->curx;
+		sheet->mark2y = sheet->cury;
+		sheet->mark2z = sheet->curz;
+	}
+
+	if (sheet->curx <= sheet->offx && sheet->offx) need_redraw++, sheet->offx = (sheet->curx?sheet->curx-1:0);
+	if (sheet->cury <= sheet->offy && sheet->offy) need_redraw++, sheet->offy = (sheet->cury?sheet->cury-1:0);
+	if (sheet->curx >= sheet->offx+sheet->maxx) need_redraw++, sheet->offx = sheet->curx-sheet->maxx+2;
+	if (sheet->cury >= sheet->offy+sheet->maxy) need_redraw++, sheet->offy = sheet->cury-sheet->maxy+2;
+
+	if (need_redraw) redraw_sheet(sheet);
+	else if (x != sheet->curx || y != sheet->cury || z != sheet->curz) redraw_cell(sheet, sheet->curx, sheet->cury, sheet->curz);
+}
+
+void relmoveto(Sheet *sheet, int x, int y, int z)
+{
+	moveto(sheet, sheet->curx+x, sheet->cury+y, (z?sheet->curz+z:-1));
+}
 
 /* line_numedit   -- number line editor function */ /*{{{*/
 static int line_numedit(int *n, const char *prompt, size_t *x, size_t *offx)
@@ -180,9 +244,7 @@ static int do_edit(Sheet *cursheet, Key c, const char *expr, int clocked)
       } while (*s!='\0' && t==(Token**)0);
     }
     if (t!=(Token**)0 && *t==(Token*)0) { free(t); t=(Token**)0; }
-    cursheet->curx=curx;
-    cursheet->cury=cury;
-    cursheet->curz=curz;
+    moveto(cursheet,curx,cury,curz);
     putcont(cursheet,cursheet->curx,cursheet->cury,cursheet->curz,t,clocked);
     forceupdate(cursheet);
   }
@@ -204,22 +266,7 @@ static int do_label(Sheet *sheet)
   if (sheet->mark1x==-1 && locked(sheet,sheet->curx,sheet->cury,sheet->curz)) line_msg(DOLABEL,ISLOCKED);
   else
   {
-    if (sheet->mark1x==-1)
-    /* range is the current cell */ /*{{{*/
-    {
-      x1=x2=sheet->curx;
-      y1=y2=sheet->cury;
-      z1=z2=sheet->curz;
-    }
-    /*}}}*/
-    else
-    /* range is the marked cube */ /*{{{*/
-    {
-      x1=sheet->mark1x; x2=sheet->mark2x; posorder(&x1,&x2);
-      y1=sheet->mark1y; y2=sheet->mark2y; posorder(&y1,&y2);
-      z1=sheet->mark1z; z2=sheet->mark2z; posorder(&z1,&z2);
-    }
-    /*}}}*/
+    get_mark(sheet, &x1, &x2, &y1, &y2, &z1, &z2, 0);
     ok=edx=offx=0;
     (void)strcpy(buf,getlabel(sheet,sheet->curx,sheet->cury,sheet->curz));
     (void)strcpy(oldlabel,buf);
@@ -263,8 +310,8 @@ static int do_columnwidth(Sheet *cursheet)
   else
   /* range is the marked cube */ /*{{{*/
   {
-    x1=cursheet->mark1x; x2=cursheet->mark2x; posorder(&x1,&x2);
-    z1=cursheet->mark1z; z2=cursheet->mark2z; posorder(&z1,&z2);
+    x1=cursheet->mark1x; x2=cursheet->mark2x;
+    z1=cursheet->mark1z; z2=cursheet->mark2z;
   }
   /*}}}*/
   for (x=x1; x<=x2; ++x) for (z=z1; z<=z2; ++z) setwidth(cursheet,x,z,n);
@@ -281,22 +328,7 @@ static void do_attribute(Sheet *cursheet, Key action)
   int c = 0;
   /*}}}*/
       
-  if (cursheet->mark1x==-1)
-  /* range is the current cell */ /*{{{*/
-  {
-    x1=x2=cursheet->curx;
-    y1=y2=cursheet->cury;
-    z1=z2=cursheet->curz;
-  }
-  /*}}}*/
-  else
-  /* range is the marked cube */ /*{{{*/
-  {
-    x1=cursheet->mark1x; x2=cursheet->mark2x; posorder(&x1,&x2);
-    y1=cursheet->mark1y; y2=cursheet->mark2y; posorder(&y1,&y2);
-    z1=cursheet->mark1z; z2=cursheet->mark2z; posorder(&z1,&z2);
-  }
-  /*}}}*/
+  get_mark(cursheet, &x1, &x2, &y1, &y2, &z1, &z2, 0);
 
   if (action != ADJUST_LOCK && cursheet->mark1x==-1 &&  action != ADJUST_LOCK && locked(cursheet,cursheet->curx,cursheet->cury,cursheet->curz))
   {
@@ -420,413 +452,213 @@ static void do_attribute(Sheet *cursheet, Key action)
     else redraw_sheet(cursheet);
   }
   forceupdate(cursheet);
-  cursheet->marking=0;
   return;
 }
 /*}}}*/
 /* do_savexdr     -- save sheet as XDR file */ /*{{{*/
-static int do_savexdr(Sheet *cursheet)
+static int do_savexdr(Sheet *cursheet, const char *name)
 {
-  /* variables */ /*{{{*/
   char buf[_POSIX_PATH_MAX];
   const char *msg;
   unsigned int count;
-  int c;
-  /*}}}*/    
 
-  if (cursheet->name==(char*)0)
-  {
-    /* variables */ /*{{{*/
-    size_t x,offx;
-    /*}}}*/
+  if (!name) {
+      name = cursheet->name;
 
-    x=0;
-    offx=0;
-    buf[0]='\0';
-    if ((c=line_edit((Sheet*)0,buf,sizeof(buf),SAVEXSHEET,&x,&offx))<0) return c;
-    cursheet->name=strcpy(malloc(strlen(buf)+1),buf);
+      if (strcmp(name+strlen(name)-3,".tp")) {
+        snprintf(buf, sizeof(buf), "%s.tp", name);
+        name = buf;
+      }
   }
-  if ((msg=savexdr(cursheet,cursheet->name,&count)))
-  {
-    line_msg(SAVEXSHEET,msg);
+
+  if ((msg = savexdr(cursheet, name, &count))) {
+    line_msg(SAVEXSHEET, msg);
     return -2;
   }
-  else
-  {
-    sprintf(buf,WROTECELLS,count);
-    assert(strlen(buf)<sizeof(buf));
-    line_msg(SAVEXSHEET,buf);
-  }
+
+  snprintf(buf, sizeof(buf), WROTECELLS, count);
+  if (!batch) line_msg(SAVEXSHEET,buf);
   return -1;
 }
 /*}}}*/
 /* do_saveport    -- save sheet as portable ASCII file */ /*{{{*/
-static int do_saveport(Sheet *cursheet, const char *extension)
+static int do_saveport(Sheet *cursheet, const char *name)
 {
-  /* variables */ /*{{{*/
   char buf[_POSIX_PATH_MAX];
   const char *msg;
-  size_t x,offx,extlen;
-  int c;
   unsigned int count;
-  /*}}}*/
-        
-  extlen=strlen(extension)+1;
-  if (cursheet->name!=(char*)0) (void)strcpy(buf,cursheet->name); else buf[0]='\0';
-  (void)strncat(buf,extension,sizeof(buf)-strlen(buf)-extlen);
-  buf[sizeof(buf)-1]='\0';
-  x=strlen(buf);
-  offx=0;
-  if ((c=line_edit((Sheet*)0,buf,sizeof(buf),SAVEPSHEET,&x,&offx))<0) return c;
-  if ((msg=saveport(cursheet,buf,&count))) line_msg(SAVEPSHEET,msg);
-  else
-  {
-    sprintf(buf,WROTECELLS,count);
-    assert(strlen(buf)<sizeof(buf));
-    line_msg(SAVEPSHEET,buf);
+
+  if (!name) name = cursheet->name;
+
+  if ((msg = saveport(cursheet, name, &count))) {
+    line_msg(SAVEPSHEET,msg);
+    return -2;
   }
+
+  snprintf(buf, sizeof(buf), WROTECELLS, count);
+  if (!batch) line_msg(SAVEPSHEET,buf);
   return -1;
 }
 /*}}}*/
 /* do_savetbl     -- save sheet as tbl file */ /*{{{*/
 static int do_savetbl(Sheet *cursheet, const char *name)
 {
-  /* variables */ /*{{{*/
   char buf[_POSIX_PATH_MAX];
   const char *msg;
-  size_t x,offx;
   int standalone=0;
   int x1,y1,z1,x2,y2,z2;
-  int c;
   unsigned int count;
-  /*}}}*/
       
-  if (cursheet->mark1x==-1)
-  /* range is the whole sheet */ /*{{{*/
-  {
-    x1=0; x2=cursheet->dimx-1;
-    y1=0; y2=cursheet->dimy-1;
-    z1=0; z2=cursheet->dimz-1;
-  }
-  /*}}}*/
-  else
-  /* range is the marked cube */ /*{{{*/
-  {
-    x1=cursheet->mark1x; x2=cursheet->mark2x; posorder(&x1,&x2);
-    y1=cursheet->mark1y; y2=cursheet->mark2y; posorder(&y1,&y2);
-    z1=cursheet->mark1z; z2=cursheet->mark2z; posorder(&z1,&z2);
-  }
-  /*}}}*/
-  if (name) (void)strcpy(buf,name);
-  else
-  {
-    if (cursheet->name==(char*)0) buf[0]='\0';
-    else
-    {
-      (void)strcpy(buf,cursheet->name);
-      (void)strncat(buf,".tbl",sizeof(buf)-strlen(buf)-5);
-      buf[sizeof(buf)-1]='\0';
-    }
-    x=0;
-    offx=0;
-    if ((c=line_edit((Sheet*)0,buf,sizeof(buf),SAVETBLF,&x,&offx))<0) return c;
-    if (buf[0]=='\0') return -1;
+  get_mark(cursheet, &x1, &x2, &y1, &y2, &z1, &z2, 1);
+  if (!name) {
+    name = cursheet->name;
     if ((standalone=line_ok(STANDALONE,1))<0) return standalone;
   }
-  if ((msg=savetbl(cursheet,buf,!standalone,x1,y1,z1,x2,y2,z2,&count))) line_msg(SAVETBLF,msg);
-  else if (name==(const char*)0)
-  {
-    sprintf(buf,WROTECELLS,count);
-    assert(strlen(buf)<sizeof(buf));
-    line_msg(SAVETBLF,buf);
+
+  if ((msg = savetbl(cursheet, name, !standalone, x1, y1, z1, x2, y2, z2, &count))) {
+    line_msg(SAVETBLF,msg);
+    return -2;
   }
+
+  snprintf(buf, sizeof(buf), WROTECELLS, count);
+  if (!batch) line_msg(SAVETBLF, buf);
   return -1;
 }
 /*}}}*/
 /* do_savelatex   -- save sheet as LaTeX file */ /*{{{*/
 static int do_savelatex(Sheet *cursheet, const char *name)
 {
-  /* variables */ /*{{{*/
   char buf[_POSIX_PATH_MAX];
   const char *msg;
-  size_t x,offx;
   int standalone=0;
   int x1,y1,z1,x2,y2,z2;
-  int c;
   unsigned int count;
-  /*}}}*/
       
-  if (cursheet->mark1x==-1)
-  /* range is the whole sheet */ /*{{{*/
-  {
-    x1=0; x2=cursheet->dimx-1;
-    y1=0; y2=cursheet->dimy-1;
-    z1=0; z2=cursheet->dimz-1;
-  }
-  /*}}}*/
-  else
-  /* range is the marked cube */ /*{{{*/
-  {
-    x1=cursheet->mark1x; x2=cursheet->mark2x; posorder(&x1,&x2);
-    y1=cursheet->mark1y; y2=cursheet->mark2y; posorder(&y1,&y2);
-    z1=cursheet->mark1z; z2=cursheet->mark2z; posorder(&z1,&z2);
-  }
-  /*}}}*/
-  if (name) (void)strcpy(buf,name);
-  else
-  {
-    if (cursheet->name==(char*)0) buf[0]='\0';
-    else
-    {
-      (void)strcpy(buf,cursheet->name);
-      (void)strncat(buf,".tex",sizeof(buf)-strlen(buf)-5);
-      buf[sizeof(buf)-1]='\0';
-    }
-    x=0;
-    offx=0;
-    if ((c=line_edit((Sheet*)0,buf,sizeof(buf),SAVELATEXF,&x,&offx))<0) return c;
-    if (buf[0]=='\0') return -1;
+  get_mark(cursheet, &x1, &x2, &y1, &y2, &z1, &z2, 1);
+  if (!name) {
+    name = cursheet->name;
     if ((standalone=line_ok(STANDALONE,1))<0) return standalone;
   }
-  if ((msg=savelatex(cursheet,buf,!standalone,x1,y1,z1,x2,y2,z2,&count))!=(const char*)0) line_msg(SAVELATEXF,msg);
-  else if (name==(const char*)0)
-  {
-    sprintf(buf,WROTECELLS,count);
-    assert(strlen(buf)<sizeof(buf));
-    line_msg(SAVELATEXF,buf);
+
+  if ((msg = savelatex(cursheet, name, !standalone, x1, y1, z1, x2, y2, z2, &count))) {
+    line_msg(SAVELATEXF,msg);
+    return -2;
   }
+
+  snprintf(buf, sizeof(buf), WROTECELLS, count);
+  if (!batch) line_msg(SAVELATEXF, buf);
   return -1;
 }
 /*}}}*/
 /* do_savecontext   -- save sheet as ConTeXt file */ /*{{{*/
 static int do_savecontext(Sheet *cursheet, const char *name)
 {
-  /* variables */ /*{{{*/
   char buf[_POSIX_PATH_MAX];
   const char *msg;
-  size_t x,offx;
   int standalone=0;
   int x1,y1,z1,x2,y2,z2;
-  int c;
   unsigned int count;
-  /*}}}*/
       
-  if (cursheet->mark1x==-1)
-  /* range is the whole sheet */ /*{{{*/
-  {
-    x1=0; x2=cursheet->dimx-1;
-    y1=0; y2=cursheet->dimy-1;
-    z1=0; z2=cursheet->dimz-1;
-  }
-  /*}}}*/
-  else
-  /* range is the marked cube */ /*{{{*/
-  {
-    x1=cursheet->mark1x; x2=cursheet->mark2x; posorder(&x1,&x2);
-    y1=cursheet->mark1y; y2=cursheet->mark2y; posorder(&y1,&y2);
-    z1=cursheet->mark1z; z2=cursheet->mark2z; posorder(&z1,&z2);
-  }
-  /*}}}*/
-  if (name) (void)strcpy(buf,name);
-  else
-  {
-    if (cursheet->name==(char*)0) buf[0]='\0';
-    else
-    {
-      (void)strcpy(buf,cursheet->name);
-      (void)strncat(buf,".tex",sizeof(buf)-strlen(buf)-5);
-      buf[sizeof(buf)-1]='\0';
-    }
-    x=0;
-    offx=0;
-    if ((c=line_edit((Sheet*)0,buf,sizeof(buf),SAVECONTEXTF,&x,&offx))<0) return c;
-    if (buf[0]=='\0') return -1;
+  get_mark(cursheet, &x1, &x2, &y1, &y2, &z1, &z2, 1);
+  if (!name) {
+    name = cursheet->name;
     if ((standalone=line_ok(STANDALONE,1))<0) return standalone;
   }
-  if ((msg=savecontext(cursheet,buf,!standalone,x1,y1,z1,x2,y2,z2,&count))!=(const char*)0) line_msg(SAVECONTEXTF,msg);
-  else if (name==(const char*)0)
-  {
-    sprintf(buf,WROTECELLS,count);
-    assert(strlen(buf)<sizeof(buf));
-    line_msg(SAVECONTEXTF,buf);
+
+  if ((msg = savecontext(cursheet, name, !standalone, x1, y1, z1, x2, y2, z2, &count))) {
+    line_msg(SAVECONTEXTF,msg);
+    return -2;
   }
+
+  snprintf(buf, sizeof(buf), WROTECELLS, count);
+  if (!batch) line_msg(SAVECONTEXTF, buf);
   return -1;
 }
 /*}}}*/
 /* do_savehtml    -- save sheet as HTML file */ /*{{{*/
 static int do_savehtml(Sheet *cursheet, const char *name)
 {
-  /* variables */ /*{{{*/
   char buf[_POSIX_PATH_MAX];
   const char *msg;
-  size_t x,offx;
   int standalone=0;
   int x1,y1,z1,x2,y2,z2;
-  int c;
   unsigned int count;
-  /*}}}*/
       
-  if (cursheet->mark1x==-1)
-  /* range is the whole sheet */ /*{{{*/
-  {
-    x1=0; x2=cursheet->dimx-1;
-    y1=0; y2=cursheet->dimy-1;
-    z1=0; z2=cursheet->dimz-1;
-  }
-  /*}}}*/
-  else
-  /* range is the marked cube */ /*{{{*/
-  {
-    x1=cursheet->mark1x; x2=cursheet->mark2x; posorder(&x1,&x2);
-    y1=cursheet->mark1y; y2=cursheet->mark2y; posorder(&y1,&y2);
-    z1=cursheet->mark1z; z2=cursheet->mark2z; posorder(&z1,&z2);
-  }
-  /*}}}*/
-  if (name) (void)strcpy(buf,name);
-  else
-  {
-    if (cursheet->name==(char*)0) buf[0]='\0';
-    else
-    {
-      (void)strcpy(buf,cursheet->name);
-      (void)strncat(buf,".html",sizeof(buf)-strlen(buf)-6);
-      buf[sizeof(buf)-1]='\0';
-    }
-    x=0;
-    offx=0;
-    if ((c=line_edit((Sheet*)0,buf,sizeof(buf),SAVEHTMLF,&x,&offx))<0) return c;
-    if (buf[0]=='\0') return -1;
+  get_mark(cursheet, &x1, &x2, &y1, &y2, &z1, &z2, 1);
+  if (!name) {
+    name = cursheet->name;
     if ((standalone=line_ok(STANDALONE,1))<0) return standalone;
   }
-  if ((msg=savehtml(cursheet,buf,!standalone,x1,y1,z1,x2,y2,z2,&count))) line_msg(SAVEHTMLF,msg);
-  else if (name==(const char*)0)
-  {
-    sprintf(buf,WROTECELLS,count);
-    assert(strlen(buf)<sizeof(buf));
-    line_msg(SAVEHTMLF,buf);
+
+  if ((msg = savehtml(cursheet, name, !standalone, x1, y1, z1, x2, y2, z2, &count))) {
+    line_msg(SAVEHTMLF,msg);
+    return -2;
   }
+
+  snprintf(buf, sizeof(buf), WROTECELLS, count);
+  if (!batch) line_msg(SAVEHTMLF, buf);
   return -1;
 }
 /*}}}*/
 /* do_savetext    -- save sheet as formatted text file */ /*{{{*/
-static int do_savetext(Sheet *cursheet)
+static int do_savetext(Sheet *cursheet, const char *name)
 {
-  /* variables */ /*{{{*/
   char buf[_POSIX_PATH_MAX];
   const char *msg;
-  size_t x,offx;
   int x1,y1,z1,x2,y2,z2;
-  int c;
   unsigned int count;
-  /*}}}*/
-      
-  if (cursheet->mark1x==-1)
-  /* range is the whole sheet */ /*{{{*/
-  {
-    x1=0; x2=cursheet->dimx-1;
-    y1=0; y2=cursheet->dimy-1;
-    z1=0; z2=cursheet->dimz-1;
+
+  get_mark(cursheet, &x1, &x2, &y1, &y2, &z1, &z2, 1);
+  if (!name) name = cursheet->name;
+
+  if ((msg = savetext(cursheet, name, x1, y1, z1, x2, y2, z2, &count))) {
+    line_msg(SAVETEXTF,msg);
+    return -2;
   }
-  /*}}}*/
-  else
-  /* range is the marked cube */ /*{{{*/
-  {
-    x1=cursheet->mark1x; x2=cursheet->mark2x; posorder(&x1,&x2);
-    y1=cursheet->mark1y; y2=cursheet->mark2y; posorder(&y1,&y2);
-    z1=cursheet->mark1z; z2=cursheet->mark2z; posorder(&z1,&z2);
-  }
-  /*}}}*/
-  if (cursheet->name==(char*)0) buf[0]='\0';
-  else
-  {
-    (void)strcpy(buf,cursheet->name);
-    (void)strncat(buf,".doc",sizeof(buf)-strlen(buf)-5);
-    buf[sizeof(buf)-1]='\0';
-  }
-  x=0;
-  offx=0;
-  if ((c=line_edit((Sheet*)0,buf,sizeof(buf),SAVETEXTF,&x,&offx))<0) return c;
-  if (buf[0]=='\0') return -1;
-  if ((msg=savetext(cursheet,buf,x1,y1,z1,x2,y2,z2,&count))) line_msg(SAVETEXTF,msg);
-  else
-  {
-    sprintf(buf,WROTECELLS,count);
-    assert(strlen(buf)<sizeof(buf));
-    line_msg(SAVETEXTF,buf);
-  }
+
+  snprintf(buf, sizeof(buf), WROTECELLS, count);
+  if (!batch) line_msg(SAVETEXTF, buf);
   return -1;
 }
 /*}}}*/
 /* do_savecsv     -- save sheet as CSV file */ /*{{{*/
 static int do_savecsv(Sheet *cursheet, const char *name)
 {
-  /* variables */ /*{{{*/
   char buf[_POSIX_PATH_MAX];
   const char *msg;
-  size_t x,offx;
   int x1,y1,z1,x2,y2,z2;
-  int c;
   unsigned int count;
-  /*}}}*/
-      
-  if (cursheet->mark1x==-1)
-  /* range is the whole sheet */ /*{{{*/
-  {
-    x1=0; x2=cursheet->dimx-1;
-    y1=0; y2=cursheet->dimy-1;
-    z1=0; z2=cursheet->dimz-1;
+  int sep = 0;
+  const char seps[4] = ",;\t";
+
+  get_mark(cursheet, &x1, &x2, &y1, &y2, &z1, &z2, 1);
+  if (!name) {
+    MenuChoice menu[3];
+    name = cursheet->name;
+
+    menu[0].str=mystrmalloc("cC)omma (,)"); menu[0].c='\0';
+    menu[1].str=mystrmalloc("sS)emicolon (;)"); menu[1].c='\0';
+    menu[2].str=mystrmalloc("tT)ab (\\t)"); menu[2].c='\0';
+    menu[3].str=(char*)0;
+    sep=line_menu("Choose separator:",menu,0);
+    if (sep < 0) return sep;
   }
-  /*}}}*/
-  else
-  /* range is the marked cube */ /*{{{*/
-  {
-    x1=cursheet->mark1x; x2=cursheet->mark2x; posorder(&x1,&x2);
-    y1=cursheet->mark1y; y2=cursheet->mark2y; posorder(&y1,&y2);
-    z1=cursheet->mark1z; z2=cursheet->mark2z; posorder(&z1,&z2);
+
+  if ((msg = savecsv(cursheet, name, seps[sep], x1, y1, z1, x2, y2, z2, &count))) {
+    line_msg(SAVECSVF,msg);
+    return -2;
   }
-  /*}}}*/
-  if (name) (void)strcpy(buf,name);
-  else
-  {
-    if (cursheet->name==(char*)0) buf[0]='\0';
-    else
-    {
-      (void)strcpy(buf,cursheet->name);
-      (void)strncat(buf,".txt",sizeof(buf)-strlen(buf)-5);
-      buf[sizeof(buf)-1]='\0';
-    }
-    x=0;
-    offx=0;
-    if ((c=line_edit((Sheet*)0,buf,sizeof(buf),SAVECSVF,&x,&offx))<0) return c;
-    if (buf[0]=='\0') return -1;
-  }
-  if ((msg=savecsv(cursheet,buf,x1,y1,z1,x2,y2,z2,&count))) line_msg(SAVECSVF,msg);
-  else if (name==(const char*)0)
-  {
-    sprintf(buf,WROTECELLS,count);
-    assert(strlen(buf)<sizeof(buf));
-    line_msg(SAVECSVF,buf);
-  }
+
+  snprintf(buf, sizeof(buf), WROTECELLS, count);
+  if (!batch) line_msg(SAVECSVF, buf);
   return -1;
 }
 /*}}}*/
 /* do_loadxdr     -- load sheet from XDR file */ /*{{{*/
 static int do_loadxdr(Sheet *cursheet)
 {
-  /* variables */ /*{{{*/
-  size_t x,offx;
-  char buf[_POSIX_PATH_MAX];
   const char *msg;
-  int c;
-  /*}}}*/
-      
-  x=0;
-  offx=0;
-  buf[0]='\0';
-  if ((c=line_edit((Sheet*)0,buf,sizeof(buf),LOADXSHEET,&x,&offx))<0) return c;
-  if (buf[0]=='\0') return (-1);
-  if (cursheet->name!=(char*)0) free(cursheet->name);
-  cursheet->name=strcpy(malloc(strlen(buf)+1),buf);
+
   if ((msg=loadxdr(cursheet,cursheet->name))!=(const char*)0) line_msg(LOADXSHEET,msg);
   return -1;
 }
@@ -834,114 +666,42 @@ static int do_loadxdr(Sheet *cursheet)
 /* do_loadport    -- load sheet from portable ASCII file */ /*{{{*/
 static int do_loadport(Sheet *cursheet)
 {
-  /* variables */ /*{{{*/
-  size_t x,offx;
-  char buf[_POSIX_PATH_MAX];
   const char *msg;
-  int c;
   /*}}}*/
       
-  x=0;
-  offx=0;
-  (void)strcpy(buf,".asc");
-  if ((c=line_edit((Sheet*)0,buf,sizeof(buf),LOADPSHEET,&x,&offx))<0) return c;
-  if (buf[0]=='\0') return -1;
-  if (cursheet->name!=(char*)0) free(cursheet->name);
-  cursheet->name=strcpy(malloc(strlen(buf)+1),buf);
   if ((msg=loadport(cursheet,cursheet->name))!=(const char*)0) line_msg(LOADPSHEET,msg);
-  if (strlen(cursheet->name)>(size_t)4 && strcmp(cursheet->name+strlen(cursheet->name)-4,".asc")==0) *(cursheet->name+strlen(cursheet->name)-4)='\0';
   return -1;
 }
 /*}}}*/
 /* do_loadsc      -- load sheet from SC file */ /*{{{*/
 static int do_loadsc(Sheet *cursheet)
 {
-  /* variables */ /*{{{*/
-  size_t x,offx;
-  char buf[_POSIX_PATH_MAX];
   const char *msg;
-  int c;
-  /*}}}*/
-      
-  x=0;
-  offx=0;
-  (void)strcpy(buf,".sc");
-  if ((c=line_edit((Sheet*)0,buf,sizeof(buf),LOADSCSHEET,&x,&offx))<0) return c;
-  if (buf[0]=='\0') return -1;
-  if (cursheet->name!=(char*)0) free(cursheet->name);
-  cursheet->name=strcpy(malloc(strlen(buf)+1),buf);
+
   if ((msg=loadsc(cursheet,cursheet->name))!=(const char*)0) line_msg(LOADSCSHEET,msg);
-  if (strlen(cursheet->name)>(size_t)3 && strcmp(cursheet->name+strlen(cursheet->name)-3,".sc")==0) *(cursheet->name+strlen(cursheet->name)-3)='\0';
   return -1;
 }
 /*}}}*/
 /* do_loadwk1     -- load sheet from WK1 file */ /*{{{*/
 static int do_loadwk1(Sheet *cursheet)
 {
-  /* variables */ /*{{{*/
-  size_t x,offx;
-  char buf[_POSIX_PATH_MAX];
   const char *msg;
-  int c;
-  /*}}}*/
-      
-  x=0;
-  offx=0;
-  (void)strcpy(buf,".wk1");
-  if ((c=line_edit((Sheet*)0,buf,sizeof(buf),LOADWK1SHEET,&x,&offx))<0) return c;
-  if (buf[0]=='\0') return -1;
-  if (cursheet->name!=(char*)0) free(cursheet->name);
-  cursheet->name=strcpy(malloc(strlen(buf)+1),buf);
+
   if ((msg=loadwk1(cursheet,cursheet->name))!=(const char*)0) line_msg(LOADWK1SHEET,msg);
-  if (strlen(cursheet->name)>(size_t)4 && strcmp(cursheet->name+strlen(cursheet->name)-4,".sc")==0) *(cursheet->name+strlen(cursheet->name)-4)='\0';
   return -1;
 }
 /*}}}*/
 /* do_loadcsv     -- load/merge sheet from CSV file */ /*{{{*/
-static int do_loadcsv(Sheet *cursheet, int semicolon)
+static int do_loadcsv(Sheet *cursheet)
 {
-  /* variables */ /*{{{*/
-  size_t x,offx;
-  char buf[_POSIX_PATH_MAX];
   const char *msg;
-  int c;
-  /*}}}*/
-      
-  x=0;
-  offx=0;
-  (void)strcpy(buf,".txt");
-  if ((c=line_edit((Sheet*)0,buf,sizeof(buf),LOADCSVSHEET,&x,&offx))<0) return c;
-  if (buf[0]=='\0') return -1;
-  if (cursheet->name==(char*)0)
-  {
-    cursheet->name=strcpy(malloc(strlen(buf)+1),buf);
-    if (strlen(cursheet->name)>(size_t)4 && strcmp(cursheet->name+strlen(cursheet->name)-4,".asc")==0) *(cursheet->name+strlen(cursheet->name)-4)='\0';
-      }
-  if ((msg=loadcsv(cursheet,buf,semicolon))!=(const char*)0) line_msg(LOADCSVSHEET,msg);
-  return -1;
-}
-/*}}}*/
-/* do_name        -- (re)name sheet */ /*{{{*/
-static int do_name(Sheet *cursheet)
-{
-  /* variables */ /*{{{*/
-  size_t x,offx;
-  char buf[_POSIX_PATH_MAX];
-  int c;
-  /*}}}*/
-      
-  x=0;
-  offx=0;
-  if (usexdr) buf[0]='\0'; else strcpy(buf,".asc");
-  while (buf[0]=='\0') if ((c=line_edit((Sheet*)0,buf,sizeof(buf),NAMESHEET,&x,&offx))<0) return c;
-  if (buf[0]=='\0') return -1;
-  if (cursheet->name!=(char*)0) free(cursheet->name);
-  cursheet->name=strcpy(malloc(strlen(buf)+1),buf);
+
+  if ((msg=loadcsv(cursheet,cursheet->name))!=(const char*)0) line_msg(LOADCSVSHEET,msg);
   return -1;
 }
 /*}}}*/
 /* do_mark        -- set mark */ /*{{{*/
-static void do_mark(Sheet *cursheet, int force)
+void do_mark(Sheet *cursheet, int force)
 {
   if (force==0)
   {
@@ -973,135 +733,59 @@ static void do_mark(Sheet *cursheet, int force)
   }
 }
 /*}}}*/
+static int do_name(Sheet *cursheet);
 /* do_save        -- save sheet */ /*{{{*/
 static int do_save(Sheet *cursheet)
 {
-  /* variables */ /*{{{*/
-  MenuChoice menu[9];
-  int c;
-  /*}}}*/
-  
-  menu[0].str=mystrmalloc(ASXDR);    menu[0].c='\0';
-  menu[1].str=mystrmalloc(ASASCII);  menu[1].c='\0';  
-  menu[2].str=mystrmalloc(TBL);      menu[2].c='\0';
-  menu[3].str=mystrmalloc(LATEX);    menu[3].c='\0';
-  menu[4].str=mystrmalloc(HTML);     menu[4].c='\0';
-  menu[5].str=mystrmalloc(CSV);      menu[5].c='\0';
-  menu[6].str=mystrmalloc(SAVETEXT); menu[6].c='\0';
-  menu[7].str=mystrmalloc(CONTEXT);  menu[7].c='\0';
-  menu[8].str=(char*)0;
-  c=(usexdr ? 0 : 1);
-  do
-  {
-    switch (c=line_menu(SAVEMENU,menu,c))
-    {
-      /* -2,-1   -- go up or abort                */ /*{{{*/
-      case -2:
-      case -1: break;
-      /*}}}*/
-      /*  0      -- save in XDR                   */ /*{{{*/
-      case 0: if ((c=do_savexdr(cursheet))>=0) c=0; break;
-      /*}}}*/
-      /*  1      -- save in ASCII format          */ /*{{{*/
-      case 1: if (do_saveport(cursheet,".asc")==-1) c=-1; break;
-      /*}}}*/
-      /*  2      -- save in tbl format            */ /*{{{*/
-      case 2: if (do_savetbl(cursheet,(const char*)0)==-1) c=-1; break;
-      /*}}}*/
-      /*  3      -- save in LaTeX format          */ /*{{{*/
-      case 3: if (do_savelatex(cursheet,(const char*)0)==-1) c=-1; break;
-      /*}}}*/
-      /*  4      -- save in HTML format           */ /*{{{*/
-      case 4: if (do_savehtml(cursheet,(const char*)0)==-1) c=-1; break;
-      /*}}}*/
-      /*  5      -- save in CSV format            */ /*{{{*/
-      case 5: if (do_savecsv(cursheet,(const char*)0)==-1) c=-1; break;
-      /*}}}*/
-      /*  6      -- save in formatted text format */ /*{{{*/
-      case 6: if (do_savetext(cursheet)==-1) c=-1; break;
-      /*}}}*/
-      /*  7      -- save in ConTeXt format        */ /*{{{*/
-      case 7: if (do_savecontext(cursheet,(const char*)0)==-1) c=-1; break;
-      /*}}}*/
-      /* default -- should not happen             */ /*{{{*/
-      default: assert(0);
-      /*}}}*/
-    }
-  } while (c>=0);
-  free(menu[0].str);
-  free(menu[1].str);
-  free(menu[2].str);
-  free(menu[3].str);
-  free(menu[4].str);
-  free(menu[5].str);
-  free(menu[6].str);
-  return c;
+	const char *ext = cursheet->name;
+	if (ext==(char*)0) return do_name(cursheet);
+
+	ext += strlen(ext)-1;
+
+	if (!strcmp(ext-3, ".tpa")) return do_saveport(cursheet, NULL);
+	if (!strcmp(ext-3, ".tbl")) return do_savetbl(cursheet, NULL);
+	if (!strcmp(ext-5, ".latex")) return do_savelatex(cursheet, NULL);
+	if (!strcmp(ext-4, ".html")) return do_savehtml(cursheet, NULL);
+	if (!strcmp(ext-3, ".csv")) return do_savecsv(cursheet, NULL);
+	if (!strcmp(ext-3, ".txt")) return do_savetext(cursheet, NULL);
+	if (!strcmp(ext-3, ".tex")) return do_savecontext(cursheet, NULL);
+	return do_savexdr(cursheet, NULL);
+}
+/*}}}*/
+/* do_name        -- (re)name sheet */ /*{{{*/
+static int do_name(Sheet *cursheet)
+{
+	const char *name;
+
+	name = line_file(cursheet->name, "teapot (*.tp)\tASCII (*.tpa)\ttbl (*.tbl)\tLaTeX (*.latex)\tHTML (*.html)\tCSV (*.csv)\tPlain Text (*.txt)\tConTeXt (*.tex)", NAMESHEET, 1);
+	if (!name) return -1;
+
+	if (cursheet->name!=(char*)0) free(cursheet->name);
+	cursheet->name=strdup(name);
+	return do_save(cursheet);
 }
 /*}}}*/
 /* do_load        -- load sheet */ /*{{{*/
 static int do_load(Sheet *cursheet)
 {
-  /* variables */ /*{{{*/
-  MenuChoice menu[7];
-  int c;
-  /*}}}*/
-  
-  menu[0].str=mystrmalloc(ASXDR);   menu[0].c='\0';
-  menu[1].str=mystrmalloc(ASASCII); menu[1].c='\0';
-  menu[2].str=mystrmalloc(ASSC);    menu[2].c='\0';
-  menu[3].str=mystrmalloc(ASWK1);   menu[3].c='\0';
-  menu[4].str=mystrmalloc(CSV);     menu[4].c='\0';
-  menu[5].str=mystrmalloc(GCSV);    menu[5].c='\0';
-  menu[6].str=(char*)0;
-  c=(usexdr ? 0 : 1);
-  do
-  {
-    switch (c=line_menu(LOADMENU,menu,c))
-    {
-      /* -2,-1   -- go up or abort    */ /*{{{*/
-      case -2:
-      case -1: break;
-      /*}}}*/
-      /*  0      -- load in XDR       */ /*{{{*/
-      case 0:
-      {
-        if (doanyway(cursheet,LOADANYWAY)!=1 || do_loadxdr(cursheet)==-1) c=-1;
-        break;
-      }
-      /*}}}*/
-      /*  1      -- load in ASCII     */ /*{{{*/
-      case 1:
-      {
-        if (doanyway(cursheet,LOADANYWAY)!=1 || do_loadport(cursheet)==-1) c=-1;
-        break;
-      }
-      /*}}}*/
-      /*  2      -- load in SC        */ /*{{{*/
-      case 2: if (doanyway(cursheet,LOADANYWAY)!=1 || do_loadsc(cursheet)==-1) c=-1; break;
-      /*}}}*/
-      /*  3      -- load in WK1       */ /*{{{*/
-      case 3: if (doanyway(cursheet,LOADANYWAY)!=1 || do_loadwk1(cursheet)==-1) c=-1; break;
-      /*}}}*/
-      /*  4      -- load in CSV       */ /*{{{*/
-      case 4: if (do_loadcsv(cursheet,0)==-1) c=-1; forceupdate(cursheet); break;
-      /*}}}*/
-      /*  5      -- load in GCSV      */ /*{{{*/
-      case 5: if (do_loadcsv(cursheet,1)==-1) c=-1; forceupdate(cursheet); break;
-      /*}}}*/
-      /* default -- should not happen */ /*{{{*/
-      default: assert(0);
-      /*}}}*/
-    }
-  } while (c>=0);
-  free(menu[0].str);
-  free(menu[1].str);
-  free(menu[2].str);
-  free(menu[3].str);
-  free(menu[4].str);
-  free(menu[5].str);
-  return c;
+	const char *name, *ext;
+
+	if (doanyway(cursheet, LOADANYWAY) != 1) return -1;
+
+	name = line_file(cursheet->name, "teapot (*.tp)\tASCII (*.tpa)\tspreadsheet calculator (*.sc)\tLotus 1-2-3 (*.wk1)\tCSV (*.csv)", LOADXSHEET, 0);
+	if (!name) return -1;
+	if (cursheet->name!=(char*)0) free(cursheet->name);
+	cursheet->name=strdup(name);
+
+	ext = name+strlen(name)-1;
+	if (!strcmp(ext-3, ".tpa")) return do_loadport(cursheet);
+	if (!strcmp(ext-2, ".sc")) return do_loadsc(cursheet);
+	if (!strcmp(ext-3, ".wk1")) return do_loadwk1(cursheet);
+	if (!strcmp(ext-3, ".csv")) return do_loadcsv(cursheet);
+	return do_loadxdr(cursheet);
 }
 /*}}}*/
+
 /* do_clear       -- clear block */ /*{{{*/
 static int do_clear(Sheet *sheet)
 {
@@ -1120,24 +804,10 @@ static int do_clear(Sheet *sheet)
       if ((c=line_ok(CLEARBLOCK,0))<0) return c;
       else if (c!=1) return -1;
     }
-    if (sheet->mark1x==-1) /* range is the current cell */ /*{{{*/
-    {
-      x1=x2=sheet->curx;
-      y1=y2=sheet->cury;
-      z1=z2=sheet->curz;
-    }
-    /*}}}*/
-    else /* range is the marked cube */ /*{{{*/
-    {
-      x1=sheet->mark1x; x2=sheet->mark2x; posorder(&x1,&x2);
-      y1=sheet->mark1y; y2=sheet->mark2y; posorder(&y1,&y2);
-      z1=sheet->mark1z; z2=sheet->mark2z; posorder(&z1,&z2);
-    }
-    /*}}}*/
+    get_mark(sheet, &x1, &x2, &y1, &y2, &z1, &z2, 0);
     for (x=x1; x<=x2; ++x) for (y=y1; y<=y2; ++y) for (z=z1; z<=z2; ++z) freecell(sheet,x,y,z);
     cachelabels(sheet);
     forceupdate(sheet);
-    sheet->marking=0;
   }
   return -1;
 }
@@ -1249,9 +919,7 @@ static int do_insert(Sheet *sheet)
   else
   /* range is the marked cube */ /*{{{*/
   {
-    x1=sheet->mark1x; x2=sheet->mark2x; posorder(&x1,&x2);
-    y1=sheet->mark1y; y2=sheet->mark2y; posorder(&y1,&y2);
-    z1=sheet->mark1z; z2=sheet->mark2z; posorder(&z1,&z2);
+      get_mark(sheet, &x1, &x2, &y1, &y2, &z1, &z2, 0);
   }
   /*}}}*/
   switch (reply)
@@ -1266,7 +934,6 @@ static int do_insert(Sheet *sheet)
     case 2: insertcube(sheet,x1,y1,z1,x2,y2,z2,IN_Z); break;
     /*}}}*/
   }
-  sheet->marking=0;
   return 0;
 }
 /*}}}*/
@@ -1380,9 +1047,7 @@ static int do_delete(Sheet *sheet)
   else
   /* range is the marked cube */ /*{{{*/
   {
-    x1=sheet->mark1x; x2=sheet->mark2x; posorder(&x1,&x2);
-    y1=sheet->mark1y; y2=sheet->mark2y; posorder(&y1,&y2);
-    z1=sheet->mark1z; z2=sheet->mark2z; posorder(&z1,&z2);
+      get_mark(sheet, &x1, &x2, &y1, &y2, &z1, &z2, 0);
   }
   /*}}}*/
   switch(reply)
@@ -1397,7 +1062,6 @@ static int do_delete(Sheet *sheet)
     case 2: deletecube(sheet,x1,y1,z1,x2,y2,z2,IN_Z); break;
     /*}}}*/
   }
-  sheet->marking=0;
   return -1;
 }
 /*}}}*/
@@ -1413,11 +1077,8 @@ static int do_move(Sheet *sheet, int copy, int force)
     int x1,y1,z1;
     int x2,y2,z2;
     
-    x1=sheet->mark1x; x2=sheet->mark2x; posorder(&x1,&x2);
-    y1=sheet->mark1y; y2=sheet->mark2y; posorder(&y1,&y2);
-    z1=sheet->mark1z; z2=sheet->mark2z; posorder(&z1,&z2);
+    get_mark(sheet, &x1, &x2, &y1, &y2, &z1, &z2, 0);
     moveblock(sheet,x1,y1,z1,x2,y2,z2,sheet->curx,sheet->cury,sheet->curz,copy);
-    sheet->marking=0;
     if (!copy) sheet->mark1x=-1;
   }
   if (c<0) return c; else return -1;
@@ -1438,9 +1099,7 @@ static int do_fill(Sheet *sheet)
   if (sheet->mark1x==-1) line_msg(FILLBLOCK,NOMARK);
   else
   {
-    x1=sheet->mark1x; x2=sheet->mark2x; posorder(&x1,&x2);
-    y1=sheet->mark1y; y2=sheet->mark2y; posorder(&y1,&y2);
-    z1=sheet->mark1z; z2=sheet->mark2z; posorder(&z1,&z2);
+    get_mark(sheet, &x1, &x2, &y1, &y2, &z1, &z2, 0);
     cols=rows=layers=1;
     firstmenu:
     offx=0;
@@ -1464,7 +1123,6 @@ static int do_fill(Sheet *sheet)
       else if (c==-2) goto secondmenu;
     } while (layers<=0);
     for (x=0; x<cols; ++x) for (y=0; y<rows; ++y) for (z=0; z<layers; ++z) moveblock(sheet,x1,y1,z1,x2,y2,z2,sheet->curx+x*(x2-x1+1),sheet->cury+y*(y2-y1+1),sheet->curz+z*(z2-z1+1),1);
-    sheet->marking=0;
   }
   return -1;
 }
@@ -1485,17 +1143,8 @@ static int do_sort(Sheet *sheet)
   int last;
   /*}}}*/
   
-  /* cry if no block is selected */ /*{{{*/
-  if (sheet->mark1x==-1)
-  {
-    line_msg(SORTBLOCK,NOREGION);
-    return -1;
-  }
-  /*}}}*/
   /* note and order block coordinates */ /*{{{*/
-  x1=sheet->mark1x; x2=sheet->mark2x; posorder(&x1,&x2);
-  y1=sheet->mark1y; y2=sheet->mark2y; posorder(&y1,&y2);
-  z1=sheet->mark1z; z2=sheet->mark2z; posorder(&z1,&z2);
+  get_mark(sheet, &x1, &x2, &y1, &y2, &z1, &z2, 1);
   /*}}}*/
   /* build menues */ /*{{{*/
   menu1[0].str=mystrmalloc(INX);     menu1[0].c='\0';
@@ -1683,6 +1332,7 @@ static int do_sort(Sheet *sheet)
 static void do_batchsort(Sheet *sheet, Direction dir, char* arg)
 {
   Sortkey sk[MAX_SORTKEYS];
+  int x1,y1,z1,x2,y2,z2;
   unsigned int key = 0;
   char* next;
   while( *arg != '\0' )
@@ -1699,7 +1349,8 @@ static void do_batchsort(Sheet *sheet, Direction dir, char* arg)
     if ( *arg != '\0' && dir != IN_Z ) { sk[key].z=strtol(arg, &next, 10); arg = next; }
     key++;
   }
-  sortblock(sheet,sheet->mark1x,sheet->mark1y,sheet->mark1z,sheet->mark2x,sheet->mark2y,sheet->mark2z,dir,sk,key);
+  get_mark(sheet, &x1, &x2, &y1, &y2, &z1, &z2, 1);
+  sortblock(sheet, x1, y1, z1, x2, y2, z2, dir, sk, key);
 }
 /*}}}*/
 /* do_mirror      -- mirror block */ /*{{{*/
@@ -1709,17 +1360,8 @@ static int do_mirror(Sheet *sheet)
   int x1,y1,z1,x2,y2,z2,reply;
   /*}}}*/
   
-  /* cry if no block is selected */ /*{{{*/
-  if (sheet->mark1x==-1)
-  {
-    line_msg(MIRRORBLOCK,NOREGION);
-    return -1;
-  }
-  /*}}}*/
   /* note and order block coordinates */ /*{{{*/
-  x1=sheet->mark1x; x2=sheet->mark2x; posorder(&x1,&x2);
-  y1=sheet->mark1y; y2=sheet->mark2y; posorder(&y1,&y2);
-  z1=sheet->mark1z; z2=sheet->mark2z; posorder(&z1,&z2);
+  get_mark(sheet, &x1, &x2, &y1, &y2, &z1, &z2, 1);
   /*}}}*/
   /* ask for direction of mirroring */ /*{{{*/
   {
@@ -1781,21 +1423,9 @@ static int do_goto(Sheet *sheet, const char *expr)
     value=eval(t);
     tvecfree(t);
     if (value.type==LOCATION && value.u.location[0]>=0 && value.u.location[1]>=0 && value.u.location[2]>=0)
-    {
-      sheet->curx=value.u.location[0];
-      sheet->cury=value.u.location[1];
-      sheet->curz=value.u.location[2];
-      if (sheet->marking)
-      {
-        sheet->mark2x=sheet->curx;
-        sheet->mark2y=sheet->cury;
-        sheet->mark2z=sheet->curz;
-      }
-    }
+		moveto(sheet,value.u.location[0],value.u.location[1],value.u.location[2]);
     else
-    {
-      line_msg(GOTO,LOCBOO);
-    }
+		line_msg(GOTO,LOCBOO);
     tfree(&value);
   }
   return -1;
@@ -1831,32 +1461,28 @@ int do_sheetcmd(Sheet *cursheet, Key c, int moveonly)
     /* UP         -- move up */ /*{{{*/
     case K_UP:
     {
-      if (cursheet->cury>0) --cursheet->cury;
-      if (cursheet->marking) cursheet->mark2y=cursheet->cury;
+      relmoveto(cursheet, 0, -1, 0);
       break;
     }
     /*}}}*/
     /* DOWN       -- move down */ /*{{{*/
     case K_DOWN:
     {
-      ++cursheet->cury;
-      if (cursheet->marking) cursheet->mark2y=cursheet->cury;
+      relmoveto(cursheet, 0, 1, 0);
       break;
     }
     /*}}}*/
     /* LEFT       -- move left */ /*{{{*/
     case K_LEFT:
     {
-      if (cursheet->curx>0) --cursheet->curx;
-      if (cursheet->marking) cursheet->mark2x=cursheet->curx;
+      relmoveto(cursheet, -1, 0, 0);
       break;
     }
     /*}}}*/
     /* RIGHT      -- move right */ /*{{{*/
     case K_RIGHT:
     {
-      ++cursheet->curx; while (shadowed(cursheet,cursheet->curx,cursheet->cury,cursheet->curz)) ++cursheet->curx;
-      if (cursheet->marking) cursheet->mark2x=cursheet->curx;
+      relmoveto(cursheet, 1, 0, 0);
       break;
     }
     /*}}}*/
@@ -1864,8 +1490,7 @@ int do_sheetcmd(Sheet *cursheet, Key c, int moveonly)
     case K_FIRSTL:
     case '<':
     {
-      cursheet->cury=0;
-      if (cursheet->marking) cursheet->mark2y=cursheet->cury;
+      moveto(cursheet, -1, 0, -1);
       break;
     }
     /*}}}*/
@@ -1873,25 +1498,21 @@ int do_sheetcmd(Sheet *cursheet, Key c, int moveonly)
     case K_LASTL:
     case '>':
     {
-      cursheet->cury=(cursheet->dimy ? cursheet->dimy-1 : 0);
-      if (cursheet->marking) cursheet->mark2y=cursheet->cury;
+      moveto(cursheet, -1, (cursheet->dimy ? cursheet->dimy-1 : 0), -1);
       break;
     }
     /*}}}*/
     /* HOME       -- move to beginning of line */ /*{{{*/
     case K_HOME:
     {
-      cursheet->curx=0;
-      if (cursheet->marking) cursheet->mark2x=cursheet->curx;
+      moveto(cursheet, 0, -1, -1);
       break;
     }
     /*}}}*/
     /* END        -- move to end of line */ /*{{{*/
     case K_END:
     {
-      cursheet->curx=(cursheet->dimx ? cursheet->dimx-1 : 0);
-      while (shadowed(cursheet,cursheet->curx,cursheet->cury,cursheet->curz)) ++cursheet->curx;
-      if (cursheet->marking) cursheet->mark2x=cursheet->curx;
+      moveto(cursheet, (cursheet->dimx ? cursheet->dimx-1 : 0), -1, -1);
       break;
     }
     /*}}}*/
@@ -1899,9 +1520,7 @@ int do_sheetcmd(Sheet *cursheet, Key c, int moveonly)
     case K_NSHEET:
     case '+':
     {
-      ++cursheet->curz; 
-      if (cursheet->marking) cursheet->mark2z=cursheet->curz;
-      redraw_sheet(cursheet);
+      relmoveto(cursheet, 0, 0, 1);
       break;
     }
     /*}}}*/
@@ -1909,9 +1528,7 @@ int do_sheetcmd(Sheet *cursheet, Key c, int moveonly)
     case K_PSHEET:
     case '-':
     {
-      if (cursheet->curz>0) --cursheet->curz; 
-      if (cursheet->marking) cursheet->mark2z=cursheet->curz;
-      redraw_sheet(cursheet);
+      relmoveto(cursheet, 0, 0, -1);
       break;
     }
     /*}}}*/
@@ -1919,9 +1536,7 @@ int do_sheetcmd(Sheet *cursheet, Key c, int moveonly)
     case K_LSHEET:
     case '*':
     {
-      cursheet->curz=(cursheet->dimz ? cursheet->dimz-1 : 0);
-      if (cursheet->marking) cursheet->mark2z=cursheet->curz;
-      redraw_sheet(cursheet);
+      moveto(cursheet, -1, -1, (cursheet->dimz ? cursheet->dimz-1 : 0));
       break;
     }
     /*}}}*/
@@ -1929,9 +1544,7 @@ int do_sheetcmd(Sheet *cursheet, Key c, int moveonly)
     case K_FSHEET:
     case '_':
     {
-      cursheet->curz=0;
-      if (cursheet->marking) cursheet->mark2z=cursheet->curz;
-      redraw_sheet(cursheet);
+      moveto(cursheet, -1, -1, 0);
       break;
     }
     /*}}}*/
@@ -1965,19 +1578,54 @@ int do_sheetcmd(Sheet *cursheet, Key c, int moveonly)
     case K_SAVEMENU: if (moveonly) break; do_save(cursheet); break;
     /*}}}*/
     /* LOADMENU   -- load menu */ /*{{{*/
+    case K_LOAD:
     case K_LOADMENU: if (moveonly) break; do_load(cursheet); break;
     /*}}}*/
     /* NAME       -- set name */ /*{{{*/
     case K_NAME: if (moveonly) break; do_name(cursheet); break;
     /*}}}*/
+	case K_HELP: show_text(HELPFILE); break;
+	case K_ABOUT: show_text("<html><head><title>About teapot</title></head><body><center><pre>"
+		"               ` ',`    '  '                   \n"
+		"                `   '  ` ' '                   \n"
+		"                 `' '   '`'                    \n"
+		"                 ' `   ' '`                    \n"
+		"    '           '` ' ` '`` `                   \n"
+		"    `.   Table Editor And Planner, or:         \n"
+		"      ,         . ,   ,  . .                   \n"
+		"                ` '   `  ' '                   \n"
+		"     `::\\    /:::::::::::::::::\\   ___         \n"
+		"      `::\\  /:::::::::::::::::::\\,'::::\\       \n"
+		"       :::\\/:::::::::::::::::::::\\/   \\:\\      \n"
+		"       :::::::::::::::::::::::::::\\    :::     \n"
+		"       ::::::::::::::::::::::::::::;  /:;'     \n"
+		"       `::::::::::::::::::::::::::::_/:;'      \n"
+		"         `::::::::::::::::::::::::::::'        \n"
+		"          `////////////////////////'           \n"
+		"           `:::::::::::::::::::::'             \n"
+		"\n"
+		"Teapot " VERSION "\n</pre>"
+		"<p>Original version: Michael Haardt<br>"
+		"Current Maintainer: J&ouml;rg Walter<br>"
+		"Home page: <a href='http://www.syntax-k.de/projekte/teapot/'>http://www.syntax-k.de/projekte/teapot/</a></p>"
+		"<p>Copyright 1995-2006 Michael Haardt, 2009-2010 J&ouml;rg Walter &lt;<a href='mailto:info@syntax-k.de'>info@syntax-k.de</a>&gt;</p></center>"
+		"<p>This program is free software: you can redistribute it and/or modify "
+		"it under the terms of the GNU General Public License as published by "
+		"the Free Software Foundation, either version 3 of the License, or "
+		"(at your option) any later version.</p>"
+		"<p>This program is distributed in the hope that it will be useful, "
+		"but WITHOUT ANY WARRANTY; without even the implied warranty of "
+		"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the "
+		"GNU General Public License for more details.</p>"
+		"You should have received a copy of the GNU General Public License "
+		"along with this program.  If not, see <a href='http://www.gnu.org/licenses/'>http://www.gnu.org/licenses/</a>.</p>"
+		"</body></html>");
+		break;
     /* MENU, / -- main menu */ /*{{{*/
     case '/': if (!moveonly && do_sheetcmd(cursheet, show_menu(cursheet), 0)) return 1; break;
     /*}}}*/
     /* SAVE       -- save in current native format */ /*{{{*/
-    case K_SAVE: if (usexdr) do_savexdr(cursheet); else do_saveport(cursheet,".asc"); break;
-    /*}}}*/
-    /* LOAD       -- load in current native format */ /*{{{*/
-    case K_LOAD: if (usexdr) do_loadxdr(cursheet); else do_loadport(cursheet); break;
+    case K_SAVE: if (usexdr) do_savexdr(cursheet, cursheet->name); else do_saveport(cursheet, cursheet->name); break;
     /*}}}*/
     /* COPY       -- copy block */ /*{{{*/
     case K_COPY: if (moveonly) break; do_move(cursheet,1,1); break;
@@ -2001,42 +1649,32 @@ int do_sheetcmd(Sheet *cursheet, Key c, int moveonly)
     /* NPAGE      -- page down    */ /*{{{*/
     case K_NPAGE:
     {
-      cursheet->cury+=(cursheet->maxy-3);
       cursheet->offy+=(cursheet->maxy-3);
-      if (cursheet->marking) cursheet->mark2y=cursheet->cury;
+      relmoveto(cursheet, 0, cursheet->maxy-3, 0);
       break;
     }
     /*}}}*/
     /* PPAGE      -- page up    */ /*{{{*/
     case K_PPAGE:
     {
-      if (cursheet->cury>=(cursheet->maxy-3))
-      {
-        cursheet->cury-=(cursheet->maxy-3);
-        cursheet->offy=(cursheet->offy>=(cursheet->maxy-3) ? cursheet->offy-(cursheet->maxy-3) : 0);
-        if (cursheet->marking) cursheet->mark2y=cursheet->cury;
-      }
+      cursheet->offy = (cursheet->offy>=(cursheet->maxy-3) ? cursheet->offy-(cursheet->maxy-3) : 0);
+      relmoveto(cursheet, 0, (cursheet->cury>=(cursheet->maxy-3) ? -(cursheet->maxy-3) : -cursheet->cury), 0);
       break;
     }
     /*}}}*/
     /* FPAGE      -- page right    */ /*{{{*/
     case K_FPAGE:
     {
-      cursheet->curx+=cursheet->width;
       cursheet->offx+=cursheet->width;
-      if (cursheet->marking) cursheet->mark2x=cursheet->curx;
+      relmoveto(cursheet, cursheet->width, 0, 0);
       break;
     }
     /*}}}*/
     /* BPAGE      -- page left */ /*{{{*/
     case K_BPAGE:
     {
-      if (cursheet->curx>=cursheet->width)
-      {
-        cursheet->curx-=cursheet->width;
-        cursheet->offx=(cursheet->offx>=cursheet->width ? cursheet->offx-cursheet->width : 0);
-        if (cursheet->marking) cursheet->mark2x=cursheet->curx;
-      }
+      cursheet->offx=(cursheet->offx>=cursheet->width ? cursheet->offx-cursheet->width : 0);
+      relmoveto(cursheet, (cursheet->curx>=cursheet->width ? -cursheet->width : -cursheet->curx), 0, 0);
       break;
     }
     /*}}}*/
@@ -2044,8 +1682,7 @@ int do_sheetcmd(Sheet *cursheet, Key c, int moveonly)
     case K_SAVEQUIT:
     {
       if (moveonly) break;
-      if (usexdr) { if (do_savexdr(cursheet)!=-2) return 1; }
-      else { if (do_saveport(cursheet,".asc")!=-2) return 1; }
+      if (do_save(cursheet)!=-2) return 1;
       break;
     }
     /*}}}*/
@@ -2119,7 +1756,7 @@ int main(int argc, char *argv[])
     /* default -- includes ? and h */ /*{{{*/
     default:
     {
-      fprintf(stderr,USAGE);
+      fprintf(stderr,"%s",USAGE);
       exit(1);
     }
     /*}}}*/
@@ -2163,7 +1800,6 @@ int main(int argc, char *argv[])
     else
     {
       if ((msg=loadport(cursheet,cursheet->name))!=(const char*)0) line_msg(LOADPSHEET,msg);
-      if (strlen(cursheet->name)>(size_t)4 && strcmp(cursheet->name+strlen(cursheet->name)-4,".asc")==0) *(cursheet->name+strlen(cursheet->name)-4)='\0';
     }
   }
   /*}}}*/
@@ -2218,10 +1854,7 @@ int main(int argc, char *argv[])
     else if (strcmp(cmd,"save-html")==0) do_savehtml(cursheet,arg);
     /*}}}*/
     /* load-csv file  */ /*{{{*/
-    else if (strcmp(cmd,"load-csv")==0) { loadcsv(cursheet,arg,0); forceupdate(cursheet); }
-    /*}}}*/
-    /* load-gcsv file  */ /*{{{*/
-    else if (strcmp(cmd,"load-gcsv")==0) { loadcsv(cursheet,arg,1); forceupdate(cursheet); }
+    else if (strcmp(cmd,"load-csv")==0) { loadcsv(cursheet,arg); forceupdate(cursheet); }
     /*}}}*/
     /* sort in x direction */ /*{{{*/
     else if (strcmp(cmd,"sort-x")==0) do_batchsort(cursheet, IN_X, arg);

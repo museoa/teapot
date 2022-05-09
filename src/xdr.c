@@ -36,9 +36,9 @@ static bool_t xdr_token(XDR *xdrs, Token *t)
 
   if (xdrs->x_op==XDR_DECODE) (void)memset(t,0,sizeof(Token));
   x=t->type;
-  if (t->type==OPERATOR) x|=t->u.operator<<8;
+  if (t->type==OPERATOR) x|=t->u.op<<8;
   result=xdr_int(xdrs,&x);
-  if ((x&0xff)==OPERATOR) t->u.operator=(x>>8)&0xff;
+  if ((x&0xff)==OPERATOR) t->u.op=(x>>8)&0xff;
   t->type=x&0xff;
   if (result==0) return result;
   switch (t->type)
@@ -70,7 +70,7 @@ static bool_t xdr_token(XDR *xdrs, Token *t)
     /* OPERATOR */ /*{{{*/
     case OPERATOR:
     {
-      return 1; /* since operator is encoded in type */
+      return 1; /* since op is encoded in type */
     }
     /*}}}*/
     /* LIDENT */ /*{{{*/

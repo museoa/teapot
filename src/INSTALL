@@ -22,4 +22,9 @@ expanding %L to C in NLSPATH.  Either you don't use NLSPATH and put the
 message catalog in a default location searched by the library or you
 don't use %L.
 
+Check the Makefile for FLTK-related settings. If you want to use the
+built-in help browser, adjust the help file path according to its
+installed location. You need FLTK 1.3, and the code was developed and
+tested with SVN r7704.
+
 Michael

@@ -1,0 +1,883 @@
+<html>
+<head><title>Teapot User guide</title></head>
+<body>
+<center><h1>Teapot User guide</h1></center>
+<blockquote>
+For ages, spread sheet programs have been closely associated with
+financial calculations done by typical end-users.  But it has shown
+that there is also hacker's work which can be done with them, like
+calculate monitor timings for various resolutions, produce convincing
+time statistics which justify the lack of documentation or the need for
+a budget increase to your employer.  This first part of this user guide
+explains how the various functions of teapot are used, whereas the
+second part gives an introduction to spread sheets and explains the
+expression evaluator and its functions.
+</blockquote>
+<h2>Copyright and usage conditions</h2>
+<code>teapot</code> (Table Editor And Planner, Or: Teapot),
+is copyright (c) by Michael Haardt, 1995 - 2006 and copyright (c) by Joerg Walter,
+2009-2010.  The implementation of clocked expressions is modelled after the description
+of clocked evaluation in the PhD work of Jrg Wittenberger
+&lt;joerg.wittenberger@inf.tu-dresden.de&gt; at the University of Technology
+in Dresden, Germany.  The German message catalog was contributed by
+Guido Msch, the Dutch
+catalog by Wim van Dorst
+&lt;baron@clifton.hobby.nl&gt; and the Ukrainian catalog by Volodymyr M. Lisivka &lt;lvm@mystery.lviv.net&gt;.
+The trigonometric functions were inspired by Koniorczyk Mtys &lt;kmatyas@cs.elte.hu&gt;.
+The context output format was contributed by Marko Schuetz &lt;MarkoSchuetz@web.de&gt;.
+<p>
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+<p>
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+<p>
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<h2>Introduction to spread sheets</h2>
+<h3>General introduction</h3>
+A spread sheet consists of cells formed by rows and columns. 
+Additionally, in many spread sheets you have a third dimension, which
+you can imagine as various sheets laying on top of each other.  The
+third dimension allows you to hide intermediate results, show you
+additional results you do not want to appear in the ``official''
+tables, keep sheets per time period (like 12 sheets for each month in a
+year) while allowing you to make calculations over the entire time
+interval and much more.  The figure below shows the three dimensions:
+<pre>                                         _.
+    +-----+-----+-----+-----+-----+      /|  z
+  +-----+-----+-----+-----+-----+ |     /
++-----+-----+-----+-----+-----+ |-+    +-------------&gt;  x
+|     |     |     |     |     |-+ |    |
++-----+-----+-----+-----+-----+ |-+    |
+|     |     |     |     |     |-+ |    |
++-----+-----+-----+-----+-----+ |-+    |
+|     |     |     |     |     |-+ |    |
++-----+-----+-----+-----+-----+ |-+    |
+|     |     |     |     |     |-+      |
++-----+-----+-----+-----+-----+        v  y
+</pre>You can think of cells as variables, which value is the value of an
+associated expression.  The expression may be constant, like 1.23, or
+it may be a function of other cell values.  The advantage compared to a
+programmable calculator is that if you change a number, you directly
+see all changes in other cells caused by that.  Often this allows you
+to get a feeling how much you may change basic sizes with still getting
+satisfying results without having to solve the problem analytically.
+<p>
+Spread sheets offer many editing functions in order to modify, clear,
+copy and move cells or blocks of cells.  Besides the usual mathematical
+functions, there are functions which work on blocks of cells, like
+calculating the sum of a block or counting all non-empty elements. 
+Further there are functions working on character strings, because most
+likely you also want text besides numbers.  The next section will
+introduce you to some of these by examples.
+<p>
+teapot is a traditional spread sheet and a typical UNIX program, because
+it does just one thing: Calculations.  It does not include any graphics
+functions and never will, but it allows to export data in many formats,
+so you can use your favourite graphics software.
+<p>
+<h3>The first steps</h3>
+Now that you should have an idea, it is probably a good time to make
+your first steps.  This section will show you how to create and save a
+sheet which contains two numbers and their sum.  If your system supports
+message catalogs, please make sure that <code>NLSPATH</code> and the <code>LC_*</code> variables
+are set right for your locale.  Now start the program without any
+arguments:
+<pre><kbd>teapot</kbd>
+</pre>You see an empty sheet with the cell cursor being at the upper left
+corner.  Further, the status line tells you that this cell is really empty:
+<pre><code>E @(0,0,0)=</code>
+</pre>The <code>E</code> means that you can edit the sheet.  A <code>V</code> would mean
+that you could only view its contents.  The meaning of <code>@()</code> will be
+explained soon.  You are now in the command mode of teapot.  Now type
+return to edit this cell.  A complete list of command mode functions
+will be given later.  A prompt will appear below the status line:
+<pre><code>Cell contents:</code> <kbd>1</kbd>
+</pre>Now the cell at position 0,0,0 has the integer
+constant 1.  The status line shows you the cell contents, whereas in the
+sheet you see its value.  Since constants are identical with their values,
+both are 1.  Now move the cell cursor down one row and edit that cell,
+giving it the integer constant <code>41</code>.
+<p>
+Now that you have two numbers, move the cell cursor to cell 0,2,0 and
+give that cell the following contents:
+<pre><code>Cell contents:</code> <kbd>@(0,0,0)+@(0,1,0)</kbd>
+</pre>If you were confused about the difference between contents and value of
+a cell, it should become more clear now: The status line shows the contents,
+which is the arithmetic expression to calculate the sum of two cells,
+whereas in the sheet you see the value of that expression: 42, which
+was to be expected.  <code>@(</code><var>x</var><code>,</code><var>y</var><code>,</code><var>z</var><code>)</code>
+is a function which takes three coordinates and returns the value of the
+cell at the given position.
+<p>
+As you can see, the arithmetic expression is not too readable.  If you
+would move cells around, it would not even work any more.  For these
+reasons, you can use symbolic names instead of coordinates, called
+labels.  When used in an expression, a label is like a pointer to a
+cell, its data type is <em>location</em>.  Move to cell 0,0,0 and use
+<kbd>/</kbd> (slash) in command mode to get into the main menu.  Depending on
+your screen size, you may not see all of it.  In this case, move the
+highlighted block right (or left) to scroll through it and to see all
+items.  Now change its label attribute: A)ttributes, L)abel:
+<pre><code>Cell label:</code> <kbd>Paper</kbd>
+</pre>Then go one cell down and change its label to <kbd>Tapes</kbd>.  After,
+move again one cell down and change the expression to:
+<pre><code>Cell contents:</code> <kbd>@(Paper)+@(Tapes)</kbd>
+</pre>As you see, you can call the function <code>@</code> with three integer values
+or with one location value.  Now the expression is more understandable,
+at least to you.  To someone else, the sheet only contained three numbers,
+so a little text should be added.  To accomplish that, a new column needs to
+be inserted: B)lock, I)insert, C)olumn, W)hole column.  The last menu
+item means that you want to insert a whole new column, not only a partial
+column.  If you move the cursor around, you will see that everything is
+still fine, because you used labels.  Go to cell 0,0,0 and edit it:
+<pre><code>Cell contents:</code> <kbd>"Paper:"</kbd>
+</pre>This is how you enter strings.  A string is a data type on its own, don't
+confuse this with labels.  If you feel like it, leave the quotes and the
+colon away, and you will see the difference, because the result will not
+be a string, but the value of the label <code>Paper</code>, which is <code>&amp;(1,0,0)</code>.
+Now change the cells below to <kbd>"Tapes:"</kbd> and <kbd>"Result:"</kbd>.  This
+is something that is understandable to others, too.
+<p>
+As the last step, save your work sheet to a file: F)ile, X)DR.
+The native file format is XDR, so chose that.  Up to 
+now, your sheet does not have a name, so you will be prompted for one:
+<pre><code>Save sheet to XDR file:</code> <kbd>first_step</kbd>
+</pre>Unless you see an error message after,
+your sheet is written to a file.
+<p>
+If you have come this far, quit (from the main menu) and you have
+successfully completed your first steps on using teapot.
+Now you know cells, the difference between contents and values, you
+learned that labels are a good thing and you can do simple
+cell modifications as well as saving your work.  This is enough for
+most applications.  If the capabilities described in the next section
+confuse you, then it is unlikely that you need them really.  Just skip
+that section and don't worry about it.
+<p>
+You may wonder what happens if you have circular dependencies, i.e.
+you have a cell which evaluates to its own value plus one.
+Well, the answer is that it depends on the order in which
+you create this cell.  If you first give it the value 1 and after edit
+it to contain the expression which refers to itself plus 1, then you
+will find that each recalculation, like after editing other cells,
+will increase the value.  While this may be funny, it is certainly
+not useful as you can not reset the cell and you have little control
+of its development.
+<p>
+What you really want is a base value and an iterative expression along
+with a way to control the recalculations.  teapot supports this by
+allowing two expressions per cell.  The expressions you have used so
+far are the ones which evaluate to the base values.  Each time you
+edit a cell, the whole sheet will be reset, which means that all
+results are recalculated using the base values.  After, you can
+clock the sheet, which is why the iterative part is also called clocked
+expression.  A clock is an atomic operation, which means that
+all cell results will be recalculated in a way that the new result
+will only show after the entire recalculation.
+<p>
+An examples will demonstrate how to make use of this feature.
+The notation <var>x</var> -&gt; <var>y</var> means that <var>x</var> is the base
+expression and <var>y</var> is the clocked expression.  Don't let
+this confuse you, as both are entered separately: teapot does
+not have an -&gt; operator, but it displays the cell contents this
+way for increased overview.  So, give the cell a base expression
+of <code>1</code> and a clocked expression of <code>@(0,0,0)+1</code> (using
+<kbd>ESC-Enter</kbd> or <kbd>Meta-Enter</kbd>) and you
+will see:
+<pre><code>@(0,0,0)=1 -&gt; @(0,0,0)+1</code>
+</pre>The sheet is currently in reset condition and the result is 1.  Now
+clock it and you will see how the value increases.
+<p>
+After this introductional chapter, you should be familiar with the basic
+concepts in spread sheets.  The next chapters explain all functions
+available in detail.  You should read them to get an overview of the
+possibilities offered by teapot.  Finally, we will come back to using
+teapot by showing some common problems and their solutions.
+<h2>The command mode</h2>
+Right after starting teapot, you are in the command mode.  Many
+functions from the command mode are also available from menues, but
+using keys is faster and some things, like moving the cell cursor,
+are only available through keys.  The command mode accepts:
+<table>
+
+<tr><td align=left>Function key</td><td align=left>ASCII key</td><td align=left>function</td></tr>
+<tr><td align=left>Next line</td><td align=left>^n</td><td align=left>cursor down</td></tr>
+<tr><td align=left>Previous line</td><td align=left>^p</td><td align=left>cursor up</td></tr>
+<tr><td align=left>Begin</td><td align=left>^a</td><td align=left>cursor to column 0</td></tr>
+<tr><td align=left>End</td><td align=left>^e</td><td align=left>cursor to last column</td></tr>
+<tr><td align=left></td><td align=left>+</td><td align=left>cursor to next layer</td></tr>
+<tr><td align=left></td><td align=left>-</td><td align=left>cursor to previous layer</td></tr>
+<tr><td align=left></td><td align=left>&lt;</td><td align=left>cursor to line 0</td></tr>
+<tr><td align=left></td><td align=left>&gt;</td><td align=left>cursor to last line</td></tr>
+<tr><td align=left></td><td align=left>_</td><td align=left>cursor to sheet 0</td></tr>
+<tr><td align=left></td><td align=left>*</td><td align=left>cursor to last sheet</td></tr>
+<tr><td align=left></td><td align=left>^x &lt;</td><td align=left>one page left</td></tr>
+<tr><td align=left></td><td align=left>^x &gt;</td><td align=left>one page right</td></tr>
+<tr><td align=left>F10</td><td align=left>/</td><td align=left>main menu</td></tr>
+<tr><td align=left>F2</td><td align=left></td><td align=left>save menu</td></tr>
+<tr><td align=left>F3</td><td align=left></td><td align=left>load menu</td></tr>
+<tr><td align=left></td><td align=left>^x ^r</td><td align=left>load in native format</td></tr>
+<tr><td align=left>Enter</td><td align=left>^j, ^m</td><td align=left>edit cell contents</td></tr>
+<tr><td align=left></td><td align=left>", @, <var>digit</var></td><td align=left>overwrite cell contents</td></tr>
+<tr><td align=left>ESC Enter</td><td align=left>ESC ^j, ESC ^m</td><td align=left>edit clocked cell contents</td></tr>
+<tr><td align=left>Backspace</td><td align=left>^h</td><td align=left>edit cell contents</td></tr>
+<tr><td align=left></td><td align=left>.</td><td align=left>mark blocks (see below)</td></tr>
+<tr><td align=left></td><td align=left>^l</td><td align=left>redraw screen</td></tr>
+<tr><td align=left></td><td align=left>^y</td><td align=left>paste (reinsert marked) block</td></tr>
+<tr><td align=left></td><td align=left>^r</td><td align=left>reset sheet</td></tr>
+<tr><td align=left></td><td align=left>^s</td><td align=left>clock sheet</td></tr>
+<tr><td align=left></td><td align=left>ESC z</td><td align=left>save and quit</td></tr>
+<tr><td align=left></td><td align=left>^x ^c</td><td align=left>quit</td></tr>
+<tr><td align=left>Next page</td><td align=left>^v</td><td align=left>one page down</td></tr>
+<tr><td align=left>Previous page</td><td align=left>ESC v</td><td align=left>one page up</td></tr>
+<tr><td align=left>Cancel</td><td align=left>^g, ^c</td><td align=left>abort current action</td></tr>
+
+</table>
+. (dot) marks blocks: The first time it marks the beginning of a
+block, which is then extended by moving the cell cursor.  The next time,
+it marks the end of the block which lets you move the cell cursor after
+without changing the block.  The third time, it removes the block marks
+again.
+<h2>The line editor</h2>
+Many functions in teapot require editing a line of text, e.g. editing
+cell contents, typing file names and the line.  Similar to the command
+mode, all things can be reached by control codes and most by function keys.
+The line editor accepts:
+<table>
+
+<tr><td align=left>Function key</td><td align=left>ASCII key</td><td align=left>function</td></tr>
+<tr><td align=left>Previous character</td><td align=left>^p</td><td align=left>go to previous line</td></tr>
+<tr><td align=left>Forward character</td><td align=left>^f</td><td align=left>move cursor right</td></tr>
+<tr><td align=left>Begin</td><td align=left>^a</td><td align=left>move cursor to column 0</td></tr>
+<tr><td align=left>End</td><td align=left>^e</td><td align=left>move cursor to last column</td></tr>
+<tr><td align=left>Enter</td><td align=left>^j, ^m</td><td align=left>finish editing</td></tr>
+<tr><td align=left></td><td align=left>^l</td><td align=left>redraw screen</td></tr>
+<tr><td align=left></td><td align=left>^t</td><td align=left>transpose character</td></tr>
+<tr><td align=left></td><td align=left>^\</td><td align=left>goto matching paren</td></tr>
+<tr><td align=left>Cancel</td><td align=left>^g, ^c</td><td align=left>abort editing</td></tr>
+<tr><td align=left>Backspace</td><td align=left>^h</td><td align=left>delete previous character</td></tr>
+<tr><td align=left>Delete</td><td align=left>^?, ^d</td><td align=left>delete current character</td></tr>
+<tr><td align=left>Insert</td><td align=left></td><td align=left>toggle insert mode</td></tr>
+
+</table>
+Besides the regular line editor functions as explained previously, you
+may use ^o to temporarily leave the editor in order to move around in
+the sheet if you are editing cell contents.  Another ^o brings you back
+to the line editor.  While moving around in the sheet, you can insert
+the value (v) or position (p) at the cursor position in the edited
+cell.
+<p>
+Aborting line editing means that you will get right back to command mode,
+whatever you started doing will have no effect.
+<h2>Interactive functions</h2>
+If a block of cells is marked, many interactive functions will be applied to
+all cells within that block.  Such functions are denoted by * for this chapter.
+<h3>Setting the precision</h3>
+The precision only changes what is printed, teapot always uses the
+maximum precision for calculations.  It also only affects the output,
+if the cell value is a floating point number.  The precision of printed
+floating point numbers.  Entering an empty precision means to set it to
+the default value.
+<h3>Changing the cell label *</h3>
+This function lets you edit the cell label of the current cell.
+Further it changes all occurences of it in the cell contents to the new
+value, unless you erased the cell label.  If a block has been marked by
+the time you edit the cell label, all occurences of the label in contents
+of cells in that block will be changed.
+<h3>Locking cells *</h3>
+You can lock cells to protect them from accidental editing.  Note
+that this protects you from modifying single cells.  If you modify
+a block of cells which contains locked cells, those will be modified
+as well.  This has been done because when using block commands, you
+usually know what you are doing.
+<h3>Setting the column width *</h3>
+The column width only affects the screen display, not the formatting of
+the final output with the expectation of saved formatted ASCII files.  It
+is intended to let you make better usage of the screen for more
+overview.  If the width is too small to display the cell value, stars
+will be displayed.
+<h3>Copying or moving a block of cells</h3>
+To copy a block of cells, mark it, then move the cell cursor to where
+the upper left corner of the copy should be and issue the copy command.
+Moving works similar, just use the move command.  Of course you can mark
+three-dimensional blocks and copy them anywhere in the
+three-dimensional sheet, but doing so requires a good three-dimensional
+imagination to get what you want.
+<h3>Filling a block of cells</h3>
+To fill a block of cells, first mark a the block it should be filled
+with.  This may be just one cell!  Then move the cell cursor to where
+the upper left corner of the block to be filled should be and issue the
+fill command.  You will be prompted for how often the marked block should
+be repeated in each dimension.  For example, you may to repeat a cell 9
+times below.  Mark it, then move down one row.  Issue the fill command and
+answer 1 to the number of column repetitions, 9 to rows and 1 to layers.
+<h3>Clearing cells *</h3>
+Clearing means to delete the cell contents and set all attributes to
+the default value.  If you want to preserve the attributes, just edit
+the contents of a cell and delete them.
+<h3>Insert cells *</h3>
+Since work sheets can be three-dimensional, you can insert cells in all
+three dimensional, too.  The inserted cells will be empty and their
+attributes have the default values.  Cells will always be moved away
+from the front upper left corner to make room for the inserted cells.
+If no block is marked, you will be asked if you really only want to
+insert a cell of if you want to insert a whole row, line or sheet.
+<h3>Delete cells *</h3>
+Deleting works contrary to inserting.  The deleted cells will be filled
+by moving neighbour cells to their positions.  You will be prompted for
+the direction from where those cells will be taken.  Deleting an entire
+column column-wise is done by marking the column, use the delete command
+and chose X direction.
+<h3>Sort cells</h3>
+Marked blocks of cells can be sorted after one or multiple keys, either
+column-wise, row-wise or depth-wise.  Sorting a two dimensional block
+row-wise will sort lines, but if a three dimensional block is sorted
+row-wise, then horizontal layers will be sorted.  The sort key is
+specified as vector which is orthogonal to the sorted elements, either
+in ascending or descending order.  The following example illustrates
+the sort function.  The upper left part of the screen should look like
+this:
+<pre></pre><center><table>
+
+<tr><td align=center>0</td><td align=center>0</td><td align=center>1</td></tr>
+<tr><td align=center>0</td><td align=right>1</td><td align=left>&quot;one&quot;</td></tr>
+<tr><td align=center>1</td><td align=right>2</td><td align=left>&quot;two&quot;</td></tr>
+<tr><td align=center>2</td><td align=right>3</td><td align=left>&quot;three&quot;</td></tr>
+<tr><td align=center>3</td><td align=right>4</td><td align=left>&quot;four&quot;</td></tr>
+
+</table>
+</center><pre></pre>The box shows you which block to mark.  Now this block should be sorted
+row-wise, with the sort key being the numbers in descending order, i.e.
+we want the lines being numbered 4,3,2,1.  Go to the block menu, then select
+sort.  Use <code>R)ow</code>, because that is how we want to sort this block.
+The X position of the sort key vector is 0, because the column 0 contains
+the numbers.  The Z position is 0, too, because those numbers are on sheet 0.
+Now chose <code>D)escending</code> as direction.  At this point, you could add
+a secondary key or decide to sort the block by the keys entered so far.
+Use <code>S)ort region</code> to sort it.  That's it, the screen should look like
+this now:
+<pre></pre><center><table>
+
+<tr><td align=center>0</td><td align=center>0</td><td align=center>1</td></tr>
+<tr><td align=center>0</td><td align=right>4</td><td align=left>&quot;four&quot;</td></tr>
+<tr><td align=center>1</td><td align=right>3</td><td align=left>&quot;three&quot;</td></tr>
+<tr><td align=center>2</td><td align=right>2</td><td align=left>&quot;two&quot;</td></tr>
+<tr><td align=center>3</td><td align=right>1</td><td align=left>&quot;one&quot;</td></tr>
+
+</table>
+</center><pre></pre><h3>Mirror cells</h3>
+Mirroring a marked block of cells can be done in three directions:
+Left/right, upside/down and front/back.
+<h3>Saving and loading sheets</h3>
+<h4>Name or rename a sheet</h4>
+Occasionally, you may want to rename a sheet, like before making critical
+changes or when you load something an existing sheet to have a start for
+making a new one.  This function allows to change the filename which is
+associated with a sheet.
+<h4>Save and load in XDR format</h4>
+XDR (eXternal Data Representation) is a standard invented by Sun
+Microsystems which defines a canonical way of storing/transporting data
+on external media.  Its advantage is that it is widely available and
+that it defines a portable floating point number format.  The native
+teapot file format uses XDR so it is portable across different machine
+architectures and operating systems.  The advantage of this over the
+portable ASCII format is that due to the (usually) missing conversion
+calculations any floating point constants will be saved/loaded exactly
+without conversion errors.  XDR files have no default extension.
+<h4>Save and load in ASCII format</h4>
+The ASCII file format allows easy generation/modification of saved
+sheets by shell scripts.  Due to binary/ASCII conversion, there may
+be conversion errors in floating point constants.  The default
+extension is <code>.asc</code>.
+<h4>Save and load in CSV/GCSV format *</h4>
+CSV (comma seperated value) files only contain the data, not the
+expressions calculating it.  Many spread sheets can generate this file
+format and many graphics programs, like <a href="gnuplot">gnuplot</a>(1) can read it.
+PlotPlus can read it if you specify <code>FORMAT FREE</code>.
+The field separator is a tab or comma, strings are preferably but
+not necessarily enclosed in double quotes and decimal numbers have a
+dot to mark the fractional part.  The default extension is <code>.txt</code>.
+When loading CSV files, the sheet will not be cleared and the data will
+be load relative to the current cursor position.  GCSV is the German
+variation, which uses semicolons for separating fields and a decimal
+comma instead of a decimal point.
+On load, strings without quotes and with a <em>0x</em> prefix followed by
+hexadecimal digits will be converted to integers.
+<h4>Load in SC format</h4>
+teapot can load simple SC sheets to convert them to teapot's native
+format.  While loading, teapot converts all references to absolute cell
+positions to labels.  This allows to insert and delete in such sheets
+without screwing the whole sheet up.  teapot can not save sheets in SC
+format, because SC lacks many features.  For now, only the most basic
+SC features are supported.  The default extension is <code>.sc</code>.
+<h4>Load in WK1 format</h4>
+teapot can load simple WK1 sheets to convert them to teapot's native
+format.  By default, 1-2-3 cell references are relative, so don't be
+surprised by a big amount of relative references in the resulting teapot
+sheet.  For now, only the most basic 1-2-3 features are supported.  The
+default extension is <code>.wk1</code>.
+<h4>Save in formatted ASCII format *</h4>
+The generated formatted ASCII files contain about what you see on the
+screen.  If your sheet has more than one layer, then the various layers
+will be saved separated by form feeds.  The default extension is <code>.doc</code>.
+<h4>Save in tbl format *</h4>
+teapot can generate <a href="tbl">tbl</a>(1) table bodies in single files which are
+supposed to be used like this:
+<pre><code>.TS</code>
+<var>options</var><code>;</code>
+<code>.so</code> <var>filename</var>
+<code>.TE</code>
+</pre>You will have to use <a href="soelim">soelim</a>(1) to eliminate the <code>.so</code>
+requests before the tbl run.  The <var>options</var><code>;</code> are optional. 
+If you use GNU roff, you will need to eliminate <code>.lf</code> requests,
+because this GNU roff extension confuses GNU tbl:
+<pre><code>soelim</code> <var>file</var> <code>| grep -v '^\.lf'</code>
+</pre>Alternatively, you can generate a stand-alone document, which needs no
+further operations to format and print.  Note: If no block is marked,
+the whole sheet will be saved, not only the current cell.  The default
+extension is <code>.tbl</code>.
+<h4>Save in LaTeX format *</h4>
+If you generate LaTeX 2e tables in single files, you include them in
+documents like this:
+<pre><code>\include{</code><var>filename</var><code>}</code>
+</pre>Alternatively, you can generate a stand-alone document, which needs no
+further operations to format and print.  Note: If no block is marked,
+the whole sheet will be saved, not only the current cell.  The default
+extension is <code>.tex</code>.
+<h4>Save in HTML format *</h4>
+You can generate html table bodies in single files which could be used
+in combination with server-side includes.  This feature differs between
+the various servers, so refer to the manual for your web server for
+details, please.
+<p>
+Alternatively, you can generate a stand-alone document.  Note: If no
+block is marked, the whole sheet will be saved, not only the current cell.
+The default file extension is <code>.html</code>.
+<h3>Go to location</h3>
+Sometimes, you directly want to go to a specific position, either to
+change its contents to see which cell a location expression refers to.
+This function lets you enter an expression, which must evaluate to
+a value of the type location.  If so, the cursor is positioned to that
+location.  For example, you could enter <code>&amp;(10,2)</code> to go to cell
+10,2 of the current layer or you could enter the name of a label you
+want to go to.  Relative movements are no problem, either.
+<h3>Shell</h3>
+Start a sub shell.  Exiting from that sub shell will bring you back
+into teapot.
+<h3>Version information</h3>
+teapot will display its version number and other entertaining things.  :)
+If you send me email, please always write which version you are using.
+<h2>Batch functions</h2>
+Besides interactive facilities, teapot has a batch mode.  Using this
+batch mode, shell scripts can generate output from teapot sheets.  This
+is handy if you use <a href="make">make</a>(1) to generate a bigger document
+containing tables, because you don't have to generate a tbl or LaTeX file
+each time you modified a sheet: make will do so.  In batch mode, teapot
+reads batch commands from standard input.  The following commands are
+available:
+<dl>
+<dt><b><code>goto</code> <var>location</var></b>
+<dd>Go to the specified <var>location</var>.
+<dt><b><code>from</code> <var>location</var></b>
+<dd>Start marking a block.
+<dt><b><code>to</code> <var>location</var></b>
+<dd>End marking a block.
+<dt><b><code>sort-x</code> d|a <em>y z</em> [ d|a <em>y z</em> ... ]</b>
+<dd><dt><b><code>sort-y</code> d|a <em>x z</em> [ d|a <em>x z</em> ... ]</b>
+<dd><dt><b><code>sort-z</code> d|a <em>x y</em> [ d|a <em>x y</em> ... ]</b>
+<dd>Sorts the marked block as described in section <em>5.10</em>,
+column-wise, row-wise or depth-wise, respectivly.
+"d" or "a" specify the sort order to be descending or ascending.
+<em>x</em>, <em>y</em> and <em>z</em> specify the position of the sort key
+<code>relative</code> to the first cell of the marked block.
+Up to eight sort keys can be specified.
+<br>This example reproduces the result from <em>5.10</em>:
+<br>echo -e "from &amp;(1,1,0)\n to &amp;(2,4,0)\n sort-y d 0 0\n save-csv
+result_num.txt" \
+<br>| teapot -b doc/unsorted
+<dt><b><code>save-tbl</code> <em>file</em></b>
+<dd><dt><b><code>save-csv</code> <em>file</em></b>
+<dd><dt><b><code>save-latex</code> <em>file</em></b>
+<dd><dt><b><code>save-context</code> <em>file</em></b>
+<dd><dt><b><code>save-html</code> <em>file</em></b>
+<dd>Save the marked block in the specified format as <em>file</em>.
+<dt><b><code>load-csv</code> <em>file</em></b>
+<dd><dt><b><code>load-gcsv</code> <em>file</em></b>
+<dd>Load <em>file</em> in the specified format to the last <code>goto</code>
+location.
+This is the same functionality as the interactive load described in
+subsection <em>5.12.4</em>.
+</dl>
+<h2>Cells</h2>
+In this chapter, <code>bold</code> marks literals which have to be entered
+exactly as shown.  <em>Italic</em> mark place holders, they are not to be
+taken literally.
+<h3>Attributes</h3>
+Each cell consists of a base/reset expression, a clocked expression,
+the result of one of these expressions (depending on the cell being
+reset or clocked) and several attributes:
+<ul>
+<li>A cell label, which is useful because it avoids to directly address
+cells by their position.  A cell label must be different from function
+names.
+<li>The cell adjustment, which determines if the cell value is printed left
+adjusted, right adjusted or centered.
+<li>The precision for the output of floating point values.  The default is
+2 digits after the dot.
+<li>If floating point numbers should be printed in scientific notation
+(0.123e1) or as decimal number (1.23).  It only affects the output, if
+the cell value is a floating point number.
+<li>If the cell is shadowed by its left neighbour.  This means that the
+left neighbour cell additionally uses the room of the shadowed cell.
+<li>If the cell is locked which prevents to accidentally edit or clear it. 
+Note that block operations override this attribute, because when you
+deal with blocks, you usually know what you are doing.
+<li>If special characters for e.g. roff and LaTeX should be quoted
+(default) or not.  Not quoting them allows special effects (if you know
+roff or LaTeX), but is of course not portable.
+</ul>
+<h3>Data Types</h3>
+In teapot, each value has an associated data type.  The following
+data types exist:
+<ul>
+<li>empty.  Empty cells have this as value.
+<li>string.  A string is a sequence of characters enclosed by double
+quotes: <code>"This is a string"</code>.  A double quote can be part of the
+string, if it is quoted using a backslash: <code>"\""</code>.  If you want
+the backslash to appear in the output instead of quoting the next
+character, use it to quote itself: <code>"\\"</code>.  A single minus
+character on the screen will be output as a minus.  If you want a
+hyphen character in the output, then use two minus characters for that.
+<li>floating point.  Floating point values are inexact, their precision and
+range depends on the implementation of the C type double on your
+system.  An example is: <code>42.0</code>
+<li>integer.  Integer values are exact, their range depends on the C type
+long on your system.  An example is: <code>42</code>
+<li>location.  Cell labels and the <code>&amp;()</code> function have this type, but
+there are no location constant literals.
+<li>error.  Syntactical, semantical (type mismatch) errors cause this value,
+as well as division by 0 and the function <code>error()</code>.  An error
+always has an assigned error message.  Functions and operators, when
+applied to a value of the type error, evaluate to just that value.  That
+way, the first error which was found deep inside a complicated
+expression will be showed.
+</ul>
+<h2>Operators</h2>
+Unlike other spread sheets, the operators in teapot check the type
+of the values they are applied to, which means the try to add a string
+to a floating point number will result in an type error.  The following
+operators are available, listed in ascending precendence:
+<dl>
+<dt><b><em>x</em><code>&lt;</code><em>y</em></b>
+<dd>evaluates to 1 if <em>x</em> is less than <em>y</em>.  If <em>x</em> or <em>y</em>
+are empty, they are considered to be 0 if the other is an integer
+number, 0.0 if it is a floating point number and the empty string if it
+is a string.
+<dt><b><em>x</em><code>&lt;=</code><em>y</em></b>
+<dd>evaluates to 1 if <em>x</em> is less than or equal to <em>y</em>.  Empty
+values are dealt with as described above.
+<dt><b><em>x</em><code>&gt;=</code><em>y</em></b>
+<dd>evaluates to 1 if <em>x</em> is greater than or equal to <em>y</em>.  Empty
+values are dealt with as described above.
+<dt><b><em>x</em><code>&gt;</code><em>y</em></b>
+<dd>evaluates to 1 if <em>x</em> is greater than <em>y</em>.  Empty values are
+dealt with as described above.
+<dt><b><em>x</em><code>==</code><em>y</em></b>
+<dd>evaluates to 1 if <em>x</em> is equal to <em>y</em>.  Empty values are dealt
+with as described above.
+<dt><b><em>x</em><code>~=</code><em>y</em></b>
+<dd>evaluates to 1 if the floating point value <em>x</em> is almost to the
+floating point value <em>y</em>.  Empty values are dealt with as described
+above.  Almost equal means, the numbers are at most neighbours.
+<dt><b><em>x</em><code>!=</code><em>y</em></b>
+<dd>evaluates to 1 if <em>x</em> is not equal to <em>y</em>.  Empty values are
+dealt with as described above.
+<dt><b><em>x</em><code>+</code><em>y</em></b>
+<dd>evaluates to the sum if <em>x</em> and <em>y</em> are numbers.  If <em>x</em> and
+<em>y</em> are strings, the result is the concatenated string.  If <em>x</em>
+or <em>y</em> is empty, the result is the other element.  There is no
+dedicated logical or operation, so use <code>+</code> for that.
+<dt><b><em>x</em><code>-</code><em>y</em></b>
+<dd>evaluates to the difference if <em>x</em> and <em>y</em> are numbers.  If
+<em>x</em> is empty, the result is <code>-</code><em>y</em>.  If <em>y</em> is empty, the
+result is <em>x</em>.
+<dt><b><em>x</em><code>*</code><em>y</em></b>
+<dd>evaluates to the product if <em>x</em> and <em>y</em> are numbers.  If <em>x</em>
+or <em>y</em> is empty, the result is 0.  There is no dedicated logical
+and operation, so use <code>*</code> for that.
+<dt><b><em>x</em><code>/</code><em>y</em></b>
+<dd>evaluates to the quotient if <em>x</em> and <em>y</em> are numbers.  If
+<em>x</em> is empty, the result is 0.  If <em>y</em> is empty, the result is
+the error ``division by 0''.
+<dt><b><em>x</em><code>%</code><em>y</em></b>
+<dd>evaluates to the remainder of the division if <em>x</em> and <em>y</em> are numbers.  If
+<em>x</em> is empty, the result is 0.  If <em>y</em> is empty, the result is
+the error ``modulo 0''.
+<dt><b><em>x</em><code>^</code><em>y</em></b>
+<dd>evaluates to <em>x</em> to the power of <em>y</em>.  If <em>x</em> or <em>y</em> are
+empty, they will be considered to be the integer value 0.
+<dt><b><code>-</code><em>x</em></b>
+<dd>evaluates to <code>-</code><em>x</em> if <em>x</em> is a number.  If <em>x</em> is
+empty, the result will be empty, too.
+<dt><b><code>(</code><em>expression</em><code>)</code></b>
+<dd>evaluates to the expression.
+<dt><b><em>function</em><code>(</code><em>argument</em><code>,</code>...<code>)</code></b>
+<dd>evaluates to the value of the function applied to the values resulting
+from evaluating the argument expressions.
+</dl>
+<h2>Functions</h2>
+This section documents all available functions in alphabetical order.
+The functions are given in a C-like notation, so use <code>@(0,0,0)</code>
+instead of <code>@(integer 0, integer 0, integer 0)</code>.  If no type is
+given for the result of a function, it means the result type depends on
+the arguments.  Brackets mark optional arguments.
+<dl>
+<dt><b><code>@(</code>[integer <em>x</em>][<code>,</code>[integer <em>y</em>][<code>,</code>[integer <em>z</em>]]]<code>)</code></b>
+<dd><dt><b><code>@(</code>location <em>l</em><code>)</code></b>
+<dd>returns the value of the cell at position <em>x</em>, <em>y</em>, <em>z</em>.  If
+any of <em>x</em>, <em>y</em> or <em>z</em> is omitted, the coordinate of the
+cell is used.
+<dt><b>location <code>&amp;(</code>[integer <em>x</em>][<code>,</code> [integer <em>y</em>][<code>,</code> [integer <em>z</em>]]]<code>)</code></b>
+<dd>returns a pointer to the cell at location <em>x</em>, <em>y</em>, <em>z</em>.  If
+<em>z</em> is omitted, the <em>z</em> position of the cell is used.  If
+<em>y</em> is missing as well, the <em>y</em> position (row) of the cell is
+used.
+<dt><b>string <code>$(</code>string <em>env</em><code>)</code></b>
+<dd>evaluates to the contents of the specified environment variable.
+If the variable does not exist, then an empty string will be returned.
+<dt><b>float <code>abs(</code>float <em>x</em><code>)</code></b>
+<dd><dt><b>int <code>abs(</code>int <em>x</em><code>)</code></b>
+<dd>evaluates to the absolute value of <em>x</em>.
+<dt><b>float <code>acos(</code>double|int <em>x</em><code>)</code></b>
+<dd>evaluates to the arc cosine of <em>x</em>, where <em>x</em> is given in radians.
+<dt><b>float <code>arcosh(</code>double|int <em>x</em><code>)</code></b>
+<dd>evaluates to the arc hyperbolic cosine of <em>x</em>, where <em>x</em> is given in radians.
+<dt><b>float <code>arsinh(</code>double|int <em>x</em><code>)</code></b>
+<dd>evaluates to the arc hyperbolic sine of <em>x</em>, where <em>x</em> is given in radians.
+<dt><b>float <code>artanh(</code>double|int <em>x</em><code>)</code></b>
+<dd>evaluates to the arc hyperbolic tangent of <em>x</em>, where <em>x</em> is given in radians.
+<dt><b>float <code>asin(</code>double|int <em>x</em><code>)</code></b>
+<dd>evaluates to the arc sine of <em>x</em>, where <em>x</em> is given in radians.
+<dt><b>float <code>atan(</code>double|int <em>x</em><code>)</code></b>
+<dd>evaluates to the arc tangent of <em>x</em>, where <em>x</em> is given in radians.
+<dt><b><code>clock(</code>integer <em>condition</em><code>,</code>[location[<code>,</code>location]<code>)</code></b>
+<dd>conditionally clocks the specified cell if the condition is not 0.  If
+two locations are given, all cells in that range will be clocked.  The
+return value of clock is empty.
+<dt><b>float <code>cos(</code>double|int <em>x</em><code>)</code></b>
+<dd>evaluates to the cosine of <em>x</em>, where <em>x</em> is given in radians.
+<dt><b>float <code>cosh(</code>double|int <em>x</em><code>)</code></b>
+<dd>evaluates to the hyperbolic cosine of <em>x</em>, where <em>x</em> is given in radians.
+<dt><b>float <code>deg2rad(</code>double|int <em>x</em><code>)</code></b>
+<dd>evaluates to the degrees that are equivalent to <em>x</em> radians.
+<dt><b>float <code>e()</code></b>
+<dd>evaluates to the Euler constant <em>e</em>.
+<dt><b>error <code>error(</code>string <em>message</em><code>)</code></b>
+<dd>evaluates to an error with the specified message.
+<dt><b><code>eval(</code>location<code>)</code></b>
+<dd>evaluates to the value of the expression in the cell at the given
+<em>location</em>, but evaluated in the context of the cell using
+<code>eval()</code>.  This function may not be used nested any deeper than
+32 times.
+<dt><b>float <code>float(</code>string <em>s</em><code>)</code></b>
+<dd>converts the given string into a floating point number.
+<dt><b>float <code>frac(</code>float <em>x</em><code>)</code></b>
+<dd>evaluates to the fractional part of <em>x</em>.
+<dt><b>int <code>int(</code>float <em>x</em>[<code>,</code>integer <em>neg</em><code>,</code> integer <em>pos</em>]<code>)</code></b>
+<dd>converts <em>x</em> to an integer value by cutting off the fractional
+part.  If given, the value of <em>neg</em> and <em>pos</em> determines how
+negative and non-negative numbers will be converted:
+<table>
+</table>
+<pre>neg, pos | result
+---------+----------------------------------
+ &lt; -1    | next smaller integer value
+    0    | cut fractional part off (default)
+    1    | round upward
+ &gt;  1    | next larger integer value
+</pre><dt><b>int <code>int(</code>string <em>s</em><code>)</code></b>
+<dd>converts <em>s</em> to an integer number.
+<dt><b>string <code>len(</code>string <em>s</em><code>)</code></b>
+<dd>evaluates to the length of <em>s</em>.
+<dt><b>float <code>log(</code>double|int <em>x</em>[<code>,</code>double|int <em>y</em><code>)</code></b>
+<dd>evaluates to the logarithm of <em>x</em>.  If <em>y</em> is specified, the
+result will be the natural logarithm, otherwise it will be the logarithm
+to the base of <em>y</em>.
+<dt><b>location <code>max(</code>location <em>l1</em><code>,</code> location <em>l2</em><code>)</code></b>
+<dd>evaluates to the maximum in the same way <code>min</code> does for the minimum.
+<dt><b>location <code>min(</code>location <em>l1</em><code>,</code> location <em>l2</em><code>)</code></b>
+<dd>evaluates to the location of the minimum of all values in the block
+marked by the corners pointed to by <em>l1</em> and <em>l2</em>.  Note that
+the empty cell is equal to 0, 0.0 and "", so if the first minimum is an
+empty cell, the result will be a pointer to this cell, too.  If you are
+not interested in the location of the minimum but the value itself, use
+<code>@(min(</code><em>l1</em><code>, </code><em>l2</em><code>))</code>.
+<dt><b>int <code>n(</code>location <em>l1</em><code>,</code> location <em>l2</em><code>)</code></b>
+<dd>evaluates to the number of non-empty cells in the block marked by the
+corners pointed to by <em>l1</em> and <em>l2</em>.
+<dt><b><code>poly(</code>float|integer <em>x</em><code>,</code> float|integer <em>c<sub>n</sub></em>[<code>,</code> ...]<code>)</code></b>
+<dd>evaluates the polynome <em>c<sub>n</sub>*x<sup>n</sup></em>+...+<em>c<sub>0</sub>*x<sup>0</sup></em>.
+<dt><b>float <code>rad2deg(</code>double|int <em>x</em><code>)</code></b>
+<dd>evaluates to the radians that are equivalent to <em>x</em> degrees.
+<dt><b>float <code>rnd()</code></b>
+<dd>evaluates to a pseudo-random number between 0.0 and 1.0.
+<dt><b>float <code>sin(</code>double|int <em>x</em><code>)</code></b>
+<dd>evaluates to the sine of <em>x</em>, where <em>x</em> is given in radians.
+<dt><b>float <code>sinh(</code>double|int <em>x</em><code>)</code></b>
+<dd>evaluates to the hyperbolic sine of <em>x</em>, where <em>x</em> is given in radians.
+<dt><b>string <code>strftime(</code>string <em>f</em> [<code>,</code> integer <em>t</em>])</b>
+<dd>evaluates to the time <em>t</em> formatted according to the format
+specified in <em>f</em>. Times in <em>t</em> are counted in seconds since
+epoch (1970-1-1 0:00). If <em>t</em> is empty or 0, the actual time is
+used.
+For the format specifications consult the man page of your c library,
+strftime (3).
+Example: <em>@(now)=int(strftime("%s"))</em> sets the field with label
+now to the actual time.
+<dt><b>string <code>string(</code>location <em>l</em><code>)</code></b>
+<dd><dt><b>string <code>string(</code>integer <em>x</em><code>)</code></b>
+<dd><dt><b>string <code>string(</code>float <em>x</em>[<code>,</code> [integer <em>precision</em>][<code>,</code> <em>scientific</em>]]<code>)</code></b>
+<dd>evaluates to a string containing the current value of the given cell at
+location <em>l</em>, or to the numeric value <em>x</em> with the given
+<em>precision</em>.  The <em>scientific</em> flag determines if decimal (0)
+or scientific (unequal 0) representation is used.
+<dt><b>int <code>strptime(</code>string <em>f</em> <code>,</code> string <em>datetime</em>)</b>
+<dd>evaluates to the seconds since epoch (1970-1-1 0:00) of the
+<em>datetime</em> string, parsed according to the format
+specified in <em>f</em>.
+For the format specifications consult the man page of your c library,
+strptime (3).
+<dt><b>string <code>substr(</code>string <em>s</em><em>,</em>integer <em>x</em><em>,</em>integer <em>y</em><code>)</code></b>
+<dd>evaluates to the substring of <em>s</em> between <em>x</em> and <em>y</em>,
+which start at 0.
+<dt><b><code>sum(</code>location <em>l1</em><code>,</code> location <em>l2</em><code>)</code></b>
+<dd>evaluates to the sum of all values in the block marked by the corners
+pointed to by <em>l1</em> and <em>l2</em>.
+<dt><b>float <code>tan(</code>double|int <em>x</em><code>)</code></b>
+<dd>evaluates to the tangent of <em>x</em>, where <em>x</em> is given in radians.
+<dt><b>float <code>tanh(</code>double|int <em>x</em><code>)</code></b>
+<dd>evaluates to the hyperbolic tangent of <em>x</em>, where <em>x</em> is given in radians.
+<dt><b>int <code>x(</code>[location <em>l</em>]<code>)</code></b>
+<dd><dt><b>int <code>y(</code>[location <em>l</em>]<code>)</code></b>
+<dd><dt><b>int <code>z(</code>[location <em>l</em>]<code>)</code></b>
+<dd>evaluate to the <em>x</em>, <em>y</em> and <em>z</em> position of the given
+location, of the currently updated cell if none is given.  These
+functions are usually used in combination with the <code>@</code> function for
+relative relations to other cells.
+</dl>
+<h2>Problems and solutions</h2>
+<h3>Why is 1.0 unequal 1.0?</h3>
+If your machine uses binary floating point arithmetic, and chances
+are that it does, you may eventually find yourself in the following
+situation:
+<pre>0.1+0.1+0.1+0.1+0.1+0.1+0.1+0.1+0.1+0.1
+</pre>You expect to see 1.0 as result, and indeed that is what you get.
+Now you compare this result to the constant 1.0, but surprisingly for
+many users, the result is 0.  Appearantly, 1.0 is unequal 1.0 for
+teapot.
+<p>
+This is not a bug in teapot, in fact it is not a bug at all.  The
+problem is, that 0.1 (1.0/10.0) does not have an exact representation in binary
+floating point arithmetic, similar to how 1.0/3.0 does not have an
+exact representation in decimal arithmetic (or binary, for that matter).
+As such, a value very close to 0.1 is used, but when displaying it, it
+will be rounded to 0.1.  The result is obvious, adding this number which
+is a little different from 0.1 ten times leads to a result very close to but
+not quite
+1.0.  Since it is so close, displaying it rounded to only a few digits precision
+shows 1.0.
+<p>
+To solve the comparison problem, teapot has the operator <code>~=</code>, which compares
+two floating point values apart from the last significant bit.  Use this
+operator to compare the two values from above and the result will be 1,
+meaning they are about equal.  Don't assume that a number which can be
+expressed with a finite number of decimal digits will be represented exactly
+in binary floating point arithmetic.
+<h3>How do I hide intermediate results?</h3>
+If you used flat, two-dimensional spread sheets before, you
+are probably used to hidden cells which contain intermediate results,
+global constants, scratch areas and the like.  teapot has no way to
+hide cells, but you have three dimensions.  Just use one or more
+layers for such cells and give each cell a label in order
+to reference and find it easily.
+<h3>Why is there no conditional evaluation?</h3>
+There is no special operator or function for conditional evaluation.
+I could add one easily, but then next someone would ask for loops and
+someone else for user-defined functions, variables and so on.  If you
+need a programming language, you know where to find it.
+<p>
+But don't worry.  :) The answer is, that conditional evaluation
+comes for free with teapot's orthogonal cell addressing.
+As an example, depending on the cell
+labelled <code>X</code> being negative or not, you want the result to be the
+string <code>"BAD</code> or <code>"GOOD"</code>.  This is the solution:
+<pre>eval(&amp;((@(X)&gt;=0)+x(BAD),y(BAD),z(BAD)))
+</pre>The cell labelled <code>BAD</code> contains the string <code>"BAD"</code>, its right
+neighbour contains the string <code>"GOOD"</code>.  If you have nested
+conditions, you could weight them with 1, 2, 4 and so on to address
+a bigger range of cells.  Alternatively, you could make use of all
+three dimensions for nested conditions.
+<h2>Expression grammar</h2>
+<table>
+<tr><td>digit</td><td>::=</td><td> <code>0</code> | .. | <code>9</code></td></tr>
+
+<tr><td>hex_digit</td><td>::=</td><td> <code>0</code> | .. | <code>9</code> | <code>a</code> | .. | <code>f</code></td></tr>
+
+<tr><td>octal_digit</td><td>::=</td><td> <code>0</code> | .. | <code>7</code></td></tr>
+
+<tr><td>decimal_integer</td><td>::=</td><td> <em>digit</em> { <em>digit</em> }</td></tr>
+
+<tr><td>hex_integer</td><td>::=</td><td> <code>0x</code> <em>hex_digit</em> { <em>hexdigit</em> }</td></tr>
+
+<tr><td>octal_integer</td><td>::=</td><td> <code>0</code> <em>octal_digit</em> { <em>octdigit</em> }</td></tr>
+
+<tr><td>integer</td><td>::=</td><td> <em>decimal_integer</em></td></tr>
+
+<tr><td></td><td></td><td> | <em>hex_integer</em></td></tr>
+
+<tr><td></td><td></td><td> | <em>octal_integer</em></td></tr>
+
+<tr><td>float</td><td>::=</td><td> <em>digit</em> { <em>digit</em> } [ <code>.</code> ] { <em>digit</em> }</td></tr>
+
+<tr><td></td><td></td><td> [ <code>e</code> | <code>E</code> [ <code>+</code> | <code>-</code> ] <em>digit</em> { <em>digit</em> } ]</td></tr>
+
+<tr><td>quoted_character</td><td>::=</td><td> <code>\</code> <em>any_character</em></td></tr>
+
+<tr><td>character</td><td>::=</td><td> <em>any_character</em> | <em>quoted_character</em></td></tr>
+
+<tr><td>string</td><td>::=</td><td> <code>"</code> { <em>character</em> } <code>"</code></td></tr>
+
+<tr><td>identifier_character</td><td>::=</td><td> <code>_</code> | <code>@</code> | <code>&</code> | <code>.</code> | <code>$</code> | <em>alpha_character</em></td></tr>
+
+<tr><td>identifier</td><td>::=</td><td> <em>identifier_character</em></td></tr>
+
+<tr><td></td><td></td><td> { <em>identifier_character</em> | <em>digit</em> }</td></tr>
+
+<tr><td>function</td><td>::=</td><td> <em>identifier</em> <code>(</code> [ <em>term</em> ] { <code>,</code> [ <em>term</em> ] } <code>)</code></td></tr>
+
+<tr><td>label</td><td>::=</td><td> <em>identifier</em></td></tr>
+
+<tr><td>parenterm</td><td>::=</td><td> <code>(</code> <em>term</em> <code>)</code></td></tr>
+
+<tr><td>negterm</td><td>::=</td><td> <code>-</code> <em>primary</em></td></tr>
+
+<tr><td>primary</td><td>::=</td><td> <em>function</em> | <em>label</em> | <em>parenterm</em> | <em>negterm</em></td></tr>
+
+<tr><td>powterm</td><td>::=</td><td> <em>primary</em> { <code>^</code> <em>primary</em> }</td></tr>
+
+<tr><td>mathterm</td><td>::=</td><td> <em>powterm</em> { <code>/</code> | <code>*</code> | <code>%</code> <em>powterm</em> }</td></tr>
+
+<tr><td>factor</td><td>::=</td><td> <em>mathterm</em> { <code>+</code> | <code>-</code> <em>mathterm</em> }</td></tr>
+
+<tr><td>term</td><td>::=</td><td> <em>factor</em> {<code><</code> | <code><=</code> | <code>>=</code> | <code>></code> | <code>==</code> | <code>!=</code> <em>factor</em> }</td></tr>
+
+</table>
+<address>Michael Haardt (michael@moria.de)</address>
+</body>
+</html>

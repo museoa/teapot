@@ -5,6 +5,10 @@
 
 #include "sheet.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern nl_catd catd;
 extern int batch;
 extern int def_precision;
@@ -69,10 +73,19 @@ typedef enum {
   BLOCK_COPY = -50,
   BLOCK_FILL = -51,
   BLOCK_SORT = -52,
-  BLOCK_MIRROR = -53
+  BLOCK_MIRROR = -53,
+  K_ABOUT = -54,
+  K_HELP = -55
 } Key;
 
-int do_sheetcmd(Sheet *cursheet, Key c, int moveonly);
-int doanyway(Sheet *sheet, const char *msg);
+extern int do_sheetcmd(Sheet *cursheet, Key c, int moveonly);
+extern int doanyway(Sheet *sheet, const char *msg);
+extern void moveto(Sheet *sheet, int x, int y, int z);
+extern void relmoveto(Sheet *sheet, int x, int y, int z);
+extern void do_mark(Sheet *cursheet, int force);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -1079,7 +1079,7 @@ const char *savetext(Sheet *sheet, const char *name, int x1, int y1, int z1, int
 }
 /*}}}*/
 /* savecsv       -- save as CSV */ /*{{{*/
-const char *savecsv(Sheet *sheet, const char *name, int x1, int y1, int z1, int x2, int y2, int z2, unsigned int *count)
+const char *savecsv(Sheet *sheet, const char *name, char sep, int x1, int y1, int z1, int x2, int y2, int z2, unsigned int *count)
 {
   /* variables */ /*{{{*/
   FILE *fp;
@@ -1099,7 +1099,7 @@ const char *savecsv(Sheet *sheet, const char *name, int x1, int y1, int z1, int 
     {
       for (x=x1; x<=x2; ++x)
       {
-        if (x>x1) if (fputc_close('\t',fp)==EOF) return strerror(errno);
+        if (x>x1) if (fputc_close(sep,fp)==EOF) return strerror(errno);
         if (SHEET(sheet,x,y,z)!=(Cell*)0)
         {
           char *buf,*s;
@@ -1565,7 +1565,7 @@ const char *loadxdr(Sheet *sheet, const char *name)
 }
 /*}}}*/
 /* loadcsv       -- load/merge CSVs */ /*{{{*/
-const char *loadcsv(Sheet *sheet, const char *name, int semicolon)
+const char *loadcsv(Sheet *sheet, const char *name)
 {
   /* variables */ /*{{{*/
   FILE *fp;
@@ -1576,15 +1576,25 @@ const char *loadcsv(Sheet *sheet, const char *name, int semicolon)
   const char *str;
   double value;
   long lvalue;
+  int separator = 0;
   /*}}}*/
 
   if ((fp=fopen(name,"r"))==(FILE*)0) return strerror(errno);
   err=(const char*)0;
-  csv_setopt(semicolon);
   for (x=0,line=1; fgets(ln,sizeof(ln),fp); ++line)
   {
     const char *s;
     const char *cend;
+
+    if (!separator) { /* FIXME: find a better way to autodetect */
+        int ccnt = 0, scnt = 0;
+        char *pos = ln;
+        while ((pos = strchr(pos, ','))) pos++, ccnt++;
+        pos = ln;
+        while ((pos = strchr(pos, ';'))) pos++, scnt++;
+        if (ccnt || scnt) separator = 1;
+        csv_setopt(scnt > ccnt);
+    }
 
     s=cend=ln;
     x=0;

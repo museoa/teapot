@@ -1,6 +1,6 @@
 #!/bin/sh
 
-awk 'BEGIN{
+awk -F '	|( +)' 'BEGIN{
   for (i=32; i<256; ++i) c[sprintf("%c",i)]=sprintf("%c",i)
   c["<"]="&lt;"
   c[">"]="&gt;"
@@ -71,10 +71,10 @@ awk 'BEGIN{
   if (define==0 && troff==0) {
     if (list[level]=="bl") printf("<li>")
     else {
-      printf("<dt>")
+      printf("<dt><b>")
       str=substr($0,5,1)==sprintf("%c",34) ? substr($0,6,length($0)-6) : $2
       for (i=1; i<=length(str); ++i) if (substr(str,i,1)=="\\") printf("\\%c",substr(str,++i,1)); else printf("%s",c[substr(str,i,1)])
-      printf("\n<dd>")
+      printf("</b>\n<dd>")
     }
   }
   next

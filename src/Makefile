@@ -1,24 +1,6 @@
-#{{{script}}}#{{{ Linux at moria
-#CFLAGS=		-g -pipe -O2 -Wall -Wmissing-prototypes -Wstrict-prototypes -Wcast-qual -Wpointer-arith -Wcast-align -Wwrite-strings -Wmissing-declarations -Wnested-externs -pedantic -fno-common
-#CPPFLAGS=	-DHAVE_TYPEAHEAD
-##CPPFLAGS=	-DHAVE_TYPEAHEAD -DTHE_ELECTRIC_FENCE
-##CPPFLAGS=	-I/usr/dmalloc/include -DDMALLOC
-#LDFLAGS=	-g
-##LDFLAGS=	-g -L/usr/efence/lib
-##LDFLAGS=	-g -L/usr/dmalloc/lib
-#LIBS=		-lcurses -lm
-##LIBS=		-lcurses -lm -lefence
-##LIBS=		-lcurses -lm -ldmalloc
-#MAKEDEPEND=	mkdep -d
-#}}}
-#{{{ Linux, SuSE 8.1, ncurses
-#CC=		gcc
-#CFLAGS=		-pipe -O2 -Wall -Wmissing-prototypes -Wstrict-prototypes -Wcast-qual -Wpointer-arith -Wcast-align -Wwrite-strings -Wmissing-declarations -Wnested-externs -pedantic -fno-common
-#CPPFLAGS=	-I/usr/include/ncurses -DHAVE_TYPEAHEAD
-#LDFLAGS=
-#LIBS=		-lncurses -lm
-#MAKEDEPEND=	gcc -MM
-#}}}
+DEBUG= -Os -s
+#DEBUG= -g3
+
 #{{{ Solaris 9, gcc, ncurses
 #CC=		gcc
 #CFLAGS=		-pipe -O2 -Wall -Wmissing-prototypes -Wstrict-prototypes -Wcast-qual -Wpointer-arith -Wcast-align -Wwrite-strings -Wmissing-declarations -Wnested-externs -pedantic -fno-common
@@ -27,58 +9,44 @@
 #LIBS=		-lcurses -lm -lnsl
 #MAKEDEPEND=	gcc -MM
 #}}}
-#{{{ NetBSD 2.0
+#{{{ NetBSD 2.0, Linux
 CC=		gcc
-CFLAGS=		-g -pipe -O2 -Wall -Wmissing-prototypes -Wstrict-prototypes -Wcast-qual -Wpointer-arith -Wcast-align -Wwrite-strings -Wmissing-declarations -Wnested-externs -pedantic -fno-common
+CFLAGS=	-pipe $(DEBUG) -Wall -Wcast-qual -Wpointer-arith -Wcast-align -Wwrite-strings -Wmissing-declarations -pedantic -fno-common
 CPPFLAGS=
-CFLAGS_GTK = `pkg-config --cflags gtk+-2.0`  -Wno-strict-prototypes
-LDFLAGS=
+LDFLAGS= $(DEBUG)
 LIBS=		-lm
-LIBS_GTK=	-lgtk-x11-2.0
-#LIBS_GTK = `pkg-config --libs gtk+-2.0`
 LIBS_TTY=	-lncurses
 MAKEDEPEND=	gcc -MM
 #}}}
 
+HELPFILE = doc/teapot.html
+#HELPFILE = <b>Sorry, Help not installed!</b>
+
+LIBS_FLTK=	-lfltk -lfltk_images
+CXXFLAGS = $(CFLAGS)
+CPPFLAGS += -DHELPFILE="\"$(HELPFILE)\""
 TEAPOTOBJS=	csv.o complete.o context.o eval.o func.o html.o \
 		latex.o main.o misc.o parser.o sc.o scanner.o sheet.o \
 		wk1.o xdr.o
-GTKOBJS=	display-gtk.o gtksheet.o gtkitementry.o gtkextra.o gtkextra-marshal.o
+FLTKOBJS=	fteapot.o
 TTYOBJS=	display.o
 
-teapot:		cat.h $(TEAPOTOBJS) $(TTYOBJS)
+teapot: cat.h $(TEAPOTOBJS) $(TTYOBJS)
 		$(CC) $(LDFLAGS) -o $@ $^ $(LIBS) $(LIBS_TTY)
 
-gteapot:		cat.h $(TEAPOTOBJS) $(GTKOBJS)
-		$(CC) $(LDFLAGS) -o $@ $^ $(LIBS) $(LIBS_GTK)
+fteapot: cat.h $(TEAPOTOBJS) $(FLTKOBJS)
+		( make teapot; cd doc; make teapot.html; )
+		$(CXX) $(LDFLAGS) -o $@ $^ $(LIBS) $(LIBS_FLTK)
 
-display-gtk.o: display-gtk.c help.h
-		$(CC) $(CFLAGS) $(CFLAGS_GTK) -o $@ -c $<
-
-gtksheet.o: gtksheet.c
-		$(CC) $(CFLAGS) $(CFLAGS_GTK) -o $@ -c $<
-
-gtkitementry.o: gtkitementry.c
-		$(CC) $(CFLAGS) $(CFLAGS_GTK) -o $@ -c $<
-
-gtkextra-marshal.o: gtkextra-marshal.c
-		$(CC) $(CFLAGS) $(CFLAGS_GTK) -o $@ -c $<
-
-gtkextra.o: gtkextra.c
-		$(CC) $(CFLAGS) $(CFLAGS_GTK) -o $@ -c $<
+%.cc: %.fl
+		fluid -c -o $@ $<
 
 cat.h:		Gencat
 		./Gencat
 		ln -s cat-en.h cat.h
 
-help.h: teapot doc/teapot.MM Genhelp
-		make -C doc teapot.html
-		./Genhelp
-
-version.c:	Genversion
-		./Genversion
-
-display.o: version.c
+display.o: version.h
+main.o: version.h
 
 graph:		graph.o csv.o
 		$(CC) $(LDFLAGS) -o $@ graph.o csv.o -lm
@@ -87,20 +55,21 @@ wc:
 		@wc -l *.[ch] | tail -1
 		@wc -c *.[ch] | tail -1
 
-depend:
+depend: cat.h
 		$(MAKEDEPEND) $(CPPFLAGS) *.c >.depend
 
 clean:
-		rm -f $(TEAPOTOBJS) graph.o $(GTKOBJS) $(TTYOBJS) help.h version.c cat.h cat-*
+		rm -f $(TEAPOTOBJS) graph.o $(FLTKOBJS) $(TTYOBJS) fteapot.h fteapot.cc cat.h cat-* *~
 		(cd doc; make clean)
 
 clobber:	clean
-		rm -f core *.out teapot graph gteapot
-		(cd doc; make clobber)
+		rm -f core *.out teapot graph fteapot tags
+		(cd doc; make clean)
 
-tar:		depend
-		./Gencat
+dist:	depend teapot
 		(cd doc; make teapot.ps teapot.doc clean)
-		(b=`pwd`; b=`basename $$b`; cd ..; tar zcvf $$b.tar.gz $$b/ANNOUNCE $$b/INSTALL $$b/doc $$b/magic $$b/teapot.1.* $$b/Makefile $$b/Gencat $$b/Genversion $$b/.depend $$b/.curses.h $$b/.nl_types.h $$b/*.c $$b/*.h $$b/examples)
+		make clobber
+		./Gencat
+		( V=teapot-"`grep \\\" version.h | sed -e 's/.*"\(.*\)"/\1/'`"; rm -r "../$$V/"; mkdir "../$$V"; cp -a * "../$$V"/; cd ..; tar czf "$$V".tar.gz "$$V"; )
 
 include .depend		

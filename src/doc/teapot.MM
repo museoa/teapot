@@ -51,36 +51,29 @@ conversation.  The fact that the first versions of this program were
 unnamed, because I had no idea how to call it and because all
 suggestions sounded boring, is pure coincidence.  :)
 .FE
-is copyright (c) by Michael Haardt, 1995, 1996, 1997, 2001.  The
-implementation of clocked expressions is modelled after the description
-of clocked evaluation in the PhD work of Jörg Wittenberger
+is copyright (c) by Michael Haardt, 1995 - 2006 and copyright (c) by Joerg Walter,
+2009-2010.  The implementation of clocked expressions is modelled after the description
+of clocked evaluation in the PhD work of JÃ¶rg Wittenberger
 <joerg.wittenberger@inf.tu-dresden.de> at the University of Technology
 in Dresden, Germany.  The German message catalog was contributed by
-Guido Müsch, the Dutch
+Guido MÃ¼sch, the Dutch
 catalog by Wim van Dorst
 <baron@clifton.hobby.nl> and the Ukrainian catalog by Volodymyr M. Lisivka <lvm@mystery.lviv.net>.
-The trigonometric functions were inspired by Koniorczyk Mátyás <kmatyas@cs.elte.hu>.
+The trigonometric functions were inspired by Koniorczyk MÃ¡tyÃ¡s <kmatyas@cs.elte.hu>.
 The context output format was contributed by Marko Schuetz <MarkoSchuetz@web.de>.
-You may use and modify this program or
-derived works without charge for personal use and at work under the
-condition that no copyright notices are removed or changed.  Distributing
-teapot under different conditions and any commercial use like charging
-for copying or selling it or derived works, alone or as part of a bigger
-product, needs a written license from me.
 .P
-I can be reached by:
-.DS I
-Snail mail:
-Michael Haardt
-An Neuenhofen 40
-47800 Krefeld
-Germany
-
-Email:
-michael@moria.de
-.DE
-Disclaimer: I am in no way responsible for anything caused by using this
-program, so if your computer or house blows up, that's your problem.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+.P
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+.P
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
 .\"}}}
 .\"{{{ Introduction to spread sheets
 .H 1 "Introduction to spread sheets"
@@ -1007,7 +1000,7 @@ evaluates to the fractional part of \fIx\fP.
 converts \fIx\fP to an integer value by cutting off the fractional
 part.  If given, the value of \fIneg\fP and \fIpos\fP determines how
 negative and non-negative numbers will be converted:
-.DS CB
+.if t \{
 .TS
 box;
 l c l
@@ -1020,7 +1013,17 @@ _
 1	\(->	round upward
 >1	\(->	next larger integer value
 .TE
+\}
+.if n \{
+.DS CB
+neg, pos | result
+---------+----------------------------------
+ < \-1    | next smaller integer value
+    0    | cut fractional part off (default)
+    1    | round upward
+ >  1    | next larger integer value
 .DE
+\}
 .LI "int \fBint(\fPstring \fIs\fP\fB)\fP"
 .br
 converts \fIs\fP to an integer number.
@@ -1230,13 +1233,17 @@ octal_digit	::=	\fB0\fP | .. | \fB7\fP
 decimal_integer	::=	\fIdigit\fP { \fIdigit\fP }
 hex_integer	::=	\fB0x\fP \fIhex_digit\fP { \fIhexdigit\fP }
 octal_integer	::=	\fB0\fP \fIoctal_digit\fP { \fIoctdigit\fP }
-integer	::=	\fIdecimal_integer\fP | \fIhex_integer\fP | \fIoctal_integer\fP
-float	::=	\fIdigit\fP { \fIdigit\fP } [ \fB.\fP ] { \fIdigit\fP } [ \fBe\fP | \fBE\fP [ \fB+\fP | \fB\-\fP ] \fIdigit\fP { \fIdigit\fP } ]
+integer	::=	\fIdecimal_integer\fP
+		| \fIhex_integer\fP
+		| \fIoctal_integer\fP
+float	::=	\fIdigit\fP { \fIdigit\fP } [ \fB.\fP ] { \fIdigit\fP }
+		[ \fBe\fP | \fBE\fP [ \fB+\fP | \fB\-\fP ] \fIdigit\fP { \fIdigit\fP } ]
 quoted_character	::=	\fB\e\fP \fIany_character\fP
 character	::=	\fIany_character\fP | \fIquoted_character\fP
 string	::=	\fB"\fP { \fIcharacter\fP } \fB"\fP
 identifier_character	::=	\fB_\fP | \fB@\fP | \fB&\fP | \fB.\fP | \fB$\fP | \fIalpha_character\fP
-identifier	::=	\fIidentifier_character\fP { \fIidentifier_character\fP | \fIdigit\fP }
+identifier	::=	\fIidentifier_character\fP
+		{ \fIidentifier_character\fP | \fIdigit\fP }
 function	::=	\fIidentifier\fP \fB(\fP [ \fIterm\fP ] { \fB,\fP [ \fIterm\fP ] } \fB)\fP
 label	::=	\fIidentifier\fP
 parenterm	::=	\fB(\fP \fIterm\fP \fB)\fP

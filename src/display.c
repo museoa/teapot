@@ -10,6 +10,7 @@
 #include <sys/wait.h>
 #include <assert.h>
 #include <ctype.h>
+#include <limits.h>
 #include <curses.h>
 #include <errno.h>
 #include <pwd.h>
@@ -306,7 +307,7 @@ int show_menu(Sheet *cursheet)
       case 3: c = do_file(cursheet); break;
       case 4: c = K_GOTO; break;
       case 5: do_shell(); c = KEY_CANCEL; break;
-      case 6: do_about(); c = KEY_CANCEL; break;
+      case 6: c = K_ABOUT; break;
       case 7: c = K_QUIT; break;
       default: assert(0);
     }
@@ -545,6 +546,22 @@ void redraw_sheet(Sheet *sheet)
   /*}}}*/
 }
 /*}}}*/
+
+/* line_file    -- line editor function for file name entry */ /*{{{*/
+const char *line_file(const char *file, const char *pattern, const char *title, int create)
+{
+	static char buf[_POSIX_PATH_MAX];
+	int rc;
+	size_t dummy = 0;
+
+	strncpy(buf, file, sizeof(buf));
+	buf[sizeof(buf)-1] = 0;
+	rc = line_edit((Sheet*)0, buf, sizeof(buf), title, &dummy, &dummy);
+	if (rc < 0) return NULL;
+	return buf;
+}
+/*}}}*/
+
 /* line_edit    -- line editor function */ /*{{{*/
 int line_edit(Sheet *sheet, char *buf, size_t size, const char *prompt, size_t *x, size_t *offx)
 {
@@ -940,6 +957,38 @@ void line_msg(const char *prompt, const char *msg)
   }
 }
 /*}}}*/
+
+void show_text(const char *text)
+{
+  int offset; /* TODO: actually display text. */
+
+  offset=(COLS-41)/2;
+  (void)clear();
+  (void)move(0,offset+13); (void)addstr("` ',`    '  '");
+  (void)move(1,offset+14); (void)addstr("`   '  ` ' '");
+  (void)move(2,offset+15); (void)addstr("`' '   '`'");
+  (void)move(3,offset+15); (void)addstr("' `   ' '`");
+  (void)move(4,offset+2); (void)addstr("'           '` ' ` '`` `");
+  (void)move(5,offset+2); (void)addstr("`.   Table Editor And Planner, or:");
+  (void)move(6,offset+4); (void)addstr(",         . ,   ,  . .");
+  (void)move(7,offset+14); (void)addstr("` '   `  ' '");
+  (void)move(8,offset+3); (void)addstr("`::\\    /:::::::::::::::::\\   ___");
+  (void)move(9,offset+4); (void)addstr("`::\\  /:::::::::::::::::::\\,'::::\\");
+  (void)move(10,offset+5); (void)addstr(":::\\/:::::::::::::::::::::\\/   \\:\\");
+  (void)move(11,offset+5); (void)addstr(":::::::::::::::::::::::::::\\    :::");
+  (void)move(12,offset+5); (void)addstr("::::::::::::::::::::::::::::;  /:;'");
+  (void)move(13,offset+5); (void)addstr("`::::::::::::::::::::::::::::_/:;'");
+  (void)move(14,offset+7); (void)addstr("`::::::::::::::::::::::::::::'");
+  (void)move(15,offset+8); (void)addstr("`////////////////////////'");
+  (void)move(16,offset+9); (void)addstr("`:::::::::::::::::::::'");
+  (void)move(17,offset+2); (void)addstr("");
+  (void)move(18,offset+17); (void)addstr("Teapot");
+  (void)move(20,offset+0); (void)addstr("Version " VERSION ", Copyright by M. Haardt, J. Walter");
+  (void)move(22,offset+8); (void)addstr("Press any key to continue");
+  (void)refresh();
+  (void)getch();
+}
+
 /* keypressed   -- get keypress, if there is one */ /*{{{*/
 int keypressed(void)
 {
@@ -958,4 +1007,3 @@ int keypressed(void)
 /*}}}*/
 
 #include "wgetc.c"
-#include "version.c"

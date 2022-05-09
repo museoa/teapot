@@ -3,6 +3,10 @@
 
 #include "scanner.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define SHEET(s,x,y,z) (*(s->sheet+(x)*s->dimz*s->dimy+(y)*s->dimz+(z)))
 
 typedef enum { LEFT=0, RIGHT=1, CENTER=2, AUTOADJUST=3 } Adjust;
@@ -66,6 +70,7 @@ typedef struct
   unsigned int changed:1;
   unsigned int moveonly:1;
   unsigned int clk:1;
+  void *display;
 } Sheet;
 
 extern Sheet *upd_sheet;
@@ -111,15 +116,19 @@ void relabel(Sheet *sheet, const char *oldlabel, const char *newlabel, int x, in
 const char *savexdr(Sheet *sheet, const char *name, unsigned int *count);
 const char *savetbl(Sheet *sheet, const char *name, int body, int x1, int y1, int z1, int x2, int y2, int z2, unsigned int *count);
 const char *savetext(Sheet *sheet, const char *name, int x1, int y1, int z1, int x2, int y2, int z2, unsigned int *count);
-const char *savecsv(Sheet *sheet, const char *name, int x1, int y1, int z1, int x2, int y2, int z2, unsigned int *count);
+const char *savecsv(Sheet *sheet, const char *name, char sep, int x1, int y1, int z1, int x2, int y2, int z2, unsigned int *count);
 const char *saveport(Sheet *sheet, const char *name, unsigned int *count);
 const char *loadxdr(Sheet *sheet, const char *name);
 const char *loadport(Sheet *sheet, const char *name);
-const char *loadcsv(Sheet *sheet, const char *name, int semicolon);
+const char *loadcsv(Sheet *sheet, const char *name);
 void insertcube(Sheet *sheet, int x1, int y1, int z1, int x2, int y2, int z2, Direction ins);
 void deletecube(Sheet *sheet, int x1, int y1, int z1, int x2, int y2, int z2, Direction ins);
 void moveblock(Sheet *sheet, int x1, int y1, int z1, int x2, int y2, int z2, int x3, int y3, int z3, int copy);
 const char *sortblock(Sheet *sheet, int x1, int y1, int z1, int x2, int y2, int z2, Direction dir, Sortkey *sk, size_t sklen);
 void mirrorblock(Sheet *sheet, int x1, int y1, int z1, int x2, int y2, int z2, Direction dir);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -35,7 +35,7 @@ teapot.html:	teapot.MM command.html.0 editline.html.0 unsorted.html.0 sorted.htm
 		soelim teapot.MM | grep -v '^\.lf' | ./Mm2html | ./Sr2html >teapot.html
 
 clean:
-		rm -f *.tbl *.tbl.0 *.html.0 teapot.mm
+		rm -f *.tbl *.0 *.1 teapot.mm *~
 
 clobber:	clean
 		rm -f *.html *.ps *.doc teapot.mm
