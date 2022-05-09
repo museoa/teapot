@@ -61,15 +61,7 @@ typedef enum {
   ADJUST_LABEL = -42,
   ADJUST_LOCK = -43,
   ADJUST_IGNORE = -44,
-  K_COLWIDTH = -45,
-  BLOCK_CLEAR = -46,
-  BLOCK_INSERT = -47,
-  BLOCK_DELETE = -48,
-  BLOCK_MOVE = -49,
-  BLOCK_COPY = -50,
-  BLOCK_FILL = -51,
-  BLOCK_SORT = -52,
-  BLOCK_MIRROR = -53
+  K_COLWIDTH = -45
 } Key;
 
 int do_sheetcmd(Sheet *cursheet, Key c, int moveonly);

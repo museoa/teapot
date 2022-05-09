@@ -13,7 +13,7 @@ typedef struct
 void display_main(Sheet *cursheet);
 void display_init(Sheet *cursheet, int always_redraw);
 void display_end(void);
-void redraw_cell(Sheet *sheet, int x, int y, int z);
+void redraw_cell(Sheet *sheet);
 void redraw_sheet(Sheet *sheet);
 int line_edit(Sheet *sheet, char *buf, size_t size, const char *prompt, size_t *x, size_t *offx);
 int line_ok(const char *prompt, int curx);

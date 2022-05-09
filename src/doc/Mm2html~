@@ -147,7 +147,7 @@ awk 'BEGIN{
 }
 /^[^.]/{
   if (sgmlify>0) { s=""; for (i=1; i<=length($0); ++i) if (substr($0,i,1)=="\\") s=s "\\" substr($0,++i,1); else s=s c[substr($0,i,1)] }
-  else if (match($0, "^<table")) s=""
+  else if (match($0, "^</\\?table")) s=""
   else if (match($0, "^<[a-z]")) s=$0
   else if (sgmlify == 0) s=""
   else { s="<tr><td>" $1 "</td><td>" $2 "</td><td>"; for (i=3; i<99; i++) if (length($i)) s=s " " $i; s=s "</td></tr>\n" }

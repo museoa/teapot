@@ -5,9 +5,9 @@
 #define _POSIX_C_SOURCE 2
 #define _GNU_SOURCE   1
 
+#include <math.h>
 #include <assert.h>
 #include <ctype.h>
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 double strtod(const char *nptr, char **endptr); /* SunOS 4 hack */

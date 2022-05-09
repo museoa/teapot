@@ -31,47 +31,29 @@
 CC=		gcc
 CFLAGS=		-g -pipe -O2 -Wall -Wmissing-prototypes -Wstrict-prototypes -Wcast-qual -Wpointer-arith -Wcast-align -Wwrite-strings -Wmissing-declarations -Wnested-externs -pedantic -fno-common
 CPPFLAGS=
-CFLAGS_GTK = `pkg-config --cflags gtk+-2.0`  -Wno-strict-prototypes
 LDFLAGS=
 LIBS=		-lm
-LIBS_GTK=	-lgtk-x11-2.0
-#LIBS_GTK = `pkg-config --libs gtk+-2.0`
-LIBS_TTY=	-lncurses
 MAKEDEPEND=	gcc -MM
 #}}}
 
 TEAPOTOBJS=	csv.o complete.o context.o eval.o func.o html.o \
 		latex.o main.o misc.o parser.o sc.o scanner.o sheet.o \
 		wk1.o xdr.o
-GTKOBJS=	display-gtk.o gtksheet.o gtkitementry.o gtkextra.o gtkextra-marshal.o
-TTYOBJS=	display.o
 
-teapot:		cat.h $(TEAPOTOBJS) $(TTYOBJS)
-		$(CC) $(LDFLAGS) -o $@ $^ $(LIBS) $(LIBS_TTY)
+teapot:		cat.h $(TEAPOTOBJS) display.o
+		$(CC) $(LDFLAGS) -o $@ $^ $(LIBS) -lcurses
 
-gteapot:		cat.h $(TEAPOTOBJS) $(GTKOBJS)
-		$(CC) $(LDFLAGS) -o $@ $^ $(LIBS) $(LIBS_GTK)
+gteapot:		cat.h $(TEAPOTOBJS) display-gtk.o
+		$(CC) $(LDFLAGS) -o $@ $^ $(LIBS) `pkg-config --libs gtk+-2.0` `pkg-config --libs gtkextra-2.0`
 
 display-gtk.o: display-gtk.c help.h
-		$(CC) $(CFLAGS) $(CFLAGS_GTK) -o $@ -c $<
-
-gtksheet.o: gtksheet.c
-		$(CC) $(CFLAGS) $(CFLAGS_GTK) -o $@ -c $<
-
-gtkitementry.o: gtkitementry.c
-		$(CC) $(CFLAGS) $(CFLAGS_GTK) -o $@ -c $<
-
-gtkextra-marshal.o: gtkextra-marshal.c
-		$(CC) $(CFLAGS) $(CFLAGS_GTK) -o $@ -c $<
-
-gtkextra.o: gtkextra.c
-		$(CC) $(CFLAGS) $(CFLAGS_GTK) -o $@ -c $<
+		$(CC) $(CFLAGS) -c -o $@ $< `pkg-config --cflags gtk+-2.0` `pkg-config --cflags gtkextra-2.0` -Wno-strict-prototypes
 
 cat.h:		Gencat
 		./Gencat
 		ln -s cat-en.h cat.h
 
-help.h: teapot doc/teapot.MM Genhelp
+help.h: doc/teapot.MM Genhelp
 		make -C doc teapot.html
 		./Genhelp
 
@@ -91,7 +73,7 @@ depend:
 		$(MAKEDEPEND) $(CPPFLAGS) *.c >.depend
 
 clean:
-		rm -f $(TEAPOTOBJS) graph.o $(GTKOBJS) $(TTYOBJS) help.h version.c cat.h cat-*
+		rm -f $(TEAPOTOBJS) graph.o display.o display-gtk.o help.h version.c cat.h cat-*
 		(cd doc; make clean)
 
 clobber:	clean

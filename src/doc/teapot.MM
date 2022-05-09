@@ -472,15 +472,7 @@ Use \*CS)ort region\*c to sort it.  That's it, the screen should look like
 this now:
 .DS CB
 .TS
-l c c
-l |l l|.
-0	0	1
-	_	_
-0	4	"four"
-1	3	"three"
-2	2	"two"
-3	1	"one"
-	_	_
+.so sorted.tbl
 .TE
 .DE
 .\"}}}
@@ -636,7 +628,7 @@ available:
 .\"{{{ goto location
 .LI "\*Cgoto\*c \*Vlocation\*v"
 .br
-Go to the specified \*vlocation\*v.
+Go to the specified \*Vlocation\*v.
 .\"}}}
 .\"{{{ from location
 .LI "\*Cfrom\*c \*Vlocation\*v"
@@ -901,7 +893,7 @@ the arguments.  Brackets mark optional arguments.
 .LI "\fB@(\fP[integer \fIx\fP][\fB,\fP[integer \fIy\fP][\fB,\fP[integer \fIz\fP]]]\fB)\fP"
 .br
 .sp -0.5
-.LI "\fB@(\fPlocation \fIl\fP\fB)\fP" 1
+.LI "\fB@(\fPlocation \fIl\fP\fB)\fP"
 .br
 returns the value of the cell at position \fIx\fP, \fIy\fP, \fIz\fP.  If
 any of \fIx\fP, \fIy\fP or \fIz\fP is omitted, the coordinate of the
@@ -933,7 +925,7 @@ evaluates to the absolute value of \fIx\fP.
 .LI "float \fBacos(\fPdouble|int \fIx\fP\fB)\fP"
 .br
 evaluates to the arc cosine of \fIx\fP, where \fIx\fP is given in radians.
-\"}}}
+.\"}}}
 .\"{{{ arcosh
 .LI "float \fBarcosh(\fPdouble|int \fIx\fP\fB)\fP"
 .br
@@ -958,7 +950,7 @@ evaluates to the arc sine of \fIx\fP, where \fIx\fP is given in radians.
 .LI "float \fBatan(\fPdouble|int \fIx\fP\fB)\fP"
 .br
 evaluates to the arc tangent of \fIx\fP, where \fIx\fP is given in radians.
-\"}}}
+.\"}}}
 .\"{{{ clock
 .LI "\fBclock(\fPinteger \fIcondition\fP\fB,\fP[location[\fB,\fPlocation]\fB)\fP"
 .br

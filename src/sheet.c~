@@ -589,7 +589,6 @@ void update(Sheet *sheet)
   } while (sheet->clk && !(kp=keypressed()));
   if (iterating==2) line_msg((const char*)0,kp ? "Calculation aborted" : "Calculation finished");
   sheet->clk=0;
-  redraw_sheet(sheet);
 }
 /*}}}*/
 /* geterror      -- get malloc()ed error string */ /*{{{*/

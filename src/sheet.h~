@@ -60,7 +60,7 @@ typedef struct
   Cell **sheet;
   int *column;
   int dimx, dimy, dimz;
-  int orix, oriy, maxx, maxy;
+  int orix, oriy;
   int width;
   char *name;
   unsigned int changed:1;

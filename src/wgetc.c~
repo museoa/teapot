@@ -136,12 +136,6 @@ Key wgetc(void)
       }
     }
     /*}}}*/
-    /* LOADMENU */ /*{{{*/
-    case KEY_F(2): return K_LOADMENU;
-    /*}}}*/
-    /* SAVEMENU */ /*{{{*/
-    case KEY_F(3): return K_SAVEMENU;
-    /*}}}*/
     /* default */ /*{{{*/
     default: return c;
     /*}}}*/

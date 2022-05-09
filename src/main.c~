@@ -1901,7 +1901,6 @@ int do_sheetcmd(Sheet *cursheet, Key c, int moveonly)
     {
       ++cursheet->curz; 
       if (cursheet->marking) cursheet->mark2z=cursheet->curz;
-      redraw_sheet(cursheet);
       break;
     }
     /*}}}*/
@@ -1911,7 +1910,6 @@ int do_sheetcmd(Sheet *cursheet, Key c, int moveonly)
     {
       if (cursheet->curz>0) --cursheet->curz; 
       if (cursheet->marking) cursheet->mark2z=cursheet->curz;
-      redraw_sheet(cursheet);
       break;
     }
     /*}}}*/
@@ -1921,7 +1919,6 @@ int do_sheetcmd(Sheet *cursheet, Key c, int moveonly)
     {
       cursheet->curz=(cursheet->dimz ? cursheet->dimz-1 : 0);
       if (cursheet->marking) cursheet->mark2z=cursheet->curz;
-      redraw_sheet(cursheet);
       break;
     }
     /*}}}*/
@@ -1931,7 +1928,6 @@ int do_sheetcmd(Sheet *cursheet, Key c, int moveonly)
     {
       cursheet->curz=0;
       if (cursheet->marking) cursheet->mark2z=cursheet->curz;
-      redraw_sheet(cursheet);
       break;
     }
     /*}}}*/

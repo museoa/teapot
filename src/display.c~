@@ -399,7 +399,7 @@ void display_end(void)
   endwin();
 }
 
-void redraw_cell(Sheet *sheet, int x, int y, int z)
+void update_sheet(Sheet *sheet, int x, int y, int z)
 {
 	redraw_sheet(sheet);
 }

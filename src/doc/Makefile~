@@ -18,7 +18,7 @@ unsorted.html.0 unsorted.tbl.0:	unsorted unsorted.bat unsorted.ed
 		ed unsorted.tbl.0 <unsorted.ed
 
 sorted.html.0 sorted.tbl.0:	unsorted sorted.bat unsorted.ed
-		../teapot -b unsorted <sorted.bat
+		../teapot -b sorted <unsorted.bat
 		ed sorted.tbl.0 <unsorted.ed
 
 teapot.ps:	teapot.mm
