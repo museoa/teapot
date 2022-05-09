@@ -146,7 +146,7 @@ case CONTEXT_CELL: {
 	fl_color(FL_FOREGROUND_COLOR);
 	fl_font(FL_HELVETICA, 14);
 	
-	printvalue(s, sizeof(s), 1, 0, getscientific(cursheet, C, R, cursheet->curz), getprecision(cursheet, C, R, cursheet->curz), cursheet, C, R, cursheet->curz);
+	printvalue(s, sizeof(s), 0, 0, getscientific(cursheet, C, R, cursheet->curz), getprecision(cursheet, C, R, cursheet->curz), cursheet, C, R, cursheet->curz);
 	int ww = 0, hh = 0;
 	fl_measure(s, ww, hh, 0);
 	if (ww > W-6) for (int i = 0; s[i]; i++) s[i] = '\#';
@@ -659,7 +659,7 @@ return !val;} {}
 
 Function {line_ok(const char *prompt, int curx)} {C return_type int
 } {
-  code {int rc = fl_choice("%s", "&No", NULL, "&Yes", prompt);
+  code {int rc = !!fl_choice("%s", "&No", NULL, "&Yes", prompt);
 if (Fl::event_key(FL_Escape)) return -1;
 return rc;} {}
 } 

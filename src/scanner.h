@@ -34,7 +34,7 @@ typedef struct
 
 int identcode(const char *s, size_t len);
 Token **scan(const char **s);
-void print(char *s, size_t size, int star, int quote, int scientific, int precision, Token **n);
+void print(char *s, size_t size, size_t chars, int quote, int scientific, int precision, Token **n);
 
 #ifdef __cplusplus
 }

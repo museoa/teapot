@@ -37,6 +37,7 @@ int getopt(int argc, char * const *argv, const char *optstring);
 #include "misc.h"
 #include "sc.h"
 #include "scanner.h"
+#include "utf8.h"
 #include "parser.h"
 #include "sheet.h"
 #include "wk1.h"
@@ -215,13 +216,13 @@ static int do_edit(Sheet *cursheet, Key c, const char *expr, int clocked)
       else if (c==K_BACKSPACE)
       {
         print(buf,sizeof(buf),0,1,getscientific(cursheet,cursheet->curx,cursheet->cury,cursheet->curz),-1,getcont(cursheet,cursheet->curx,cursheet->cury,cursheet->curz,clocked));
-        if (strlen(buf)) buf[strlen(buf)-1]='\0';
+        if (strlen(buf)) *mbspos(buf+strlen(buf),-1)='\0';
         s=buf+strlen(buf);
       }
       else if (c==K_DC)
       {
         print(buf,sizeof(buf),0,1,getscientific(cursheet,cursheet->curx,cursheet->cury,cursheet->curz),-1,getcont(cursheet,cursheet->curx,cursheet->cury,cursheet->curz,clocked));
-        memmove(buf,buf+1,strlen(buf));
+        memmove(buf,mbspos(buf,1),strlen(mbspos(buf,1))+1);
         s=buf;
       }
       else if (isalpha(c))
@@ -242,7 +243,7 @@ static int do_edit(Sheet *cursheet, Key c, const char *expr, int clocked)
       {
         int r;
 
-        x=s-buf;
+        x=mbslen(buf)-mbslen(s);
         if ((r=line_edit(cursheet,buf,sizeof(buf),clocked ? _("Clocked cell contents:") : _("Cell contents:"),&x,&offx))<0) return r;
         s=buf;
 		if (buf[0] == '"' && buf[strlen(buf)-1] != '"' && strlen(buf)+1 < sizeof(buf)) {
@@ -1727,6 +1728,7 @@ int main(int argc, char *argv[])
   char ln[1024];
   /*}}}*/
 
+  setlocale(LC_ALL, "");
   find_helpfile(helpfile, sizeof(helpfile), argv[0]);
 
   /* parse options */ /*{{{*/

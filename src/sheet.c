@@ -20,6 +20,7 @@
 #include "parser.h"
 #include "scanner.h"
 #include "sheet.h"
+#include "utf8.h"
 #include "xdr.h"
 
 /*}}}*/
@@ -610,14 +611,14 @@ char *geterror(Sheet *sheet, int x, int y, int z)
 }
 /*}}}*/
 /* printvalue    -- get ASCII representation of value */ /*{{{*/
-void printvalue(char *s, size_t size, int star, int quote, int scientific, int precision, Sheet *sheet, int x, int y, int z)
+void printvalue(char *s, size_t size, size_t chars, int quote, int scientific, int precision, Sheet *sheet, int x, int y, int z)
 {
   Token *tv[2],t;
 
   assert(sheet!=(Sheet*)0);
   t=getvalue(sheet,x,y,z); tv[0]=&t;
   tv[1]=(Token*)0;
-  print(s,size,star,quote,scientific,precision,tv);
+  print(s,size,chars,quote,scientific,precision,tv);
   tfree(&t);
 }
 /*}}}*/
@@ -1049,8 +1050,8 @@ const char *savetext(Sheet *sheet, const char *name, int x1, int y1, int z1, int
         {
           char *buf;
     
-          buf=malloc(size+1);
-          printvalue(buf,size+1,1,0,getscientific(sheet,x,y,z),getprecision(sheet,x,y,z),sheet,x,y,z);
+          buf=malloc(size*UTF8SZ+1);
+          printvalue(buf,size*UTF8SZ+1,size,0,getscientific(sheet,x,y,z),getprecision(sheet,x,y,z),sheet,x,y,z);
           adjust(getadjust(sheet,x,y,z),buf,size+1);
           if (fputs_close(buf,fp)==EOF)
           {
@@ -1104,8 +1105,8 @@ const char *savecsv(Sheet *sheet, const char *name, char sep, int x1, int y1, in
         {
           char *buf,*s;
     
-          buf=malloc(255+1);
-          printvalue(buf,255+1,1,0,getscientific(sheet,x,y,z),getprecision(sheet,x,y,z),sheet,x,y,z);
+          buf=malloc(255*UTF8SZ+1);
+          printvalue(buf,255*UTF8SZ+1,255,0,getscientific(sheet,x,y,z),getprecision(sheet,x,y,z),sheet,x,y,z);
           if (SHEET(sheet,x,y,z)->value.type==STRING && fputc_close('"',fp)==EOF)
           {
             free(buf);

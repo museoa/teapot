@@ -1,4 +1,3 @@
-/* #includes */ /*{{{C}}}*//*{{{*/
 #ifndef NO_POSIX_SOURCE
 #undef _POSIX_SOURCE
 #define _POSIX_SOURCE   1
@@ -11,7 +10,11 @@
 #include <assert.h>
 #include <ctype.h>
 #include <limits.h>
+#ifdef ENABLE_UTF8
+#include <cursesw.h>
+#else
 #include <curses.h>
+#endif
 #include <errno.h>
 #include <pwd.h>
 #include <termios.h>
@@ -39,28 +42,27 @@
 #include "main.h"
 #include "misc.h"
 #include "sheet.h"
-/*}}}*/
+#include "utf8.h"
 
 static Key wgetc(void);
 
-/* redraw       -- redraw whole screen */ /*{{{*/
+/* redraw       -- redraw whole screen */
 static void redraw(void)
 {
   (void)touchwin(curscr);
   (void)wrefresh(curscr);
 }
-/*}}}*/
 
-/* do_attribute   -- set cell attributes */ /*{{{*/
+
+/* do_attribute   -- set cell attributes */
 static int do_attribute(Sheet *cursheet)
 {
-  /* variables */ /*{{{*/
+
   MenuChoice mainmenu[5];
   MenuChoice adjmenu[9];
   int c;
-  /*}}}*/
-      
-  /* create menus */ /*{{{*/
+
+  /* create menus */
   adjmenu[0].str=mystrmalloc(_("lL)eft"));     adjmenu[0].c='\0';
   adjmenu[1].str=mystrmalloc(_("rR)ight"));    adjmenu[1].c='\0';
   adjmenu[2].str=mystrmalloc(_("cC)entered")); adjmenu[2].c='\0';
@@ -76,7 +78,7 @@ static int do_attribute(Sheet *cursheet)
   mainmenu[2].str=mystrmalloc(_("oLo)ck"));    mainmenu[2].c='\0';
   mainmenu[3].str=mystrmalloc(_("iI)gnore"));  mainmenu[3].c='\0';
   mainmenu[4].str=(char*)0;
-  /*}}}*/
+
   do
   {
     c = line_menu(cursheet->mark1x==-1 ? _("Cell attribute:") : _("Block attribute:"),mainmenu,0);
@@ -113,7 +115,8 @@ static int do_attribute(Sheet *cursheet)
     }
   } while (c == K_INVALID);
   if (c == KEY_CANCEL) c = K_INVALID;
-  /* free menus */ /*{{{*/
+
+  /* free menus */
   free(mainmenu[0].str);
   free(mainmenu[1].str);
   free(mainmenu[2].str);
@@ -126,16 +129,16 @@ static int do_attribute(Sheet *cursheet)
   free(adjmenu[5].str);
   free(adjmenu[6].str);
   free(adjmenu[7].str);
-  /*}}}*/
+
   return c;
 }
-/* do_file        -- file menu */ /*{{{*/
+/* do_file        -- file menu */
 static int do_file(Sheet *cursheet)
 {
-  /* variables */ /*{{{*/
+
   MenuChoice menu[4];
   int c;
-  /*}}}*/
+
   
   menu[0].str=mystrmalloc(_("lL)oad")); menu[0].c='\0';
   menu[1].str=mystrmalloc(_("sS)ave")); menu[1].c='\0';
@@ -160,9 +163,9 @@ static int do_file(Sheet *cursheet)
   free(menu[2].str);
   return c;
 }
-/*}}}*/
 
-/* do_shell       -- spawn a shell */ /*{{{*/
+
+/* do_shell       -- spawn a shell */
 static int do_shell(void)
 {
   pid_t pid;
@@ -176,10 +179,10 @@ static int do_shell(void)
   sigaction(SIGQUIT,&interrupt,(struct sigaction *)0);
   switch (pid=fork())
   {
-    /*      -1 */ /*{{{*/
+    /*      -1 */
     case -1: line_msg(_("Spawn sub shell"),strerror(errno)); break;
-    /*}}}*/
-    /*       0 */ /*{{{*/
+
+    /*       0 */
     case 0:
     {
       const char *shell;
@@ -202,7 +205,7 @@ static int do_shell(void)
       curs_set(1);
       refresh();
       reset_shell_mode();
-      write(1,"\n",1);
+      puts("\n");
       interrupt.sa_handler=SIG_DFL;
       sigaction(SIGINT,&interrupt,(struct sigaction *)0);
       sigaction(SIGQUIT,&interrupt,(struct sigaction *)0);
@@ -210,8 +213,8 @@ static int do_shell(void)
       exit(127);
       break;
     }
-    /*}}}*/
-    /* default */ /*{{{*/
+
+    /* default */
     default:
     {
       pid_t r;
@@ -227,13 +230,13 @@ static int do_shell(void)
       curs_set(0);
       redraw();
     }
-    /*}}}*/
+
   }
   return -1;
 }
-/*}}}*/
 
-/* do_block       -- block menu */ /*{{{*/
+
+/* do_block       -- block menu */
 static int do_block(Sheet *cursheet)
 {
   MenuChoice block[9];
@@ -276,14 +279,14 @@ static int do_block(Sheet *cursheet)
   free(block[7].str);
   return c;
 }
-/*}}}*/
+
 
 int show_menu(Sheet *cursheet)
 {
-  /* variables */ /*{{{*/
+
   MenuChoice menu[9];
   int c = K_INVALID;
-  /*}}}*/
+
 
   menu[0].str=mystrmalloc(_("aA)ttributes"));   menu[0].c='\0';
   menu[1].str=mystrmalloc(_("wW)idth")); menu[1].c='\0';
@@ -326,7 +329,7 @@ int show_menu(Sheet *cursheet)
   return c;
 }
 
-/* do_bg          -- background teapot */ /*{{{*/
+/* do_bg          -- background teapot */
 static void do_bg(void)
 {
   struct termios t;
@@ -338,7 +341,7 @@ static void do_bg(void)
     curs_set(1);
     refresh();
     reset_shell_mode();
-    write(1,"\n",1);
+    puts("\n");
     kill(getpid(),SIGSTOP);
     clear();
     refresh();
@@ -347,7 +350,7 @@ static void do_bg(void)
   }
   else line_msg((const char*)0,_("The susp character is undefined"));
 }
-/*}}}*/
+
 
 
 void display_main(Sheet *cursheet)
@@ -405,10 +408,10 @@ void redraw_cell(Sheet *sheet, int x, int y, int z)
 	redraw_sheet(sheet);
 }
 
-/* redraw_sheet -- draw a sheet with cell cursor */ /*{{{*/
+/* redraw_sheet -- draw a sheet with cell cursor */
 void redraw_sheet(Sheet *sheet)
 {
-  /* variables */ /*{{{*/
+
   int width,col,x,y,again;
   char pbuf[80];
   char *buf=malloc(128);
@@ -416,18 +419,17 @@ void redraw_sheet(Sheet *sheet)
   const char *label;
   char *err;
   char moveonly;
-  /*}}}*/
-  
-  /* asserts */ /*{{{*/
+
   assert(sheet!=(Sheet*)0);
   assert(sheet->curx>=0);
   assert(sheet->cury>=0);
   assert(sheet->curz>=0);
   assert(sheet->offx>=0);
   assert(sheet->offy>=0);
-  /*}}}*/
+
   (void)wattron(stdscr,DEF_NUMBER);
-  /* correct offsets to keep cursor visible */ /*{{{*/
+
+  /* correct offsets to keep cursor visible */
   while (shadowed(sheet,sheet->curx,sheet->cury,sheet->curz))
   {
     --(sheet->curx);
@@ -448,16 +450,15 @@ void redraw_sheet(Sheet *sheet)
       else if (sheet->curx-sheet->offx>=col) { ++sheet->offx; again=1; }
     }
   } while (again);
-  /*}}}*/
-  /* draw x numbers */ /*{{{*/
+
+  /* draw x numbers */
   for (width=4; width<sheet->maxx; ++width) mvwaddch(stdscr,0+sheet->oriy,sheet->orix+width,(chtype)(unsigned char)' ');
   for (width=4,x=sheet->offx; width<sheet->maxx; width+=col,++x)
   {
     col=columnwidth(sheet,x,sheet->curz);
     if (bufsz<(size_t)((col+1)<10 ? 10 : col+1)) buf=realloc(buf,bufsz=(size_t)((col+1)<10 ? 10 : col+1));
     sprintf(buf,"%d",x);
-    if ((int)strlen(buf)>col)
-    {
+    if (mbslen(buf)>col) {
       buf[col-1]='$';
       buf[col]='\0';
     }
@@ -466,15 +467,15 @@ void redraw_sheet(Sheet *sheet)
     if ((sheet->maxx-width)<col) buf[sheet->maxx-width]='\0';
     mvwaddstr(stdscr,sheet->oriy,sheet->orix+width,buf);
   }
-  /*}}}*/
-  /* draw y numbers */ /*{{{*/
+
+  /* draw y numbers */
   for (y=1; y<(sheet->maxy-1); ++y) (void)mvwprintw(stdscr,sheet->oriy+y,sheet->orix,"%-4d",y-1+sheet->offy);
-  /*}}}*/
-  /* draw z number */ /*{{{*/
+
+  /* draw z number */
   (void)mvwprintw(stdscr,sheet->oriy,sheet->orix,"%-4d",sheet->curz);
-  /*}}}*/
+
   (void)wattroff(stdscr,DEF_NUMBER);
-  /* draw elements */ /*{{{*/
+  /* draw elements */
   for (y=1; y<sheet->maxy-1; ++y) for (width=4,x=sheet->offx; width<sheet->maxx; width+=columnwidth(sheet,x,sheet->curz),++x)
   {
     size_t size,realsize,fill,cutoff;
@@ -491,8 +492,8 @@ void redraw_sheet(Sheet *sheet)
     {
       int invert;
       
-      if (bufsz<(size+1)) buf=realloc(buf,bufsz=(size+1));
-      printvalue(buf,size+1,1,quote,getscientific(sheet,realx,y-1+sheet->offy,sheet->curz),getprecision(sheet,realx,y-1+sheet->offy,sheet->curz),sheet,realx,y-1+sheet->offy,sheet->curz);
+      if (bufsz<(size*UTF8SZ+1)) buf=realloc(buf,bufsz=(size*UTF8SZ+1));
+      printvalue(buf,(size*UTF8SZ+1),size,quote,getscientific(sheet,realx,y-1+sheet->offy,sheet->curz),getprecision(sheet,realx,y-1+sheet->offy,sheet->curz),sheet,realx,y-1+sheet->offy,sheet->curz);
       adjust(getadjust(sheet,realx,y-1+sheet->offy,sheet->curz),buf,size+1);
       assert(size>=cutoff);
       if (width+((int)(size-cutoff))>=sheet->maxx)
@@ -511,43 +512,42 @@ void redraw_sheet(Sheet *sheet)
       if (x==sheet->curx && (y-1+sheet->offy)==sheet->cury) invert=(sheet->marking ? 1 : 1-invert);
       if (invert) (void)wattron(stdscr,DEF_CELLCURSOR);
       (void)mvwaddstr(stdscr,sheet->oriy+y,sheet->orix+width,buf+cutoff);
-      for (fill=strlen(buf+cutoff); fill<realsize; ++fill) (void)waddch(stdscr,(chtype)(unsigned char)' ');
+      for (fill=mbslen(buf+cutoff); fill<realsize; ++fill) (void)waddch(stdscr,(chtype)(unsigned char)' ');
       if (invert) (void)wattroff(stdscr,DEF_CELLCURSOR);
     }
   }
-  /*}}}*/
-  /* draw contents of current element */ /*{{{*/
-  if (bufsz<(unsigned int)(sheet->maxx+1)) buf=realloc(buf,bufsz=(sheet->maxx+1));
+
+  /* draw contents of current element */
+  if (bufsz<(unsigned int)(sheet->maxx*UTF8SZ+1)) buf=realloc(buf,bufsz=(sheet->maxx*UTF8SZ+1));
   label=getlabel(sheet,sheet->curx,sheet->cury,sheet->curz);
   assert(label!=(const char*)0);
   moveonly=sheet->moveonly ? *_("V") : *_("E");
   if (*label=='\0') sprintf(pbuf,"%c @(%d,%d,%d)=",moveonly,sheet->curx,sheet->cury,sheet->curz);
   else sprintf(pbuf,"%c @(%s)=",moveonly,label);
-  (void)strncpy(buf,pbuf,sheet->maxx+1);
-  buf[sheet->maxx]='\0';
+  (void)strncpy(buf,pbuf,bufsz);
+  buf[bufsz-1] = 0;
   if ((err=geterror(sheet,sheet->curx,sheet->cury,sheet->curz))!=(const char*)0)
   {
-    (void)strncpy(buf,err,width-strlen(buf));
+    (void)strncpy(buf, err, bufsz);
     free(err);
-    buf[sheet->maxx]='\0';
   }
   else
   {
-    print(buf+strlen(buf),sheet->maxx+1-strlen(buf),0,1,getscientific(sheet,sheet->curx,sheet->cury,sheet->curz),-1,getcont(sheet,sheet->curx,sheet->cury,sheet->curz,0));
-    if (getcont(sheet,sheet->curx,sheet->cury,sheet->curz,1) && strlen(buf)<(size_t)(sheet->maxx+1-4))
+    print(buf+strlen(buf),bufsz-strlen(buf),0,1,getscientific(sheet,sheet->curx,sheet->cury,sheet->curz),-1,getcont(sheet,sheet->curx,sheet->cury,sheet->curz,0));
+    if (getcont(sheet,sheet->curx,sheet->cury,sheet->curz,1) && mbslen(buf) < (size_t)(sheet->maxx+1-4))
     {
       strcat(buf," -> ");
-      print(buf+strlen(buf),sheet->maxx+1-strlen(buf),0,1,getscientific(sheet,sheet->curx,sheet->cury,sheet->curz),-1,getcont(sheet,sheet->curx,sheet->cury,sheet->curz,1));
+      print(buf+strlen(buf),bufsz-strlen(buf),0,1,getscientific(sheet,sheet->curx,sheet->cury,sheet->curz),-1,getcont(sheet,sheet->curx,sheet->cury,sheet->curz,1));
     }
   }
+  *mbspos(buf, sheet->maxx) = 0;
   (void)mvwaddstr(stdscr,sheet->oriy+sheet->maxy-1,sheet->orix,buf);
-  for (col=strlen(buf); col<sheet->maxx; ++col) (void)waddch(stdscr,' ');
-  free(buf);
-  /*}}}*/
-}
-/*}}}*/
+  for (col=mbslen(buf); col<sheet->maxx; ++col) (void)waddch(stdscr,' ');
 
-/* line_file    -- line editor function for file name entry */ /*{{{*/
+}
+
+
+/* line_file    -- line editor function for file name entry */
 const char *line_file(const char *file, const char *pattern, const char *title, int create)
 {
 	static char buf[PATH_MAX] = "";
@@ -560,274 +560,233 @@ const char *line_file(const char *file, const char *pattern, const char *title, 
 	if (rc < 0) return NULL;
 	return buf;
 }
-/*}}}*/
 
-/* line_edit    -- line editor function */ /*{{{*/
+
+/* line_edit    -- line editor function */
 int line_edit(Sheet *sheet, char *buf, size_t size, const char *prompt, size_t *x, size_t *offx)
 {
-  /* variables */ /*{{{*/
-  size_t promptlen;
-  int i,mx,my,insert;
-  chtype c;
-  /*}}}*/
+	size_t promptlen;
+	char *src, *dest;
+	int i,mx,my,insert;
+	chtype c;
 
-  /* asserts */ /*{{{*/
-  assert(buf!=(char*)0);
-  assert(prompt!=(char*)0);  
-  assert(x!=(size_t*)0);  
-  assert(offx!=(size_t*)0);  
-  /*}}}*/
-  (void)curs_set(1);
-  mx=COLS;
-  my=LINES;
-  promptlen=strlen(prompt)+1;
-  (void)mvwaddstr(stdscr,LINES-1,0,prompt); (void)waddch(stdscr,(chtype)(unsigned char)' ');
-  insert=1;
-  do
-  {
-    /* correct offx to cursor stays visible */ /*{{{*/
-    if (*x<*offx) *offx=*x;
-    if ((*x-*offx)>(mx-promptlen-1)) *offx=*x-mx+promptlen+1;
-    /*}}}*/
-    /* display buffer */ /*{{{*/
-    (void)wmove(stdscr,LINES-1,(int)promptlen);
-    for (i=promptlen; buf[i-promptlen+*offx]!='\0' && i<COLS; ++i) (void)waddch(stdscr,(chtype)(unsigned char)(buf[i-promptlen+*offx]));
-    if (i!=mx) (void)wclrtoeol(stdscr);
-    /*}}}*/
-    /* show cursor */ /*{{{*/
-    (void)wmove(stdscr,LINES-1,(int)(*x-*offx+promptlen));
-    /*}}}*/
-    c=wgetc();
-    if (sheet!=(Sheet*)0 && sheet->moveonly) /* move around in sheet */ /*{{{*/
-    switch (c)
-    {
-      /*      ^o -- switch back to line editor */ /*{{{*/
-      case '\017': sheet->moveonly=0; break;
-      /*}}}*/
-      /*       v -- insert value of current cell */ /*{{{*/
-      case 'v':
-      {
-        /* variables */ /*{{{*/
-        char valbuf[1024];
-        /*}}}*/
+	assert(buf!=(char*)0);
+	assert(prompt!=(char*)0);  
+	assert(x!=(size_t*)0);  
+	assert(offx!=(size_t*)0);  
 
-        printvalue(valbuf,sizeof(valbuf),0,1,getscientific(sheet,sheet->curx,sheet->cury,sheet->curz),-1,sheet,sheet->curx,sheet->cury,sheet->curz);
-        if (strlen(buf)+strlen(valbuf)>=(size-1)) break;
-        (void)memmove(buf+*x+strlen(valbuf),buf+*x,strlen(buf)-*x+strlen(valbuf));
-        (void)memcpy(buf+*x,valbuf,strlen(valbuf));
-        (*x)+=strlen(valbuf);
-        break;
-      }
-      /*}}}*/
-      /*       p -- insert position of current cell */ /*{{{*/
-      case 'p':
-      {
-        /* variables */ /*{{{*/
-        char valbuf[1024];
-        /*}}}*/
+	(void)curs_set(1);
+	mx=COLS;
+	my=LINES;
+	promptlen=mbslen(prompt)+1;
+	(void)mvwaddstr(stdscr,LINES-1,0,prompt); (void)waddch(stdscr,(chtype)(unsigned char)' ');
+	insert=1;
 
-        sprintf(valbuf,"(%d,%d,%d)",sheet->curx,sheet->cury,sheet->curz);
-        if (strlen(buf)+strlen(valbuf)>=(size-1)) break;
-        (void)memmove(buf+*x+strlen(valbuf),buf+*x,strlen(buf)-*x+strlen(valbuf));
-        (void)memcpy(buf+*x,valbuf,strlen(valbuf));
-        (*x)+=strlen(valbuf);
-        break;
-      }
-      /*}}}*/
-      /* default -- move around in sheet */ /*{{{*/
-      default: (void)do_sheetcmd(sheet,c,1); redraw_sheet(sheet); break;
-      /*}}}*/
-    }
-    /*}}}*/
-    else /* edit line */ /*{{{*/
-    switch (c)
-    {
-      /* UP */ /*{{{*/
-      case K_UP: break;
-      /*}}}*/
-      /* LEFT */ /*{{{*/
-      case K_LEFT: if (*x>0) --(*x); break;
-      /*}}}*/
-      /* RIGHT */ /*{{{*/
-      case K_RIGHT: if (*x<strlen(buf)) ++(*x); break;
-      /*}}}*/
-      /* BACKSPACE      */ /*{{{*/
-      case K_BACKSPACE:
-      {
-        if (*x>0)
-        {
-          memmove(buf+*x-1,buf+*x,strlen(buf+*x)+1);
-          --(*x);
-        }
-        break;
-      }
-      /*}}}*/
-      /* C-i -- file name completion */ /*{{{*/
-      case '\t':
-      {
-        char *s,*r,ch;
-        
-        ch=buf[*x];
-        buf[*x]='\0';
-        if ((r=s=completefile(buf)))
-        {
-          buf[*x]=ch;
-          for (; *r; ++r)
-          {
-            if (strlen(buf)==(size-1)) break;
-            memmove(buf+*x+1,buf+*x,strlen(buf)-*x+1);
-            *(buf+*x)=*r;
-            ++(*x);
-          }  
-          free(s);
-        }
-        else buf[*x]=ch;
-        break;
-      }
-      /*}}}*/
-      /* DC */ /*{{{*/
-      case K_DC:
-      {
-        if (*x<strlen(buf)) memmove(buf+*x,buf+*x+1,strlen(buf+*x));
-        break;
-      }
-      /*}}}*/
-      /* HOME */ /*{{{*/
-      case K_HOME:
-      {
-        *x=0;
-        break;
-      }  
-      /*}}}*/
-      /* END */ /*{{{*/
-      case K_END:
-      {
-        *x=strlen(buf);
-        break;
-      }  
-      /*}}}*/
-      /* IC */ /*{{{*/
-      case KEY_IC:
-      {
-        insert=1-insert;
-        break;
-      }  
-      /*}}}*/
-      /* EIC */ /*{{{*/
-      case KEY_EIC:
-      {
-        insert=0;
-        break;
-      }
-      /*}}}*/
-      /* control t */ /*{{{*/
-      case '\024':
-      {
-        if (*x>0 && (strlen(buf)<(size-1) || *x!=strlen(buf)))
-        {
-          char c;
+	do {
+		/* correct offx to cursor stays visible */
+		if (*x<*offx) *offx=*x;
+		if ((*x-*offx)>(mx-promptlen-1)) *offx=*x-mx+promptlen+1;
 
-          c=*(buf+*x);
-          *(buf+*x)=*(buf+*x-1);
-          if (c=='\0')
-          {
-            c=' ';
-            *(buf+*x+1)='\0';
-          }
-          *(buf+*x-1)=c;
-          ++(*x);
-        }
-        break;
-      }
-      /*}}}*/
-      /* control backslash */ /*{{{*/
-      case '\034':
-      {
-        int curx,level;
+		/* display buffer */
+		(void)wmove(stdscr,LINES-1,(int)promptlen);
+		src = mbspos(buf, *offx);
+		dest = mbspos(buf, *offx+COLS-promptlen);
+		for (; *src && src < dest; src++) (void)waddch(stdscr,(chtype)(unsigned char)(*src));
+		if (i!=mx) (void)wclrtoeol(stdscr);
 
-        curx=*x;
-        level=1;
-        switch (buf[curx])
-        {
-          /* (    */ /*{{{*/
-          case '(':
-          {
-            if (buf[curx]) ++curx;
-            while (buf[curx]!='\0' && level>0) 
-            {
-              if (buf[curx]==')') --level;
-              else if (buf[curx]=='(') ++level;
-              if (level) ++curx;
-            }
-            if (level==0) *x=curx;
-            break;
-          }
-          /*}}}*/
-          /* ) */ /*{{{*/
-          case ')':
-          {
-            if (curx>0) --curx;
-            while (curx>0 && level>0) 
-            {
-              if (buf[curx]==')') ++level;
-              else if (buf[curx]=='(') --level;
-              if (level) --curx;
-            }
-            if (level==0) *x=curx;
-            break;
-          }
-          /*}}}*/
-        }   
-        break;
-      }
-      /*}}}*/
-      /* DL */ /*{{{*/
-      case KEY_DL:
-      {
-        *(buf+*x)='\0';
-        break;
-      }
-      /*}}}*/
-      /* control o */ /*{{{*/
-      case '\017': if (sheet!=(Sheet*)0) sheet->moveonly=1; break;
-      /*}}}*/
-      /* default */ /*{{{*/
-      default:
-      {
-        if (((unsigned)c)<' ' || ((unsigned)c)>=256 || strlen(buf)==(size-1)) break;
-        if (insert) memmove(buf+*x+1,buf+*x,strlen(buf)-*x+1);
-        else if (*x==strlen(buf)) *(buf+*x+1)='\0';
-        *(buf+*x)=(char)c;
-        ++(*x);
-        break;
-      }
-      /*}}}*/
-    }
-    /*}}}*/
-  } while (c!=K_ENTER && c!=KEY_CANCEL && (c!=K_UP || (sheet!=(Sheet*)0 && sheet->moveonly)));
-  if (sheet) sheet->moveonly=0;
-  (void)curs_set(0);
-  (void)wmove(stdscr,LINES-1,0);
-  (void)wclrtoeol(stdscr);
-  switch (c)
-  {
-    case KEY_CANCEL: return -1;
-    case K_UP: return -2;
-    default: return 0;
-  }
+		/* show cursor */
+		(void)wmove(stdscr,LINES-1,(int)(*x-*offx+promptlen));
+
+		src = dest = mbspos(buf, *x);
+		c=wgetc();
+		if (sheet!=(Sheet*)0 && sheet->moveonly) switch (c) {
+		/*      ^o -- switch back to line editor */
+		case '\t':
+		case '\017': sheet->moveonly=0; break;
+
+		/*       v -- insert value of current cell */
+		case 'v': {
+			char valbuf[1024];
+
+			printvalue(valbuf,sizeof(valbuf),0,1,getscientific(sheet,sheet->curx,sheet->cury,sheet->curz),-1,sheet,sheet->curx,sheet->cury,sheet->curz);
+			if (strlen(buf)+strlen(valbuf) >= (size-1)) break;
+			(void)memmove(src+strlen(valbuf), src, strlen(src));
+			(void)memcpy(src, valbuf, strlen(valbuf));
+			(*x) += mbslen(valbuf);
+			break;
+		}
+
+		/*       p -- insert position of current cell */
+		case 'p': {
+			char valbuf[1024];
+
+			sprintf(valbuf,"(%d,%d,%d)",sheet->curx,sheet->cury,sheet->curz);
+			if (strlen(buf)+strlen(valbuf) >= (size-1)) break;
+			(void)memmove(src+strlen(valbuf), src, strlen(src));
+			(void)memcpy(src, valbuf, strlen(valbuf));
+			(*x) += mbslen(valbuf);
+			break;
+		}
+
+		/* default -- move around in sheet */
+		default:
+			(void)do_sheetcmd(sheet,c,1);
+			redraw_sheet(sheet);
+			break;
+
+		} else switch (c) {
+		/* UP */
+		case K_UP: break;
+
+		/* LEFT */
+		case K_LEFT: if (*x > 0) (*x)--; break;
+
+		/* RIGHT */
+		case K_RIGHT: if (*x < mbslen(buf)) (*x)++; break;
+
+		/* BACKSPACE      */
+		case K_BACKSPACE: 
+			if (*x > 0) {
+				memmove(mbspos(src, -1), src, strlen(src)+1);
+				(*x)--;
+			}
+			break;
+
+		/* C-i -- file name completion */
+		case '\t':
+			completefile(buf, src, size);
+			break;
+
+		/* DC */
+		case K_DC:
+			src = mbspos(dest, 1);
+			if (*x < strlen(buf)) memmove(dest, src, strlen(src)+1);
+			break;
+
+		/* HOME */
+		case K_HOME:
+			*x = 0;
+			break;
+
+		/* END */
+		case K_END:
+			*x = mbslen(buf);
+			break;
+
+		/* IC */
+		case KEY_IC:
+			insert=1-insert;
+			break;
+
+		/* EIC */
+		case KEY_EIC:
+			insert=0;
+			break;
+
+		/* control t */
+		case '\024':
+			if (*x > 0) {
+				char c, *end;
+
+				dest = mbspos(src, -1);
+				if (*x == mbslen(buf)) {
+					src = dest;
+					dest = mbspos(src, -1);
+					(*x)--;
+				}
+				end = mbspos(src, 1);
+
+				while (src != end) {
+					c = *src;
+					memmove(dest+1, dest, src-dest);
+					*dest = c;
+					src++;
+					dest++;
+				}
+				(*x)++;
+			}
+			break;
+
+		/* control backslash */
+		case '\034': {
+			int level;
+			char open = 0, close = 0, dir = 1;
+
+			switch (*dest) {
+			case ')': dir = -1;
+			case '(': open = '('; close = ')'; break;
+			case '}': dir = -1;
+			case '{': open = '{'; close = '}'; break;
+			case ']': dir = -1;
+			case '[': open = '['; close = ']'; break;
+			default: break;
+			}
+
+			level = dir;
+			while (*dest && level) {
+				dest += dir;
+				if (*dest == open) level--;
+				else if (*dest == close) level++;
+			}
+			if (!level) *x = mbslen(buf)-mbslen(dest);
+			break;
+		}
+
+		/* DL */
+		case KEY_DL:
+			*src = '\0';
+			break;
+
+		/* control o */
+		case '\017':
+			if (sheet!=(Sheet*)0) sheet->moveonly=1;
+			break;
+
+		/* default */
+		default:
+			if (((unsigned int)c) < ' ' || ((unsigned int)c) >= 256) break;
+			if (strlen(buf) >= (size-1)) {
+				if (is_mbcont(c)) {
+					dest = mbspos(src, -1);
+					memmove(dest, src, strlen(src)+1);
+				}
+				break;
+			}
+			if (insert || is_mbcont(c)) memmove(src+1, src, strlen(src)+1);
+			else {
+				if (is_mbchar(*src)) memmove(src+1, mbspos(src, 1), strlen(mbspos(src, 1))+1);
+				if (!*src) *(src+1) = '\0';
+			}
+			*src = (char)c;
+			if (!is_mbcont(c)) (*x)++;
+			break;
+		}
+
+	} while (c != K_ENTER && c != KEY_CANCEL && (c != K_UP || (sheet!=(Sheet*)0 && sheet->moveonly)));
+
+	if (sheet) sheet->moveonly=0;
+	(void)curs_set(0);
+	(void)wmove(stdscr,LINES-1,0);
+	(void)wclrtoeol(stdscr);
+
+	switch (c) {
+		case KEY_CANCEL: return -1;
+		case K_UP: return -2;
+		default: return 0;
+	}
 }
-/*}}}*/
-/* line_ok        -- one line yes/no menu */ /*{{{*/
+
+/* line_ok        -- one line yes/no menu */
 int line_ok(const char *prompt, int curx)
 {
-  /* variables */ /*{{{*/
+
   MenuChoice menu[3];
   int result;
-  /*}}}*/
 
-  /* asserts */ /*{{{*/
+
+
   assert(curx==0 || curx==1);
-  /*}}}*/
+
   menu[0].str=mystrmalloc(_("nN)o")); menu[0].c='\0';
   menu[1].str=mystrmalloc(_("yY)es")); menu[1].c='\0';
   menu[2].str=(char*)0;
@@ -836,9 +795,9 @@ int line_ok(const char *prompt, int curx)
   free(menu[1].str);
   return (result);
 }
-/*}}}*/
-/* line_menu    -- one line menu */ /*{{{*/
-/* Notes */ /*{{{*/
+
+/* line_menu    -- one line menu */
+/* Notes */
 /*
 
 The choices are terminated by the last element having a (const char*)str
@@ -847,58 +806,58 @@ the c field.  Use a space as first character of str, if you only want the
 function key to work.
 
 */
-/*}}}*/
+
 int line_menu(const char *prompt, const MenuChoice *choice, int curx)
 {
-  /* variables */ /*{{{*/
+
   int maxx,x,width,offx;
   chtype c;
   size_t promptlen;
-  /*}}}*/
 
-  /* asserts */ /*{{{*/
+
+
   assert(prompt!=(const char*)0);
   assert(choice!=(const MenuChoice*)0);
   assert(curx>=0);
-  /*}}}*/
+
   mvwaddstr(stdscr,LINES-1,0,prompt);
-  promptlen=strlen(prompt);
+  promptlen = mbslen(prompt);
   for (maxx=0; (choice+maxx)->str!=(const char*)0; ++maxx);
   offx=0;
   do
   {
     (void)wmove(stdscr,LINES-1,(int)promptlen);
-    /* correct offset so choice is visible */ /*{{{*/
+    /* correct offset so choice is visible */
     if (curx<=offx) offx=curx;
     else do
     {
-      for (width=promptlen,x=offx; x<maxx && width+((int)strlen((choice+x)->str+1))+1<=COLS; width+=((int)(strlen((choice+x)->str)))+1,++x);
+      for (width=promptlen,x=offx; x<maxx && width+((int)mbslen((choice+x)->str+1))+1<=COLS; width+=((int)(mbslen((choice+x)->str)))+1,++x);
       --x;
       if (x<curx) ++offx;
     } while (x<curx);
-    /*}}}*/
-    /* show visible choices */ /*{{{*/
-    for (width=promptlen,x=offx; x<maxx && width+((int)strlen((choice+x)->str+1))+1<=COLS; width+=strlen((choice+x)->str+1)+1,++x)
+
+    /* show visible choices */
+    for (width=promptlen,x=offx; x<maxx && width+((int)mbslen((choice+x)->str+1))+1<=COLS; width+=mbslen((choice+x)->str+1)+1,++x)
     {
       (void)waddch(stdscr,(chtype)(unsigned char)' ');
       if (x==curx) (void)wattron(stdscr,DEF_MENU);
       (void)waddstr(stdscr,(char*)(choice+x)->str+1);
       if (x==curx) (void)wattroff(stdscr,DEF_MENU);
     }
-    /*}}}*/
+
     if (width<COLS) (void)wclrtoeol(stdscr);
     switch (c=wgetc())
     {
-      /* KEY_LEFT              -- move to previous item */ /*{{{*/
+      /* KEY_LEFT              -- move to previous item */
       case K_BACKSPACE:
       case K_LEFT: if (curx>0) --curx; else curx=maxx-1; break;
-      /*}}}*/
-      /* Space, Tab, KEY_RIGHT -- move to next item */ /*{{{*/
+
+      /* Space, Tab, KEY_RIGHT -- move to next item */
       case ' ':
       case '\t':
       case K_RIGHT: if (curx<(maxx-1)) ++curx; else curx=0; break;
-      /*}}}*/
-      /* default               -- search choice keys */ /*{{{*/
+
+      /* default               -- search choice keys */
       default:
       {
         int i;
@@ -912,7 +871,7 @@ int line_menu(const char *prompt, const MenuChoice *choice, int curx)
           }
         }
       }
-      /*}}}*/
+
     }
   }
   while (c!=K_ENTER && c!=K_DOWN && c!=KEY_CANCEL && c!=K_UP);
@@ -925,18 +884,18 @@ int line_menu(const char *prompt, const MenuChoice *choice, int curx)
     default: return curx;
   }
 }
-/*}}}*/
-/* line_msg     -- one line message which will be cleared by someone else */ /*{{{*/
+
+/* line_msg     -- one line message which will be cleared by someone else */
 void line_msg(const char *prompt, const char *msg)
 {
-  /* variables */ /*{{{*/
-  int width;
-  /*}}}*/
 
-  /* asserts */ /*{{{*/
+  int width;
+
+
+
   assert(msg!=(const char*)0);
   if (!*msg) msg = _("Use F0, F10 or / for menu");
-  /*}}}*/
+
   if (!batch)
   {
     width=1;
@@ -957,7 +916,7 @@ void line_msg(const char *prompt, const char *msg)
     exit(1);
   }
 }
-/*}}}*/
+
 
 void show_text(const char *text)
 {
@@ -973,7 +932,7 @@ void show_text(const char *text)
       end = strchr(++text, '\n');
       if (*text == '\f') break;
       if (end) *end = 0;
-      (void)move(i,(COLS-strlen(text))/2);
+      (void)move(i,(COLS-mbslen(text))/2);
       (void)addstr(text);
       text = end;
     }
@@ -985,7 +944,7 @@ void show_text(const char *text)
   free(stripped);
 }
 
-/* keypressed   -- get keypress, if there is one */ /*{{{*/
+/* keypressed   -- get keypress, if there is one */
 int keypressed(void)
 {
   (void)nodelay(stdscr,TRUE);
@@ -1000,142 +959,142 @@ int keypressed(void)
     return 1;
   }
 }
-/*}}}*/
 
-/* wgetc */ /*{{{*/
+
+/* wgetc */
 static Key wgetc(void)
 {
-  /* variables */ /*{{{*/
+
   chtype c;
-  /*}}}*/
+
 
   doupdate();
   refresh();
   switch (c=wgetch(stdscr))
   {
-    /* LEFT */ /*{{{*/
+    /* LEFT */
     case KEY_LEFT:
     case '\02': return K_LEFT;
-    /*}}}*/
-    /* RIGHT */ /*{{{*/
+
+    /* RIGHT */
     case KEY_RIGHT:
     case '\06': return K_RIGHT;
-    /*}}}*/
-    /* UP */ /*{{{*/
+
+    /* UP */
     case KEY_UP:
     case '\020': return K_UP;
-    /*}}}*/
-    /* DOWN */ /*{{{*/
+
+    /* DOWN */
     case KEY_DOWN:
     case '\016': return K_DOWN;
-    /*}}}*/
-    /* BACKSPACE */ /*{{{*/
+
+    /* BACKSPACE */
     case KEY_BACKSPACE:
     case '\010': return K_BACKSPACE;
-    /*}}}*/
-    /* DC */ /*{{{*/
+
+    /* DC */
     case KEY_DC:
     case '\04':
     case '\177': return K_DC;
-    /*}}}*/
-    /* CANCEL */ /*{{{*/
+
+    /* CANCEL */
     case '\03':
     case '\07': return KEY_CANCEL;
-    /*}}}*/
-    /* ENTER */ /*{{{*/
+
+    /* ENTER */
     case KEY_ENTER:
     case '\r':
     case '\n': return K_ENTER;
-    /*}}}*/
-    /* HOME */ /*{{{*/
+
+    /* HOME */
     case KEY_HOME:
     case '\01': return K_HOME;
-    /*}}}*/
-    /* END */ /*{{{*/
+
+    /* END */
     case KEY_END:
     case '\05': return K_END;
-    /*}}}*/
-    /* DL */ /*{{{*/
+
+    /* DL */
     case '\013': return KEY_DL;
-    /*}}}*/
-    /* NPAGE */ /*{{{*/
+
+    /* NPAGE */
     case KEY_NPAGE:
     case '\026': return K_NPAGE;
-    /*}}}*/
-    /* PPAGE */ /*{{{*/
+
+    /* PPAGE */
     case KEY_PPAGE: return K_PPAGE;
-    /*}}}*/
-    /* Control Y, copy */ /*{{{*/
+
+    /* Control Y, copy */
     case '\031': return K_COPY;
-    /*}}}*/
-    /* Control R, recalculate sheet */ /*{{{*/
+
+    /* Control R, recalculate sheet */
     case '\022': return K_RECALC;
-    /*}}}*/
-    /* Control S, clock sheet */ /*{{{*/
+
+    /* Control S, clock sheet */
     case '\023': return K_CLOCK;
-    /*}}}*/
-    /* Control X, get one more key */ /*{{{*/
+
+    /* Control X, get one more key */
     case '\030':
     {
       switch (wgetch(stdscr))
       {
-        /* C-x <   -- BPAGE */ /*{{{*/
+        /* C-x <   -- BPAGE */
         case KEY_PPAGE:
         case '<': return K_BPAGE;
-        /*}}}*/
-        /* C-x >   -- FPAGE */ /*{{{*/
+
+        /* C-x >   -- FPAGE */
         case KEY_NPAGE:
         case '>': return K_FPAGE;
-        /*}}}*/
-        /* C-x C-c -- QUIT */ /*{{{*/
+
+        /* C-x C-c -- QUIT */
         case '\03': return K_QUIT;
-        /*}}}*/
-        /* C-x C-s -- SAVE */ /*{{{*/
+
+        /* C-x C-s -- SAVE */
         case '\023': return K_SAVE;
-        /*}}}*/
-        /* C-x C-r -- LOAD */ /*{{{*/
+
+        /* C-x C-r -- LOAD */
         case '\022': return K_LOAD;
-        /*}}}*/
-        /* default -- INVALID, general invalid value */ /*{{{*/
+
+        /* default -- INVALID, general invalid value */
         default: return K_INVALID;
-        /*}}}*/
+
       }
     }
-    /*}}}*/
-    /* ESC, get one more key */ /*{{{*/
+
+    /* ESC, get one more key */
     case '\033':
     {
       switch (wgetch(stdscr))
       {
-        /* M-v     -- PPAGE */ /*{{{*/
+        /* M-v     -- PPAGE */
         case 'v': return K_PPAGE;
-        /*}}}*/
-        /* M-Enter -- MENTER */ /*{{{*/
+
+        /* M-Enter -- MENTER */
         case KEY_ENTER:
         case '\r':
         case '\n': return K_MENTER;
-        /*}}}*/
-        /* M-z     -- SAVEQUIT */ /*{{{*/
+
+        /* M-z     -- SAVEQUIT */
         case 'z': return K_SAVEQUIT;
-        /*}}}*/
-        /* default -- INVALID, general invalid value */ /*{{{*/
+
+        /* default -- INVALID, general invalid value */
         default: return K_INVALID;
-        /*}}}*/
+
       }
     }
-    /*}}}*/
-    /* _("Load sheet file format:") */ /*{{{*/
+
+    /* _("Load sheet file format:") */
     case KEY_F(2): return K_LOADMENU;
-    /*}}}*/
-    /* _("Save sheet file format:") */ /*{{{*/
+
+    /* _("Save sheet file format:") */
     case KEY_F(3): return K_SAVEMENU;
-    /*}}}*/
-    /* default */ /*{{{*/
+
+    /* default */
     default: return c;
-    /*}}}*/
+
   }
 }
-/*}}}*/
+
 
 void find_helpfile(char *buf, int size, const char *argv0)
 {

@@ -2,12 +2,13 @@ cmake_minimum_required(VERSION 2.6)
 project(Teapot)
 
 set(Teapot_VERSION_MAJOR 2)
-set(Teapot_VERSION_MINOR 1)
+set(Teapot_VERSION_MINOR 2)
 set(Teapot_VERSION_PATCH 0)
 
 option(ENABLE_HELP "Enable built-in documentation" ON)
+option(ENABLE_UTF8 "Enable UTF-8 support" ON)
 
-add_library(teapotlib complete.c context.c csv.c eval.c func.c html.c latex.c main.c misc.c parser.c sc.c scanner.c sheet.c wk1.c xdr.c)
+add_library(teapotlib context.c csv.c eval.c func.c html.c latex.c main.c misc.c parser.c sc.c scanner.c sheet.c utf8.c wk1.c xdr.c)
 
 find_library(LIB_PORTABLEXDR portablexdr)
 if (NOT LIB_PORTABLEXDR)
@@ -15,12 +16,24 @@ if (NOT LIB_PORTABLEXDR)
 endif ()
 
 find_package(Curses)
+if (CURSES_FOUND AND ENABLE_UTF8)
+	find_library(LIB_CURSESW ncursesw)
+    if (LIB_CURSESW)
+		set(teapot_DEB_DEPENDS ", libncursesw5 (>= 5.6+20071006-3)") 
+		set(CURSES_CURSES_LIBRARY ${LIB_CURSESW})
+	else ()
+		set(ENABLE_UTF8 OFF)
+		set(teapot_DEB_DEPENDS ", libncurses5 (>= 5.6+20071006-3)") 
+	endif ()
+elseif (CURSES_FOUND)
+	set(teapot_DEB_DEPENDS ", libncurses5 (>= 5.6+20071006-3)") 
+endif ()
+
 if (CURSES_FOUND)
 	include_directories("${CURSES_INCLUDE_DIR}")
-	add_executable(teapot display.c)
+	add_executable(teapot display.c complete.c)
 	target_link_libraries(teapot teapotlib m ${CURSES_CURSES_LIBRARY} ${LIB_PORTABLEXDR})
 	install(TARGETS teapot DESTINATION bin)
-	set(teapot_DEB_DEPENDS ", libncurses5 (>= 5.6+20071006-3)") 
 endif ()
 
 find_package(FLTK NO_MODULE)
@@ -80,7 +93,7 @@ install(FILES COPYING README DESTINATION share/doc/teapot)
 add_custom_target(dist
 	COMMAND ${CMAKE_COMMAND} -E remove_directory teapot-${Teapot_VERSION_MAJOR}.${Teapot_VERSION_MINOR}.${Teapot_VERSION_PATCH}
 	COMMAND ${CMAKE_COMMAND} -E make_directory teapot-${Teapot_VERSION_MAJOR}.${Teapot_VERSION_MINOR}.${Teapot_VERSION_PATCH}
-	COMMAND cp -r ${CMAKE_CURRENT_SOURCE_DIR}/doc ${CMAKE_CURRENT_SOURCE_DIR}/examples ${CMAKE_CURRENT_SOURCE_DIR}/[A-Z]* ${CMAKE_CURRENT_SOURCE_DIR}/*.*[a-z] teapot-${Teapot_VERSION_MAJOR}.${Teapot_VERSION_MINOR}.${Teapot_VERSION_PATCH}
+	COMMAND cp -r ${CMAKE_CURRENT_SOURCE_DIR}/doc ${CMAKE_CURRENT_SOURCE_DIR}/examples ${CMAKE_CURRENT_SOURCE_DIR}/[A-Z]*[A-Z] ${CMAKE_CURRENT_SOURCE_DIR}/*.*[a-z] teapot-${Teapot_VERSION_MAJOR}.${Teapot_VERSION_MINOR}.${Teapot_VERSION_PATCH}
 	COMMAND tar czf teapot-${Teapot_VERSION_MAJOR}.${Teapot_VERSION_MINOR}.${Teapot_VERSION_PATCH}.tar.gz teapot-${Teapot_VERSION_MAJOR}.${Teapot_VERSION_MINOR}.${Teapot_VERSION_PATCH}
 )
 
@@ -88,6 +101,8 @@ configure_file("${PROJECT_SOURCE_DIR}/config.h.in" "${PROJECT_BINARY_DIR}/config
 include_directories("${PROJECT_BINARY_DIR}")
 include_directories("${PROJECT_SOURCE_DIR}")
 
+set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE ARCH-NOTFOUND CACHE ".deb Architecture" STRING)
+set(CPACK_RPM_PACKAGE_ARCHITECTURE ARCH-NOTFOUND CACHE ".rpm Architecture" STRING)
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Table Editor And Planner, Or: Teapot!")
 set(CPACK_PACKAGE_DESCRIPTION "A three-dimensional spreadsheet specialized in advanced calculations. Comes in GUI (FLTK) and console (curses) flavours.")
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README")

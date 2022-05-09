@@ -6,6 +6,7 @@
 #define HELPFILE "@HELPFILE@"
 
 #cmakedefine ENABLE_HELP
+#cmakedefine ENABLE_UTF8
 #cmakedefine CURSES_HAVE_CURSES_H
 #cmakedefine CURSES_HAVE_NCURSES_H
 #cmakedefine CURSES_HAVE_NCURSES_NCURSES_H

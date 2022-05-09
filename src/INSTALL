@@ -15,14 +15,17 @@ to install it, as FLTK is so small that statically linking it (the default)
 is safe. If you don't install FLTK, set the path to your FLTK directory
  using ccmake.
 
-For the console version, you will have to make sure your system
+For the console version you will have to make sure your system
 offers a SYSV compatible curses.  You can check that you do by looking
 at its include file curses.h; it should e.g. contain KEY_ macros.  If you
 have a system which contains BSD and SYSV curses libraries, make sure (by
--I CPPFLAGS) that the SYSV curses.h is used.  This particularly applies
-if you use the SYSV curses clone ncurses.  If you do so, further make
-sure that you use version 4 or higher.  Otherwise teapot may not work
-correctly and you get corrupted screen output.  Since version 4 makes
-it easy to be built as shared (ELF) library, this can reduce the size
-of the teapot binary considerably.
+checking the cmake variables) that the SYSV curses.h is used.  This
+particularly applies if you use the SYSV curses clone ncurses.  If you do
+so, further make sure that you use version 4 or higher.  Otherwise teapot
+may not work correctly and you get corrupted screen output.  Since version
+4 makes it easy to be built as shared (ELF) library, this can reduce the
+size of the teapot binary considerably.
+
+If you want the curses frontend to be fully UTF-8 aware, you need
+libncursesw (Debian package name: libncursesw5-dev). 
 

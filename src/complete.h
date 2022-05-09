@@ -1,6 +1,6 @@
 #ifndef COMPLETE_H
 #define COMPLETE_H
 
-char *completefile(const char *);
+void completefile(char *, char *, size_t size);
 
 #endif

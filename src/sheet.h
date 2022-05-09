@@ -93,7 +93,7 @@ Token **getcont(Sheet *sheet, int x, int y, int z, int c);
 Token getvalue(Sheet *sheet, int x, int y, int z);
 void update(Sheet *sheet);
 char *geterror(Sheet *sheet, int x, int y, int z);
-void printvalue(char *s, size_t size, int star, int quote, int scientific, int precision, Sheet *sheet, int x, int y, int z);
+void printvalue(char *s, size_t size, size_t chars, int quote, int scientific, int precision, Sheet *sheet, int x, int y, int z);
 Adjust getadjust(Sheet *sheet, int x, int y, int z);
 void setadjust(Sheet *sheet, int x, int y, int z, Adjust adjust);
 void shadow(Sheet *sheet, int x, int y, int z, int yep);

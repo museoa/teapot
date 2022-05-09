@@ -27,6 +27,7 @@
 #include "default.h"
 #include "main.h"
 #include "misc.h"
+#include "utf8.h"
 /*}}}*/
 
 /* posnumber   -- match positive integer */ /*{{{*/
@@ -149,7 +150,7 @@ int fputc_close(char c, FILE *fp)
   }
   return e;
 }
-/*}}}*/
+
 /* fputs_close -- error checking fputs which closes stream on error */ /*{{{*/
 int fputs_close(const char *s, FILE *fp)
 {
@@ -165,12 +166,12 @@ int fputs_close(const char *s, FILE *fp)
   }
   return e;
 }
-/*}}}*/
+
 /* adjust      -- readjust a left adjusted string in a buffer */ /*{{{*/
 void adjust(Adjust a, char *s, size_t n)
 {
   assert(s!=(char*)0);
-  assert(strlen(s)<n);
+  assert(mbslen(s)<n);
   switch (a)
   {
     /* LEFT */ /*{{{*/
@@ -181,10 +182,10 @@ void adjust(Adjust a, char *s, size_t n)
     {
       size_t len;
 
-      len=strlen(s)+1;
+      len=mbslen(s);
       if (len!=n)
       {
-        memmove(s+n-len,s,len);
+        memmove(s+n-len,s,strlen(s)+1);
         (void)memset(s,' ',n-len);
       }
       break;
@@ -195,13 +196,13 @@ void adjust(Adjust a, char *s, size_t n)
     {
       size_t len,pad;
 
-      len=strlen(s);
+      len=mbslen(s);
       pad=((n-1)-len)/2;
       assert((pad+len)<n);
-      memmove(s+pad,s,len);
+      memmove(s+pad,s,strlen(s)+1);
       (void)memset(s,' ',pad);
-      (void)memset(s+pad+len,' ',n-pad-len-1);
-      *(s+n-1)='\0';
+      *(s+strlen(s)+n-pad-len)='\0';
+      (void)memset(s+strlen(s),' ',n-pad-len-1);
       break;
     }  
     /*}}}*/

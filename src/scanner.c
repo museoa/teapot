@@ -226,7 +226,7 @@ Token **scan(const char **s)
 }
 /*}}}*/
 /* print      -- print token sequence */ /*{{{*/
-void print(char *s, size_t size, int star, int quote, int scientific, int precision, Token **n)
+void print(char *s, size_t size, size_t chars, int quote, int scientific, int precision, Token **n)
 {
   size_t cur;
   
@@ -352,11 +352,11 @@ void print(char *s, size_t size, int star, int quote, int scientific, int precis
     default: assert(0);
     /*}}}*/
   }
-  if (cur<size) *(s+cur)='\0';
-  else
-  {
-    if (star) for (cur=0; cur<(size-1); ++cur) *(s+cur)='*';
-    *(s+size-1)='\0';
+  if (cur<size) s[cur] = 0;
+  else s[size-1] = 0;
+  if (chars && mbslen(s) > chars) {
+    for (cur=0; cur < chars; ++cur) s[cur] = '#';
+    s[cur] = 0;
   }
 }
 /*}}}*/
