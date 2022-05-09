@@ -44,6 +44,8 @@ typedef struct
   unsigned int clock_t0:1;
   unsigned int clock_t1:1;
   unsigned int clock_t2:1;
+  unsigned int bold:1;
+  unsigned int underline:1;
 } Cell;
 
 struct Label
@@ -58,7 +60,7 @@ typedef struct
   struct Label *labelcache[LABEL_CACHE];
   int curx, cury, curz;
   int mark1x, mark1y, mark1z;
-  int mark2x, mark2y, mark2z;  
+  int mark2x, mark2y, mark2z;
   int marking;
   int offx, offy;
   Cell **sheet;
@@ -98,6 +100,10 @@ Adjust getadjust(Sheet *sheet, int x, int y, int z);
 void setadjust(Sheet *sheet, int x, int y, int z, Adjust adjust);
 void shadow(Sheet *sheet, int x, int y, int z, int yep);
 int shadowed(Sheet *sheet, int x, int y, int z);
+void bold(Sheet *sheet, int x, int y, int z, int yep);
+int isbold(Sheet *sheet, int x, int y, int z);
+void underline(Sheet *sheet, int x, int y, int z, int yep);
+int underlined(Sheet *sheet, int x, int y, int z);
 void lockcell(Sheet *sheet, int x, int y, int z, int yep);
 int locked(Sheet *sheet, int x, int y, int z);
 int transparent(Sheet *sheet, int x, int y, int z);

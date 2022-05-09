@@ -18,7 +18,7 @@
 #include <string.h>
 
 
-#include "html.h"
+#include "htmlio.h"
 #include "main.h"
 #include "misc.h"
 /*}}}*/

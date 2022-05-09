@@ -76,7 +76,9 @@ typedef enum {
   BLOCK_SORT = -52,
   BLOCK_MIRROR = -53,
   K_ABOUT = -54,
-  K_HELP = -55
+  K_HELP = -55,
+  ADJUST_BOLD = -56,
+  ADJUST_UNDERLINE = -57
 } Key;
 
 extern int do_sheetcmd(Sheet *cursheet, Key c, int moveonly);

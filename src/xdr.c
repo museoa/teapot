@@ -102,7 +102,7 @@ static bool_t xdr_token(XDR *xdrs, Token *t)
     /*}}}*/
   }
   return 0;
-}  
+}
 /*}}}*/
 /* xdr_tokenptr */ /*{{{*/
 static bool_t xdr_tokenptr(XDR *xdrs, Token **t)
@@ -120,7 +120,7 @@ static bool_t xdr_tokenptrvec(XDR *xdrs, Token ***t)
   if (xdrs->x_op!=XDR_DECODE)
   {
     Token **run;
-    
+
     if (*t==(Token**)0) len=0;
     else for (len=1,run=*t; *run!=(Token*)0; ++len,++run);
   }
@@ -133,7 +133,7 @@ static bool_t xdr_tokenptrvec(XDR *xdrs, Token ***t)
 static bool_t xdr_mystring(XDR *xdrs, char **str)
 {
   static struct xdr_discrim arms[3]=
-  { 
+  {
     { 0, (xdrproc_t)xdr_void },
     { 1, (xdrproc_t)xdr_wrapstring },
     { -1, (xdrproc_t)0 }
@@ -173,7 +173,7 @@ bool_t xdr_cell(XDR *xdrs, Cell *cell)
   cell->adjust=x;
   if (result==0) return 0;
   if (xdr_int(xdrs, &(cell->precision))==0) return 0;
-  x=(cell->updated&1)|((cell->shadowed&1)<<1)|((cell->scientific&1)<<2)|((cell->locked&1)<<3)|((cell->transparent&1)<<4)|((cell->ignored&1)<<5);
+  x=(cell->updated&1)|((cell->shadowed&1)<<1)|((cell->scientific&1)<<2)|((cell->locked&1)<<3)|((cell->transparent&1)<<4)|((cell->ignored&1)<<5)|((cell->bold&1)<<6)|((cell->underline&1)<<7);
   result=xdr_int(xdrs, &x);
   cell->updated=((x&(1))!=0);
   cell->shadowed=((x&(1<<1))!=0);
@@ -181,6 +181,8 @@ bool_t xdr_cell(XDR *xdrs, Cell *cell)
   cell->locked=((x&(1<<3))!=0);
   cell->transparent=((x&(1<<4))!=0);
   cell->ignored=((x&(1<<5))!=0);
+  cell->bold=((x&(1<<6))!=0);
+  cell->underline=((x&(1<<7))!=0);
   return result;
 }
 /*}}}*/

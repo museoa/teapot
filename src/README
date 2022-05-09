@@ -1,20 +1,20 @@
-This is release 2.1.0 of teapot (Table Editor And Planner, Or: Teapot),
+This is release 2.2.1 of teapot (Table Editor And Planner, Or: Teapot),
 a spread sheet program for UNIX.
 
-    Copyright (C) 1995-2006 Michael Haardt
-    Copyright (C) 2009-2010 Joerg Walter
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	Copyright (C) 1995-2006 Michael Haardt
+	Copyright (C) 2009-2010 Joerg Walter
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 The current release has the following features:
 
@@ -44,45 +44,6 @@ o  For UTF-8 in the text interface: libncursesw and a UTF-8 locale
 o  For the FLTK interface: C++
 o  For the FLTK interface: FLTK 1.3, tested with SVN r7704
 
-The changes compared to 2.1.0 are:
-
-o UTF-8 support for curses frontend
-o various bug fixes
-
-The changes compared to 2.0.2 are:
-
-o switched to CMake as build system
-o Win32 compatibility
-o usage improvements in the GUI version
-o various bug fixes
-
-The changes compared to 2.0.1 are:
-
-o Low-resource builds (leaving out the help system)
-o various bug fixes
-
-The changes compared to 2.0 are:
-
-o Fix a possible crash and some minor bugs
-o improve FLTK navigation and cell editing (moving around and
-  selecting cells now works while editing a formula)
-o automatically start a string value when typing a letter
-o fix build system
-
-The changes compared to 1.09 are:
-
-o Several bug fixes and changes how files are handled
-o FLTK user interface
-o Built-in Help and About screen (currently only in FLTK)
-o License changed to GPL (see mbox file in doc folder for permission)
-
-The changes compared to 1.07 are:
-
-o  Use KEY_HOME additional to KEY_BEG to move to the beginning of
-   the line in the line editor
-
 A GNU zipped tar file is available from:
 
    http://www.syntax-k.de/projekte/teapot/
-
-Michael

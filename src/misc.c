@@ -105,7 +105,7 @@ static void catchfpe(int n)
 const char *dblfinite(double x)
 {
   /*struct sigaction act;
-  
+
   caughtfpe=0;
   act.sa_handler=catchfpe;
   act.sa_flags=0;
@@ -171,14 +171,14 @@ int fputs_close(const char *s, FILE *fp)
 void adjust(Adjust a, char *s, size_t n)
 {
   assert(s!=(char*)0);
-  assert(mbslen(s)<n);
+  assert(mbslen(s)<=n);
   switch (a)
   {
     /* LEFT */ /*{{{*/
     case LEFT: break;
     /*}}}*/
     /* RIGHT */ /*{{{*/
-    case RIGHT: 
+    case RIGHT:
     {
       size_t len;
 
@@ -192,19 +192,19 @@ void adjust(Adjust a, char *s, size_t n)
     }
     /*}}}*/
     /* CENTER */ /*{{{*/
-    case CENTER: 
+    case CENTER:
     {
       size_t len,pad;
 
       len=mbslen(s);
-      pad=((n-1)-len)/2;
-      assert((pad+len)<n);
+      pad=(n-len)/2;
+      assert((pad+len)<=n);
       memmove(s+pad,s,strlen(s)+1);
       (void)memset(s,' ',pad);
       *(s+strlen(s)+n-pad-len)='\0';
       (void)memset(s+strlen(s),' ',n-pad-len-1);
       break;
-    }  
+    }
     /*}}}*/
     /* default */ /*{{{*/
     default: assert(0);
@@ -235,16 +235,15 @@ void *myrealloc(void *p, size_t n)
 
 char *striphtml(const char *in)
 {
-	char *end, *stripped = malloc(strlen(in)), *out = stripped;
-	in--;
+    char *end, *stripped = malloc(strlen(in)), *out = stripped;
+    in--;
 
-	while (in && (end = strchr(++in, '<'))) {
-		memcpy(out, in, end-in);
-		out += end-in;
-		in = strchr(end+1, '>');
-	}
-	if (in) strcpy(out, in);
-	else *out = 0;
-	return stripped;
+    while (in && (end = strchr(++in, '<'))) {
+        memcpy(out, in, end-in);
+        out += end-in;
+        in = strchr(end+1, '>');
+    }
+    if (in) strcpy(out, in);
+    else *out = 0;
+    return stripped;
 }
-

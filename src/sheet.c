@@ -220,14 +220,14 @@ void resize(Sheet *sheet, int x, int y, int z)
     int *newcolumn;
     unsigned int ndimx,ndimy,ndimz;
     /*}}}*/
-  
+
     sheet->changed=1;
     ndimx=(x>=sheet->dimx ? x+1 : sheet->dimx);
     ndimy=(y>=sheet->dimy ? y+1 : sheet->dimy);
     ndimz=(z>=sheet->dimz ? z+1 : sheet->dimz);
     /* allocate new sheet */ /*{{{*/
     newsheet=malloc(ndimx*ndimy*ndimz*sizeof(Cell*));
-    for (x=0; x<ndimx; ++x) for (y=0; y<ndimy; ++y) for (z=0; z<ndimz; ++z)  
+    for (x=0; x<ndimx; ++x) for (y=0; y<ndimy; ++y) for (z=0; z<ndimz; ++z)
     {
       if (x<sheet->dimx && y<sheet->dimy && z<sheet->dimz) *(newsheet+x*ndimz*ndimy+y*ndimz+z)=SHEET(sheet,x,y,z);
       else *(newsheet+x*ndimz*ndimy+y*ndimz+z)=(Cell*)0;
@@ -271,6 +271,8 @@ void initcell(Sheet *sheet, int x, int y, int z)
     SHEET(sheet,x,y,z)->adjust=AUTOADJUST;
     SHEET(sheet,x,y,z)->precision=-1;
     SHEET(sheet,x,y,z)->shadowed=0;
+    SHEET(sheet,x,y,z)->bold=0;
+    SHEET(sheet,x,y,z)->underline=0;
     SHEET(sheet,x,y,z)->scientific=DEF_SCIENTIFIC;
     SHEET(sheet,x,y,z)->value.type=EMPTY;
     SHEET(sheet,x,y,z)->resvalue.type=EMPTY;
@@ -404,7 +406,7 @@ void freecell(Sheet *sheet, int x, int y, int z)
     tvecfree(SHEET(sheet,x,y,z)->ccontents);
     tfree(&(SHEET(sheet,x,y,z)->value));
     free(SHEET(sheet,x,y,z));
-    SHEET(sheet,x,y,z)=(Cell*)0;      
+    SHEET(sheet,x,y,z)=(Cell*)0;
     sheet->changed=1;
   }
 }
@@ -556,7 +558,7 @@ void update(Sheet *sheet)
   do
   {
     sheet->clk=0;
-    if (iterating==1) 
+    if (iterating==1)
     {
       line_msg((const char*)0,_("Calculating running, press Escape to abort it"));
       ++iterating;
@@ -599,7 +601,7 @@ char *geterror(Sheet *sheet, int x, int y, int z)
   Token v;
 
   assert(sheet!=(Sheet*)0);
-  if ((v=getvalue(sheet,x,y,z)).type!=EEK) 
+  if ((v=getvalue(sheet,x,y,z)).type!=EEK)
   {
     tfree(&v);
     return (char*)0;
@@ -632,7 +634,7 @@ Adjust getadjust(Sheet *sheet, int x, int y, int z)
   }
   else if (SHEET(sheet,x,y,z)->adjust==AUTOADJUST) return (SHEET(sheet,x,y,z)->value.type==INT || SHEET(sheet,x,y,z)->value.type==FLOAT ? RIGHT : LEFT);
   else return (SHEET(sheet,x,y,z)->adjust);
-}  
+}
 /*}}}*/
 /* setadjust     -- set cell adjustment */ /*{{{*/
 void setadjust(Sheet *sheet, int x, int y, int z, Adjust adjust)
@@ -642,7 +644,7 @@ void setadjust(Sheet *sheet, int x, int y, int z, Adjust adjust)
   resize(sheet,x,y,z);
   initcell(sheet,x,y,z);
   SHEET(sheet,x,y,z)->adjust=adjust;
-}  
+}
 /*}}}*/
 
 /* shadow        -- shadow cell by left neighbour */ /*{{{*/
@@ -651,13 +653,41 @@ void shadow(Sheet *sheet, int x, int y, int z, int yep)
   sheet->changed=1;
   initcell(sheet,x,y,z);
   SHEET(sheet,x,y,z)->shadowed=yep;
-}  
+}
 /*}}}*/
 /* shadowed      -- is cell shadowed? */ /*{{{*/
 int shadowed(Sheet *sheet, int x, int y, int z)
 {
   return (SHADOWED(sheet,x,y,z));
-}  
+}
+/*}}}*/
+/* bold        -- bold font */ /*{{{*/
+void bold(Sheet *sheet, int x, int y, int z, int yep)
+{
+  sheet->changed=1;
+  initcell(sheet,x,y,z);
+  SHEET(sheet,x,y,z)->bold=yep;
+}
+/*}}}*/
+/* isbold      -- is cell bold? */ /*{{{*/
+int isbold(Sheet *sheet, int x, int y, int z)
+{
+  return (x<sheet->dimx && y<sheet->dimy && z<sheet->dimz && SHEET(sheet,x,y,z)!=(Cell*)0 && SHEET(sheet,x,y,z)->bold);
+}
+/*}}}*/
+/* underline        -- underline */ /*{{{*/
+void underline(Sheet *sheet, int x, int y, int z, int yep)
+{
+  sheet->changed=1;
+  initcell(sheet,x,y,z);
+  SHEET(sheet,x,y,z)->underline=yep;
+}
+/*}}}*/
+/* isunderline      -- is cell underlined? */ /*{{{*/
+int underlined(Sheet *sheet, int x, int y, int z)
+{
+  return (x<sheet->dimx && y<sheet->dimy && z<sheet->dimz && SHEET(sheet,x,y,z)!=(Cell*)0 && SHEET(sheet,x,y,z)->underline);
+}
 /*}}}*/
 /* lockcell      -- lock cell */ /*{{{*/
 void lockcell(Sheet *sheet, int x, int y, int z, int yep)
@@ -665,19 +695,19 @@ void lockcell(Sheet *sheet, int x, int y, int z, int yep)
   sheet->changed=1;
   initcell(sheet,x,y,z);
   SHEET(sheet,x,y,z)->locked=yep;
-}  
+}
 /*}}}*/
 /* locked        -- is cell locked? */ /*{{{*/
 int locked(Sheet *sheet, int x, int y, int z)
 {
   return (x<sheet->dimx && y<sheet->dimy && z<sheet->dimz && SHEET(sheet,x,y,z)!=(Cell*)0 && SHEET(sheet,x,y,z)->locked);
-}  
+}
 /*}}}*/
 /* transparent   -- is cell transparent? */ /*{{{*/
 int transparent(Sheet *sheet, int x, int y, int z)
 {
   return (x<sheet->dimx && y<sheet->dimy && z<sheet->dimz && SHEET(sheet,x,y,z)!=(Cell*)0 && SHEET(sheet,x,y,z)->transparent);
-}  
+}
 /*}}}*/
 /* maketrans     -- make cell transparent */ /*{{{*/
 void maketrans(Sheet *sheet, int x, int y, int z, int yep)
@@ -685,7 +715,7 @@ void maketrans(Sheet *sheet, int x, int y, int z, int yep)
   sheet->changed=1;
   initcell(sheet,x,y,z);
   SHEET(sheet,x,y,z)->transparent=yep;
-}  
+}
 /*}}}*/
 /* igncell       -- ignore cell */ /*{{{*/
 void igncell(Sheet *sheet, int x, int y, int z, int yep)
@@ -693,13 +723,13 @@ void igncell(Sheet *sheet, int x, int y, int z, int yep)
   sheet->changed=1;
   initcell(sheet,x,y,z);
   SHEET(sheet,x,y,z)->ignored=yep;
-}  
+}
 /*}}}*/
 /* ignored       -- is cell ignored? */ /*{{{*/
 int ignored(Sheet *sheet, int x, int y, int z)
 {
   return (x<sheet->dimx && y<sheet->dimy && z<sheet->dimz && SHEET(sheet,x,y,z)!=(Cell*)0 && SHEET(sheet,x,y,z)->ignored);
-}  
+}
 /*}}}*/
 /* clk           -- clock cell */ /*{{{*/
 void clk(Sheet *sheet, int x, int y, int z)
@@ -713,7 +743,7 @@ void clk(Sheet *sheet, int x, int y, int z)
     SHEET(sheet,x,y,z)->clock_t2=1;
     sheet->clk=1;
   }
-}  
+}
 /*}}}*/
 /* setscientific -- cell value should be displayed in scientific notation */ /*{{{*/
 void setscientific(Sheet *sheet, int x, int y, int z, int yep)
@@ -722,14 +752,14 @@ void setscientific(Sheet *sheet, int x, int y, int z, int yep)
   resize(sheet,x,y,z);
   initcell(sheet,x,y,z);
   SHEET(sheet,x,y,z)->scientific=yep;
-}  
+}
 /*}}}*/
 /* getscientific -- should value be displayed in scientific notation? */ /*{{{*/
 int getscientific(Sheet *sheet, int x, int y, int z)
 {
   if (x<sheet->dimx && y<sheet->dimy && z<sheet->dimz && SHEET(sheet,x,y,z)!=(Cell*)0) return SHEET(sheet,x,y,z)->scientific;
   else return DEF_SCIENTIFIC;
-}  
+}
 /*}}}*/
 /* setprecision  -- set cell precision */ /*{{{*/
 void setprecision(Sheet *sheet, int x, int y, int z, int precision)
@@ -745,14 +775,14 @@ int getprecision(Sheet *sheet, int x, int y, int z)
 {
   if (x<sheet->dimx && y<sheet->dimy && z<sheet->dimz && SHEET(sheet,x,y,z)!=(Cell*)0) return (SHEET(sheet,x,y,z)->precision==-1 ? def_precision : SHEET(sheet,x,y,z)->precision);
   else return def_precision;
-}  
+}
 /*}}}*/
 /* getlabel      -- get cell label */ /*{{{*/
 const char *getlabel(Sheet *sheet, int x, int y, int z)
 {
   if (x>=sheet->dimx || y>=sheet->dimy || z>=sheet->dimz || SHEET(sheet,x,y,z)==(Cell*)0 || SHEET(sheet,x,y,z)->label==(char*)0) return "";
   else return (SHEET(sheet,x,y,z)->label);
-}  
+}
 /*}}}*/
 /* setlabel      -- set cell label */ /*{{{*/
 void setlabel(Sheet *sheet, int x, int y, int z, const char *buf, int update)
@@ -768,7 +798,7 @@ void setlabel(Sheet *sheet, int x, int y, int z, const char *buf, int update)
     cachelabels(sheet);
     forceupdate(sheet);
   }
-}  
+}
 /*}}}*/
 /* findlabel     -- return cell location for a given label */ /*{{{*/
 Token findlabel(Sheet *sheet, const char *label)
@@ -852,7 +882,7 @@ const char *savexdr(Sheet *sheet, const char *name, unsigned int *count)
   XDR xdrs;
   int x,y,z;
   /*}}}*/
-  
+
   *count=0;
   if ((fp=fopen(name,"w"))==(FILE*)0) return strerror(errno);
   xdrstdio_create(&xdrs,fp,XDR_ENCODE);
@@ -909,7 +939,7 @@ const char *savetbl(Sheet *sheet, const char *name, int body, int x1, int y1, in
   char num[20];
   char fullname[PATH_MAX];
   /*}}}*/
-  
+
   /* asserts */ /*{{{*/
   assert(sheet!=(Sheet*)0);
   assert(name!=(const char*)0);
@@ -927,7 +957,7 @@ const char *savetbl(Sheet *sheet, const char *name, int body, int x1, int y1, in
       (void)strncpy(fullname,name,sizeof(fullname)-strlen(num)-1);
       fullname[sizeof(fullname)-1]='\0';
       (void)strncat(fullname,num,sizeof(fullname)-strlen(num)-1);
-      fullname[sizeof(fullname)-1]='\0';  
+      fullname[sizeof(fullname)-1]='\0';
       if ((fp=fopen(fullname,"w"))==(FILE*)0) return strerror(errno);
     }
     /*}}}*/
@@ -942,6 +972,14 @@ const char *savetbl(Sheet *sheet, const char *name, int body, int x1, int y1, in
         if (shadowed(sheet,x,y,z))
         {
           if (fputc_close('s',fp)==EOF) return strerror(errno);
+        }
+        if (isbold(sheet,x,y,z))
+        {
+          if (fputc_close('b',fp)==EOF) return strerror(errno);
+        }
+        if (underlined(sheet,x,y,z))
+        {
+          if (fputc_close('u',fp)==EOF) return strerror(errno);
         }
         else switch (getadjust(sheet,x,y,z))
         {
@@ -958,7 +996,7 @@ const char *savetbl(Sheet *sheet, const char *name, int body, int x1, int y1, in
       {
         if (!shadowed(sheet,x,y,z))
         {
-          if (x>x1 && fputc_close('\t',fp)==EOF) return strerror(errno);    
+          if (x>x1 && fputc_close('\t',fp)==EOF) return strerror(errno);
           if (SHEET(sheet,x,y,z)!=(Cell*)0)
           {
             char *bufp;
@@ -1029,7 +1067,7 @@ const char *savetext(Sheet *sheet, const char *name, int x1, int y1, int z1, int
   FILE *fp;
   int x,y,z;
   /*}}}*/
-  
+
   /* asserts */ /*{{{*/
   assert(sheet!=(Sheet*)0);
   assert(name!=(const char*)0);
@@ -1039,20 +1077,20 @@ const char *savetext(Sheet *sheet, const char *name, int x1, int y1, int z1, int
   if ((fp=fopen(name,"w"))==(FILE*)0) return strerror(errno);
   for (z=z1; z<=z2; ++z)
   {
-    for (y=y1; y<=y2; ++y)   
+    for (y=y1; y<=y2; ++y)
     {
       size_t size,fill;
-        
+
       for (x=x1; x<=x2; ++x)
       {
         size=cellwidth(sheet,x,y,z);
         if (SHEET(sheet,x,y,z)!=(Cell*)0)
         {
           char *buf;
-    
+
           buf=malloc(size*UTF8SZ+1);
           printvalue(buf,size*UTF8SZ+1,size,0,getscientific(sheet,x,y,z),getprecision(sheet,x,y,z),sheet,x,y,z);
-          adjust(getadjust(sheet,x,y,z),buf,size+1);
+          adjust(getadjust(sheet,x,y,z),buf,size);
           if (fputs_close(buf,fp)==EOF)
           {
             free(buf);
@@ -1086,7 +1124,7 @@ const char *savecsv(Sheet *sheet, const char *name, char sep, int x1, int y1, in
   FILE *fp;
   int x,y,z;
   /*}}}*/
-  
+
   /* asserts */ /*{{{*/
   assert(sheet!=(Sheet*)0);
   assert(name!=(const char*)0);
@@ -1096,7 +1134,7 @@ const char *savecsv(Sheet *sheet, const char *name, char sep, int x1, int y1, in
   if ((fp=fopen(name,"w"))==(FILE*)0) return strerror(errno);
   for (z=z1; z<=z2; ++z)
   {
-    for (y=y1; y<=y2; ++y)   
+    for (y=y1; y<=y2; ++y)
     {
       for (x=x1; x<=x2; ++x)
       {
@@ -1104,7 +1142,7 @@ const char *savecsv(Sheet *sheet, const char *name, char sep, int x1, int y1, in
         if (SHEET(sheet,x,y,z)!=(Cell*)0)
         {
           char *buf,*s;
-    
+
           buf=malloc(255*UTF8SZ+1);
           printvalue(buf,255*UTF8SZ+1,255,0,getscientific(sheet,x,y,z),getprecision(sheet,x,y,z),sheet,x,y,z);
           if (SHEET(sheet,x,y,z)->value.type==STRING && fputc_close('"',fp)==EOF)
@@ -1150,9 +1188,9 @@ const char *saveport(Sheet *sheet, const char *name, unsigned int *count)
   fprintf(fp,"# This is a work sheet generated with teapot %s.\n",VERSION);
   for (z=sheet->dimz-1; z>=0; --z)
   {
-    for (y=sheet->dimy-1; y>=0; --y)   
+    for (y=sheet->dimy-1; y>=0; --y)
     {
-      for (x=sheet->dimx-1; x>=0; --x) 
+      for (x=sheet->dimx-1; x>=0; --x)
       {
         if (y==0) if (columnwidth(sheet,x,z)!=DEF_COLUMNWIDTH) fprintf(fp,"W%d %d %d\n",x,z,columnwidth(sheet,x,z));
         if (SHEET(sheet,x,y,z)!=(Cell*)0)
@@ -1162,13 +1200,15 @@ const char *saveport(Sheet *sheet, const char *name, unsigned int *count)
           if (SHEET(sheet,x,y,z)->label) fprintf(fp,"L%s ",SHEET(sheet,x,y,z)->label);
           if (SHEET(sheet,x,y,z)->precision!=-1) fprintf(fp,"P%d ",SHEET(sheet,x,y,z)->precision);
           if (SHEET(sheet,x,y,z)->shadowed) fprintf(fp,"S ");
+          if (SHEET(sheet,x,y,z)->bold) fprintf(fp,"B ");
+          if (SHEET(sheet,x,y,z)->underline) fprintf(fp,"U ");
           if (SHEET(sheet,x,y,z)->scientific!=DEF_SCIENTIFIC) fprintf(fp,"E ");
           if (SHEET(sheet,x,y,z)->locked) fprintf(fp,"C ");
           if (SHEET(sheet,x,y,z)->transparent) fprintf(fp,"T ");
           if (SHEET(sheet,x,y,z)->contents)
           {
             char buf[4096];
-          
+
             if (fputc_close(':',fp)==EOF) return strerror(errno);
             print(buf,sizeof(buf),0,1,SHEET(sheet,x,y,z)->scientific,SHEET(sheet,x,y,z)->precision,SHEET(sheet,x,y,z)->contents);
             if (fputs_close(buf,fp)==EOF) return strerror(errno);
@@ -1176,7 +1216,7 @@ const char *saveport(Sheet *sheet, const char *name, unsigned int *count)
           if (SHEET(sheet,x,y,z)->ccontents)
           {
             char buf[4096];
-          
+
             if (fputs_close("\\\n",fp)==EOF) return strerror(errno);
             print(buf,sizeof(buf),0,1,SHEET(sheet,x,y,z)->scientific,SHEET(sheet,x,y,z)->precision,SHEET(sheet,x,y,z)->ccontents);
             if (fputs_close(buf,fp)==EOF) return strerror(errno);
@@ -1206,6 +1246,8 @@ const char *loadport(Sheet *sheet, const char *name)
   char *label;
   Adjust adjust;
   int shadowed;
+  int bold;
+  int underline;
   int scientific;
   int locked;
   int transparent;
@@ -1238,6 +1280,8 @@ const char *loadport(Sheet *sheet, const char *name)
         contents=(Token**)0;
         ccontents=(Token**)0;
         shadowed=0;
+        bold=0;
+        underline=0;
         scientific=DEF_SCIENTIFIC;
         locked=0;
         transparent=0;
@@ -1257,7 +1301,7 @@ const char *loadport(Sheet *sheet, const char *name)
         if (os==ns)
         {
           sprintf(errbuf,_("Parse error for y position in line %d"),line);
-          err=errbuf;  
+          err=errbuf;
           goto eek;
         }
         while (*ns==' ') ++ns;
@@ -1266,7 +1310,7 @@ const char *loadport(Sheet *sheet, const char *name)
         if (os==ns)
         {
           sprintf(errbuf,_("Parse error for z position in line %d"),line);
-          err=errbuf;    
+          err=errbuf;
           goto eek;
         }
         /*}}}*/
@@ -1328,6 +1372,34 @@ const char *loadport(Sheet *sheet, const char *name)
               }
               ++ns;
               shadowed=1;
+              break;
+            }
+            /*}}}*/
+            /* U       -- underline */ /*{{{*/
+            case 'U':
+            {
+              if (x==0)
+              {
+                sprintf(errbuf,_("Trying to underline cell (%d,%d,%d) in line %d"),x,y,z,line);
+                err=errbuf;
+                goto eek;
+              }
+              ++ns;
+              underline=1;
+              break;
+            }
+            /*}}}*/
+            /* B       -- bold */ /*{{{*/
+            case 'B':
+            {
+              if (x==0)
+              {
+                sprintf(errbuf,_("Trying to bold cell (%d,%d,%d) in line %d"),x,y,z,line);
+                err=errbuf;
+                goto eek;
+              }
+              ++ns;
+              bold=1;
               break;
             }
             /*}}}*/
@@ -1411,7 +1483,9 @@ const char *loadport(Sheet *sheet, const char *name)
         SHEET(sheet,x,y,z)->label=label;
         SHEET(sheet,x,y,z)->precision=precision;
         SHEET(sheet,x,y,z)->shadowed=shadowed;
-        SHEET(sheet,x,y,z)->scientific=scientific;  
+        SHEET(sheet,x,y,z)->bold=bold;
+        SHEET(sheet,x,y,z)->underline=underline;
+        SHEET(sheet,x,y,z)->scientific=scientific;
         SHEET(sheet,x,y,z)->locked=locked;
         SHEET(sheet,x,y,z)->transparent=transparent;
         SHEET(sheet,x,y,z)->ignored=ignored;
@@ -1451,7 +1525,7 @@ const char *loadport(Sheet *sheet, const char *name)
           sprintf(errbuf,_("Parse error for width in line %d"),line);
           err=errbuf;
           goto eek;
-        }  
+        }
         /*}}}*/
         setwidth(sheet,x,z,width);
         break;
@@ -1533,7 +1607,7 @@ const char *loadxdr(Sheet *sheet, const char *name)
         return strerror(olderror);
       }
       initcell(sheet,x,y,z);
-      if (xdr_cell(&xdrs,SHEET(sheet,x,y,z))==0) 
+      if (xdr_cell(&xdrs,SHEET(sheet,x,y,z))==0)
       {
         freecell(sheet,x,y,z);
         olderror=errno;
@@ -1608,42 +1682,42 @@ const char *loadcsv(Sheet *sheet, const char *name)
       if (s!=cend) /* ok, it is a integer */ /*{{{*/
       {
         t[0]->type=INT;
-	t[0]->u.integer=lvalue;
-	putcont(sheet, sheet->curx+x, sheet->cury+line-1, sheet->curz, t, 0);
+        t[0]->u.integer=lvalue;
+        putcont(sheet, sheet->curx+x, sheet->cury+line-1, sheet->curz, t, 0);
       }
       /*}}}*/
       else
       {
-	value=csv_double(s,&cend);
-	if (s!=cend) /* ok, it is a double */ /*{{{*/
-	{
-	  t[0]->type=FLOAT;
-	  t[0]->u.flt=value;
-	  putcont(sheet, sheet->curx+x, sheet->cury+line-1, sheet->curz, t, 0);
-	}
-	/*}}}*/
-	else
-	{
-	  str=csv_string(s,&cend);
-	  if (s!=cend) /* ok, it is a string */ /*{{{*/
-	  {
-	    t[0]->type=STRING;
-	    t[0]->u.string=mystrmalloc(str);
-	    putcont(sheet, sheet->curx+x, sheet->cury+line-1, sheet->curz, t, 0);
-	  }
-	  /*}}}*/
-	  else
-	  {
-	    tvecfree(t);
-	    csv_separator(s,&cend);
-	    while (s==cend && *s && *s!='\n')
-	    {
-	      err=_("unknown values ignored");
-	      csv_separator(++s,&cend);
-	    }
-	    /* else it is nothing, which does not need to be stored :) */
-	  }
-	}
+        value=csv_double(s,&cend);
+        if (s!=cend) /* ok, it is a double */ /*{{{*/
+        {
+          t[0]->type=FLOAT;
+          t[0]->u.flt=value;
+          putcont(sheet, sheet->curx+x, sheet->cury+line-1, sheet->curz, t, 0);
+        }
+        /*}}}*/
+        else
+        {
+          str=csv_string(s,&cend);
+          if (s!=cend) /* ok, it is a string */ /*{{{*/
+          {
+            t[0]->type=STRING;
+            t[0]->u.string=mystrmalloc(str);
+            putcont(sheet, sheet->curx+x, sheet->cury+line-1, sheet->curz, t, 0);
+          }
+          /*}}}*/
+          else
+          {
+            tvecfree(t);
+            csv_separator(s,&cend);
+            while (s==cend && *s && *s!='\n')
+            {
+              err=_("unknown values ignored");
+              csv_separator(++s,&cend);
+            }
+            /* else it is nothing, which does not need to be stored :) */
+          }
+        }
       }
     } while (s!=cend ? s=cend,++x,1 : 0);
   }
